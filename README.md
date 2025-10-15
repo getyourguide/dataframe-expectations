@@ -4,7 +4,7 @@
 
 Instead of using different validation approaches for DataFrames across repositories, this library provides a
 standardized solution for this use case. As a result, any contributions made here—such as adding new expectations—can be leveraged by all users of the library.
-You can find the complete list of expectations [here](docs/expectations.md).
+You can find the complete list of expectations [here](docs/build/html/expectations.html).
 
 **Pandas example:**
 ```python
@@ -519,10 +519,22 @@ For concrete examples of unit tests, check for tests in the [expectations_implem
 find the unit test template [here](../../tests/dataframe_expectations/expectations_implemented/template_test_expectation.py).
 
 #### Step 4: Updating the documentation
-After the expectation is ready for use, the last thing remaining is adding your expectation to this list of expectations [here](docs/expectations.md). For this you need to run the following script:
+After the expectation is ready for use, the last thing remaining is adding your expectation to the documentation. The documentation is automatically generated using a CI pipeline with the `uv` package manager and is available at `docs/build/html/expectations.html`.
+
+Make sure to add the docstring for the function you added to `DataframeExpectationsSuite` before submitting your changes. The CI pipeline will automatically update the documentation using the make targets in the `docs` folder when your changes are merged.
+
+If you need to build the documentation locally for testing, you can use the make targets available in the `docs` folder.
 
 ```bash
-poetry run python mltools/dataframe_expectations/generate_docs.py
+cd docs 
+uv run sphinx-build source build/html
 ```
 
-Make sure to add the docstring for the function you added to `DataframeExpectationsSuite` before running the script. Running the script should update [expectations.md](docs/expectations.md).
+or use the make command
+
+```bash
+cd docs
+make html
+```
+
+

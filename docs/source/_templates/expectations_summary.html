@@ -1,0 +1,27 @@
+<div class="expectations-summary">
+    <h2>Expectations Summary</h2>
+    <table class="expectations-table">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Expectations</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category, subcategories in expectations_by_category.items() %}
+                {% for subcategory, expectations in subcategories.items() %}
+                <tr>
+                    <td><a href="#category-{{ category|lower|replace(' ', '-') }}">{{ category }}</a></td>
+                    <td><a href="#subcategory-{{ subcategory|lower|replace(' ', '-') }}">{{ subcategory }}</a></td>
+                    <td>
+                        {% for exp in expectations %}
+                            <a href="#method-{{ exp }}"><code>{{ exp }}</code></a>{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

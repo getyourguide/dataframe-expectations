@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 *.pyo
+
+# Ignore virtual environment directories
+.venv
+
+# Ignore generated documentation
+docs/build/
