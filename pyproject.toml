@@ -16,6 +16,7 @@ dev = [
     "pytest>=8.4.2",
     "pre-commit>=3.0.0",
     "ruff>=0.1.0",
+    "pytest-cov>=7.0.0",
 ]
 docs = [
     "sphinx>=4.0.0",

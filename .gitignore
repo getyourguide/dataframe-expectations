@@ -8,3 +8,6 @@ __pycache__/
 
 # Ignore generated documentation
 docs/build/
+
+# Unit test coverage
+.coverage
