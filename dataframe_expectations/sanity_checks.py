@@ -11,38 +11,23 @@ Usage:
 """
 
 import ast
-import os
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 
 class ExpectationsSanityChecker:
     """Validates consistency across the expectations framework."""
 
-    def __init__(self, mltools_root: Path):
-        self.mltools_root = mltools_root
-        self.expectations_dir = (
-            mltools_root / "mltools" / "dataframe_expectations" / "expectations"
-        )
-        self.suite_file = (
-            mltools_root
-            / "mltools"
-            / "dataframe_expectations"
-            / "expectations_suite.py"
-        )
-        self.tests_dir = (
-            mltools_root
-            / "tests"
-            / "dataframe_expectations"
-            / "expectations_implemented"
-        )
+    def __init__(self, project_root: Path):
+        self.project_root = project_root
+        self.expectations_dir = project_root / "dataframe_expectations" / "expectations"
+        self.suite_file = project_root / "dataframe_expectations" / "expectations_suite.py"
+        self.tests_dir = project_root / "tests" / "expectations_implemented"
 
         # Results storage
-        self.registered_expectations: Dict[
-            str, str
-        ] = {}  # expectation_name -> file_path
+        self.registered_expectations: Dict[str, str] = {}  # expectation_name -> file_path
         self.suite_methods: Set[str] = set()  # expect_* method names
         self.test_files: Dict[str, str] = {}  # expectation_name -> test_file_path
 
@@ -100,13 +85,9 @@ class ExpectationsSanityChecker:
                     if isinstance(node, ast.FunctionDef):
                         for decorator in node.decorator_list:
                             if self._is_register_expectation_decorator(decorator):
-                                expectation_name = self._extract_expectation_name(
-                                    decorator
-                                )
+                                expectation_name = self._extract_expectation_name(decorator)
                                 if expectation_name:
-                                    self.registered_expectations[
-                                        expectation_name
-                                    ] = str(file_path)
+                                    self.registered_expectations[expectation_name] = str(file_path)
 
             except Exception as e:
                 print(f"   ⚠️  Warning: Could not parse {file_path}: {e}")
@@ -114,10 +95,7 @@ class ExpectationsSanityChecker:
     def _is_register_expectation_decorator(self, decorator) -> bool:
         """Check if a decorator is @register_expectation."""
         if isinstance(decorator, ast.Call):
-            if (
-                isinstance(decorator.func, ast.Name)
-                and decorator.func.id == "register_expectation"
-            ):
+            if isinstance(decorator.func, ast.Name) and decorator.func.id == "register_expectation":
                 return True
         return False
 
@@ -158,20 +136,17 @@ class ExpectationsSanityChecker:
         test_files = list(self.tests_dir.rglob("test_*.py"))
 
         for test_file in test_files:
+            # Skip template files
+            if "template" in test_file.name.lower():
+                continue
+
             # Extract potential expectation name from filename
             # e.g., test_expect_value_equals.py -> ExpectationValueEquals
             filename = test_file.stem
             if filename.startswith("test_expect_"):
-                # Convert from snake_case to PascalCase
-                expectation_part = filename[5:]  # Remove "test_"
-                expectation_name = self._snake_to_pascal_case(expectation_part)
-
-                # Also try with "Expectation" prefix
-                if expectation_name not in self.registered_expectations:
-                    expectation_name = "Expectation" + self._snake_to_pascal_case(
-                        expectation_part[7:]
-                    )  # Remove "expect_"
-
+                # Convert test_expect_value_equals -> ValueEquals
+                expectation_part = filename[12:]  # Remove "test_expect_"
+                expectation_name = "Expectation" + self._snake_to_pascal_case(expectation_part)
                 self.test_files[expectation_name] = str(test_file)
 
     def _snake_to_pascal_case(self, snake_str: str) -> str:
@@ -277,7 +252,7 @@ class ExpectationsSanityChecker:
         print("📊 SANITY CHECK RESULTS")
         print("=" * 70)
 
-        print(f"\n📈 Summary:")
+        print("\n📈 Summary:")
         print(f"   • Registered expectations: {len(self.registered_expectations)}")
         print(f"   • Suite methods:          {len(self.suite_methods)}")
         print(f"   • Test files:             {len(self.test_files)}")
@@ -289,7 +264,7 @@ class ExpectationsSanityChecker:
             for issue in self.issues:
                 print(issue)
         else:
-            print(f"\n✅ ALL CHECKS PASSED!")
+            print("\n✅ ALL CHECKS PASSED!")
             print("   The expectations framework is consistent across:")
             print("   • Registry registrations")
             print("   • Suite method implementations")
@@ -328,7 +303,7 @@ class ExpectationsSanityChecker:
                     check=True,
                 )
                 default_branch = result.stdout.strip().split("/")[-1]
-            except:
+            except subprocess.CalledProcessError:
                 # Fallback to common default branch names
                 for branch in ["main", "master"]:
                     try:
@@ -340,7 +315,7 @@ class ExpectationsSanityChecker:
                         )
                         default_branch = branch
                         break
-                    except:
+                    except subprocess.CalledProcessError:
                         continue
                 else:
                     default_branch = "main"  # Final fallback
@@ -372,14 +347,12 @@ class ExpectationsSanityChecker:
                         break
 
             if changed_relevant_files:
-                print(f"🔍 Relevant DataFrame expectations files changed:")
+                print("🔍 Relevant DataFrame expectations files changed:")
                 for file in changed_relevant_files:
                     print(f"   • {file}")
                 return True
             else:
-                print(
-                    "🔍 No relevant DataFrame expectations files changed, skipping sanity check."
-                )
+                print("🔍 No relevant DataFrame expectations files changed, skipping sanity check.")
                 return False
 
         except subprocess.CalledProcessError as e:
@@ -395,17 +368,20 @@ class ExpectationsSanityChecker:
 if __name__ == "__main__":
     # Use relative path from the script location
     script_dir = Path(__file__).parent
-    mltools_root = (
-        script_dir.parent.parent
-    )  # Go up two levels: sanity_checks -> dataframe_expectations -> mltools
+    # Go up one level: sanity_checks.py is in dataframe_expectations/, project root is parent
+    project_root = script_dir.parent
 
-    if not mltools_root.name == "mltools":
-        print(
-            "❌ Unexpected directory structure - script should be in mltools/dataframe_expectations/"
-        )
+    # Validate directory structure
+    expected_dirs = ["dataframe_expectations", "tests", "pyproject.toml"]
+    missing_dirs = [d for d in expected_dirs if not (project_root / d).exists()]
+
+    if missing_dirs:
+        print(f"❌ Missing expected directories/files: {missing_dirs}")
+        print(f"Script location: {Path(__file__)}")
+        print(f"Project root: {project_root}")
         sys.exit(1)
 
-    checker = ExpectationsSanityChecker(mltools_root)
+    checker = ExpectationsSanityChecker(project_root)
 
     # Run the checks
     success = checker.run_full_check()
