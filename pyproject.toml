@@ -22,7 +22,7 @@ docs = [
     "sphinx>=4.0.0",
     "pydata-sphinx-theme>=0.16.1",
     "sphinx-autobuild>=2021.3.14",
-    "pyspark>=3.0.0", # Needed for the Sphinx extension to import expectations
+    "pyspark>=4.0.1", # Needed for the Sphinx extension to import expectations
     "pandas>=1.0.0", # Also needed since expectations work with both pandas and pyspark
     "tabulate", # If your code uses tabulate for formatting
     # Add any other dependencies your main package needs

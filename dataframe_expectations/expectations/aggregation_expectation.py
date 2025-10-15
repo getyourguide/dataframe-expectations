@@ -120,9 +120,7 @@ class DataframeAggregationExpectation(DataframeExpectation):
         if not self.column_names:
             return None
 
-        missing_columns = [
-            col for col in self.column_names if col not in data_frame.columns
-        ]
+        missing_columns = [col for col in self.column_names if col not in data_frame.columns]
         if missing_columns:
             if len(missing_columns) == 1:
                 return f"Column '{missing_columns[0]}' does not exist in the DataFrame."

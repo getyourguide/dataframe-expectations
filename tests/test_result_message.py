@@ -17,7 +17,9 @@ def test_result_message_empty():
     """
     result_message = DataframeExpectationResultMessage()
 
-    assert str(result_message) == "", f"Expected empty result message but got: {str(result_message)}"
+    assert (
+        str(result_message) == ""
+    ), f"Expected empty result message but got: {str(result_message)}"
 
 
 def test_data_frame_to_str_pandas():
@@ -36,16 +38,16 @@ def test_data_frame_to_str_pandas():
         data_frame=pandas_dataframe,
         rows=2,
     )
-    assert actual_str == expected_dataframe_str, f"Expected pandas dataframe string but got: {actual_str}"
+    assert (
+        actual_str == expected_dataframe_str
+    ), f"Expected pandas dataframe string but got: {actual_str}"
 
 
 def test_dataframe_to_str_pyspark(spark):
     """
     Test the dataframe_to_str method with a mock PySpark DataFrame.
     """
-    pyspark_dataframe = spark.createDataFrame(
-        [(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"]
-    )
+    pyspark_dataframe = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
 
     result_message = DataframeExpectationResultMessage()
 
@@ -61,7 +63,9 @@ def test_dataframe_to_str_pyspark(spark):
         data_frame=pyspark_dataframe,
         rows=2,
     )
-    assert actual_str == expected_dataframe_str, f"Expected pyspark dataframe string but got: {actual_str}"
+    assert (
+        actual_str == expected_dataframe_str
+    ), f"Expected pyspark dataframe string but got: {actual_str}"
 
 
 def test_dataframe_to_str_invalid_type():
@@ -75,7 +79,9 @@ def test_dataframe_to_str_invalid_type():
             data_frame_type="invalid_type", data_frame=pd.DataFrame(), rows=2
         )
 
-    assert str(context.value) == "Unsupported DataFrame type: invalid_type", f"Expected ValueError message but got: {str(context.value)}"
+    assert (
+        str(context.value) == "Unsupported DataFrame type: invalid_type"
+    ), f"Expected ValueError message but got: {str(context.value)}"
 
 
 def test_success_message_no_additional_message():
@@ -85,7 +91,9 @@ def test_success_message_no_additional_message():
     expectation_name = "TestExpectation"
     success_message = DataframeExpectationSuccessMessage(expectation_name)
     message_str = str(success_message)
-    assert expectation_name in message_str, f"Expectation name should be in the message: {message_str}"
+    assert (
+        expectation_name in message_str
+    ), f"Expectation name should be in the message: {message_str}"
 
 
 def test_success_message_with_additional_message():
@@ -98,8 +106,12 @@ def test_success_message_with_additional_message():
         expectation_name, additional_message
     )
     message_str = str(success_message_with_additional)
-    assert expectation_name in message_str, f"Expectation name should be in the message: {message_str}"
-    assert additional_message in message_str, f"Additional message should be in the success message: {message_str}"
+    assert (
+        expectation_name in message_str
+    ), f"Expectation name should be in the message: {message_str}"
+    assert (
+        additional_message in message_str
+    ), f"Additional message should be in the success message: {message_str}"
 
 
 def test_failure_message_default_params():
@@ -108,15 +120,17 @@ def test_failure_message_default_params():
     """
     expectation_name = "TestExpectation"
     data_frame_type = None
-    failure_message = DataframeExpectationFailureMessage(
-        expectation_name, data_frame_type
-    )
+    failure_message = DataframeExpectationFailureMessage(expectation_name, data_frame_type)
 
     message_str = str(failure_message)
-    assert expectation_name in message_str, f"Expectation name should be in the message: {message_str}"
+    assert (
+        expectation_name in message_str
+    ), f"Expectation name should be in the message: {message_str}"
 
     violations_df = failure_message.get_violations_data_frame()
-    assert violations_df is None, f"Violations DataFrame should be None when not provided but got: {violations_df}"
+    assert (
+        violations_df is None
+    ), f"Violations DataFrame should be None when not provided but got: {violations_df}"
 
 
 def test_failure_message_custom_message():
@@ -133,11 +147,17 @@ def test_failure_message_custom_message():
     )
 
     message_str = str(failure_message)
-    assert expectation_name in message_str, f"Expectation name should be in the message: {message_str}"
-    assert custom_message in message_str, f"Custom message should be in the failure message: {message_str}"
+    assert (
+        expectation_name in message_str
+    ), f"Expectation name should be in the message: {message_str}"
+    assert (
+        custom_message in message_str
+    ), f"Custom message should be in the failure message: {message_str}"
 
     violations_df = failure_message.get_violations_data_frame()
-    assert violations_df is None, f"Violations DataFrame should be None when not provided but got: {violations_df}"
+    assert (
+        violations_df is None
+    ), f"Violations DataFrame should be None when not provided but got: {violations_df}"
 
 
 def test_failure_message_with_violations_dataframe():
@@ -146,9 +166,7 @@ def test_failure_message_with_violations_dataframe():
     """
     expectation_name = "TestExpectation"
     data_frame_type = DataFrameType.PANDAS
-    violations_dataframe = pd.DataFrame(
-        {"col1": [1, 2, 3], "col2": ["a", "b", "c"]}
-    )
+    violations_dataframe = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
     failure_message = DataframeExpectationFailureMessage(
         expectation_str=expectation_name,
         data_frame_type=data_frame_type,
@@ -165,8 +183,12 @@ def test_failure_message_with_violations_dataframe():
     )
 
     message_str = str(failure_message)
-    assert expectation_name in message_str, f"Expectation name should be in the message: {message_str}"
-    assert expected_dataframe_str in message_str, f"Violations DataFrame should be included in the message: {message_str}"
+    assert (
+        expectation_name in message_str
+    ), f"Expectation name should be in the message: {message_str}"
+    assert (
+        expected_dataframe_str in message_str
+    ), f"Violations DataFrame should be included in the message: {message_str}"
 
     actual_violations_df = failure_message.get_violations_data_frame()
     assert_pandas_df_equal(actual_violations_df, expected_dataframe)

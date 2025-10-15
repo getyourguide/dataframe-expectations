@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, cast
 
 from dataframe_expectations.expectations import DataFrameLike
 from dataframe_expectations.expectations.expectation_registry import (
@@ -883,15 +883,21 @@ class DataframeExpectationsSuite:
         was_already_cached = False
 
         if data_frame_type == DataFrameType.PYSPARK:
+            # Import PySpark DataFrame for type casting
+            from pyspark.sql import DataFrame as PySparkDataFrame
+
+            # Cast to PySpark DataFrame since we know it's PySpark at this point
+            pyspark_df = cast(PySparkDataFrame, data_frame)
+
             # Check if DataFrame is already cached
-            was_already_cached = data_frame.is_cached
+            was_already_cached = pyspark_df.is_cached
 
             # Cache the DataFrame if it wasn't already cached
             if not was_already_cached:
-                logger.debug(
-                    "Caching PySpark DataFrame for expectations suite execution"
-                )
-                data_frame.cache()
+                logger.debug("Caching PySpark DataFrame for expectations suite execution")
+                pyspark_df.cache()
+                # Update the original reference for subsequent operations
+                data_frame = pyspark_df
 
         try:
             # Run all expectations
@@ -914,10 +920,10 @@ class DataframeExpectationsSuite:
         finally:
             # Uncache the DataFrame if we cached it (and it wasn't already cached)
             if data_frame_type == DataFrameType.PYSPARK and not was_already_cached:
-                logger.debug(
-                    "Uncaching PySpark DataFrame after expectations suite execution"
-                )
-                data_frame.unpersist()
+                from pyspark.sql import DataFrame as PySparkDataFrame
+
+                logger.debug("Uncaching PySpark DataFrame after expectations suite execution")
+                cast(PySparkDataFrame, data_frame).unpersist()
 
         footer_message = f"{len(successes)} success, {len(failures)} failures"
         footer_prefix = "=" * ((margin_len - len(footer_message) - 2) // 2)
@@ -939,9 +945,7 @@ if __name__ == "__main__":
     suite.expect_value_less_than(column_name="salary", value=100000)
     suite.expect_unique_rows(column_names=["id"])
     suite.expect_column_mean_between(column_name="age", min_value=20, max_value=40)
-    suite.expect_column_max_between(
-        column_name="salary", min_value=80000, max_value=150000
-    )
+    suite.expect_column_max_between(column_name="salary", min_value=80000, max_value=150000)
 
     import pandas as pd
 

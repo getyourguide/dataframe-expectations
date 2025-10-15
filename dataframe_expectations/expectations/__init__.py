@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import cast
 
 from pandas import DataFrame as PandasDataFrame
 from pyspark.sql import DataFrame as PySparkDataFrame
@@ -18,7 +18,6 @@ from dataframe_expectations.result_message import (
 
 
 class DataframeExpectation(ABC):
-
     """
     Base class for DataFrame expectations.
     """
@@ -102,8 +101,10 @@ class DataframeExpectation(ABC):
         """
         data_frame_type = cls.infer_data_frame_type(data_frame)
         if data_frame_type == DataFrameType.PANDAS:
-            return len(data_frame)
+            # Cast to PandasDataFrame since we know it's a Pandas DataFrame at this point
+            return len(cast(PandasDataFrame, data_frame))
         elif data_frame_type == DataFrameType.PYSPARK:
-            return data_frame.count()
+            # Cast to PySparkDataFrame since we know it's a PySpark DataFrame at this point
+            return cast(PySparkDataFrame, data_frame).count()
         else:
             raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")

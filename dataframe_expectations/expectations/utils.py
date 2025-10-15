@@ -1,11 +1,11 @@
 from functools import wraps
-from typing import Any, Callable, Dict, Tuple, Type, Union, get_args, get_origin
+from typing import Any, Callable, Dict, Optional, Tuple, Type, Union, get_args
 
 from dataframe_expectations.expectations import DataframeExpectation
 
 
 def requires_params(
-    *required_params, types: Dict[str, Union[Type, Tuple[Type, ...]]] = None
+    *required_params, types: Optional[Dict[str, Union[Type, Tuple[Type, ...]]]] = None
 ):
     """
     Decorator that validates required parameters and optionally checks their types.
@@ -48,9 +48,7 @@ def requires_params(
                             )
 
                 if type_errors:
-                    raise TypeError(
-                        f"{func_name} type validation errors: {'; '.join(type_errors)}"
-                    )
+                    raise TypeError(f"{func_name} type validation errors: {'; '.join(type_errors)}")
 
             return func(**kwargs)
 
@@ -65,9 +63,9 @@ def _is_instance_of_type(value: Any, expected_type: Type) -> bool:
     if hasattr(expected_type, "__origin__") and expected_type.__origin__ is Union:
         # For Union types, check if value matches any of the union members
         union_args = get_args(expected_type)
-        return any(
-            isinstance(value, arg) for arg in union_args if arg is not type(None)
-        ) or (type(None) in union_args and value is None)
+        return any(isinstance(value, arg) for arg in union_args if arg is not type(None)) or (
+            type(None) in union_args and value is None
+        )
 
     # Handle regular types
     return isinstance(value, expected_type)
@@ -77,9 +75,7 @@ def _get_type_name(type_hint: Type) -> str:
     """Helper function to get a readable name for type hints."""
     if hasattr(type_hint, "__origin__") and type_hint.__origin__ is Union:
         union_args = get_args(type_hint)
-        arg_names = [
-            arg.__name__ if hasattr(arg, "__name__") else str(arg) for arg in union_args
-        ]
+        arg_names = [arg.__name__ if hasattr(arg, "__name__") else str(arg) for arg in union_args]
         return f"Union[{', '.join(arg_names)}]"
 
     return getattr(type_hint, "__name__", str(type_hint))

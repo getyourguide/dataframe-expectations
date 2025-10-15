@@ -526,7 +526,7 @@ Make sure to add the docstring for the function you added to `DataframeExpectati
 If you need to build the documentation locally for testing, you can use the make targets available in the `docs` folder.
 
 ```bash
-cd docs 
+cd docs
 uv run sphinx-build source build/html
 ```
 
@@ -536,5 +536,3 @@ or use the make command
 cd docs
 make html
 ```
-
-

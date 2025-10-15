@@ -1,6 +1,8 @@
-from typing import Union
+from typing import Union, cast
 
 import pandas as pd
+from pandas import DataFrame as PandasDataFrame
+from pyspark.sql import DataFrame as PySparkDataFrame
 from pyspark.sql import functions as F
 
 from dataframe_expectations import DataFrameLike, DataFrameType
@@ -71,7 +73,9 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
         }
         self.quantile_desc = quantile_names.get(quantile, f"{quantile} quantile")
 
-        description = f"column '{column_name}' {self.quantile_desc} value between {min_value} and {max_value}"
+        description = (
+            f"column '{column_name}' {self.quantile_desc} value between {min_value} and {max_value}"
+        )
 
         self.column_name = column_name
         self.quantile = quantile
@@ -89,15 +93,17 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate column quantile in a pandas DataFrame."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Calculate quantile
             if self.quantile == 0.0:
-                quantile_val = data_frame[self.column_name].min()
+                quantile_val = pandas_df[self.column_name].min()
             elif self.quantile == 1.0:
-                quantile_val = data_frame[self.column_name].max()
+                quantile_val = pandas_df[self.column_name].max()
             elif self.quantile == 0.5:
-                quantile_val = data_frame[self.column_name].median()
+                quantile_val = pandas_df[self.column_name].median()
             else:
-                quantile_val = data_frame[self.column_name].quantile(self.quantile)
+                quantile_val = pandas_df[self.column_name].quantile(self.quantile)
 
             # Handle case where all values are null
             if pd.isna(quantile_val):
@@ -134,10 +140,10 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate column quantile in a PySpark DataFrame."""
         try:
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
             # First check if all values are null to avoid edge cases
-            non_null_count = data_frame.select(F.count(self.column_name)).collect()[0][
-                0
-            ]
+            non_null_count = pyspark_df.select(F.count(self.column_name)).collect()[0][0]
             if non_null_count == 0:
                 return DataframeExpectationFailureMessage(
                     expectation_str=str(self),
@@ -147,23 +153,19 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
 
             # Calculate quantile
             if self.quantile == 0.0:
-                result = data_frame.select(
-                    F.min(self.column_name).alias("quantile_val")
-                ).collect()
+                result = pyspark_df.select(F.min(self.column_name).alias("quantile_val")).collect()
             elif self.quantile == 1.0:
-                result = data_frame.select(
-                    F.max(self.column_name).alias("quantile_val")
-                ).collect()
+                result = pyspark_df.select(F.max(self.column_name).alias("quantile_val")).collect()
             elif self.quantile == 0.5:
-                result = data_frame.select(
-                    F.median(self.column_name).alias("quantile_val")
+                result = pyspark_df.select(
+                    F.median(self.column_name).alias("quantile_val")  # type: ignore
                 ).collect()
             else:
                 # Use percentile_approx for other quantiles
-                result = data_frame.select(
-                    F.percentile_approx(
-                        F.col(self.column_name), F.lit(self.quantile)
-                    ).alias("quantile_val")
+                result = pyspark_df.select(
+                    F.percentile_approx(F.col(self.column_name), F.lit(self.quantile)).alias(  # type: ignore
+                        "quantile_val"
+                    )
                 ).collect()
 
             quantile_val = result[0]["quantile_val"]
@@ -227,9 +229,7 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
             min_value (Union[int, float]): Minimum allowed value for the column mean (inclusive).
             max_value (Union[int, float]): Maximum allowed value for the column mean (inclusive).
         """
-        description = (
-            f"column '{column_name}' mean value between {min_value} and {max_value}"
-        )
+        description = f"column '{column_name}' mean value between {min_value} and {max_value}"
 
         self.column_name = column_name
         self.min_value = min_value
@@ -246,8 +246,10 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate column mean in a pandas DataFrame."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Calculate mean
-            mean_val = data_frame[self.column_name].mean()
+            mean_val = pandas_df[self.column_name].mean()
 
             # Handle case where all values are null
             if pd.isna(mean_val):
@@ -281,10 +283,10 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate column mean in a PySpark DataFrame."""
         try:
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
             # Calculate mean
-            mean_result = data_frame.select(
-                F.avg(self.column_name).alias("mean_val")
-            ).collect()
+            mean_result = pyspark_df.select(F.avg(self.column_name).alias("mean_val")).collect()
             mean_val = mean_result[0]["mean_val"]
 
             # Handle case where all values are null

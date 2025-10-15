@@ -1,5 +1,3 @@
-from typing import Union
-
 from pyspark.sql import functions as F
 
 from dataframe_expectations.expectations.column_expectation import (
@@ -12,9 +10,7 @@ from dataframe_expectations.expectations.utils import requires_params
 
 
 @register_expectation("ExpectationValueGreaterThan")
-@requires_params(
-    "column_name", "value", types={"column_name": str, "value": (int, float)}
-)
+@requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
 def create_expectation_value_greater_than(**kwargs) -> DataframeColumnExpectation:
     column_name = kwargs["column_name"]
     value = kwargs["value"]
@@ -29,9 +25,7 @@ def create_expectation_value_greater_than(**kwargs) -> DataframeColumnExpectatio
 
 
 @register_expectation("ExpectationValueLessThan")
-@requires_params(
-    "column_name", "value", types={"column_name": str, "value": (int, float)}
-)
+@requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
 def create_expectation_value_less_than(**kwargs) -> DataframeColumnExpectation:
     column_name = kwargs["column_name"]
     value = kwargs["value"]

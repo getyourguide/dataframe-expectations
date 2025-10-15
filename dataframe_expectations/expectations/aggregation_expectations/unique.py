@@ -1,6 +1,8 @@
-from typing import List
+from typing import List, cast
 
 import pandas as pd
+from pandas import DataFrame as PandasDataFrame
+from pyspark.sql import DataFrame as PySparkDataFrame
 from pyspark.sql import functions as F
 
 from dataframe_expectations import DataFrameLike, DataFrameType
@@ -76,25 +78,22 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
         """
         Validate uniqueness in a pandas DataFrame.
         """
+        # Cast to PandasDataFrame for type safety
+        pandas_df = cast(PandasDataFrame, data_frame)
+
         # If columns list is empty, use all columns
-        check_columns = (
-            self.column_names if self.column_names else list(data_frame.columns)
-        )
+        check_columns = self.column_names if self.column_names else list(pandas_df.columns)
 
         # Find duplicates - dropna=False ensures null values are considered in duplicate detection
         # This means rows with null values can be duplicates of each other
-        duplicates = data_frame[data_frame.duplicated(subset=check_columns, keep=False)]
+        duplicates = pandas_df[pandas_df.duplicated(subset=check_columns, keep=False)]
 
         if len(duplicates) == 0:
-            return DataframeExpectationSuccessMessage(
-                expectation_name=self.get_expectation_name()
-            )
+            return DataframeExpectationSuccessMessage(expectation_name=self.get_expectation_name())
 
         # Add duplicate count column and keep only one row per duplicate group
         duplicate_counts = (
-            data_frame.groupby(check_columns, dropna=False)
-            .size()
-            .reset_index(name="#duplicates")
+            pandas_df.groupby(check_columns, dropna=False).size().reset_index(name="#duplicates")
         )
         # Filter to only keep groups with duplicates (count > 1)
         duplicate_counts = duplicate_counts[duplicate_counts["#duplicates"] > 1]
@@ -104,9 +103,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
         duplicates_with_counts = duplicate_counts.sort_values(sort_columns)
 
         # Replace NaN with None
-        duplicates_with_counts = duplicates_with_counts.map(
-            lambda x: None if pd.isna(x) else x
-        )
+        duplicates_with_counts = duplicates_with_counts.map(lambda x: None if pd.isna(x) else x)
 
         # Calculate total number of duplicate rows (not groups)
         total_duplicate_rows = duplicates_with_counts["#duplicates"].sum()
@@ -131,12 +128,15 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
         """
         Validate uniqueness in a PySpark DataFrame.
         """
+        # Cast to PySparkDataFrame for type safety
+        pyspark_df = cast(PySparkDataFrame, data_frame)
+
         # If columns list is empty, use all columns
-        check_columns = self.column_names if self.column_names else data_frame.columns
+        check_columns = self.column_names if self.column_names else pyspark_df.columns
 
         # Group by the specified columns and count duplicates
         duplicates_df = (
-            data_frame.groupBy(*check_columns)
+            pyspark_df.groupBy(*check_columns)
             .count()
             .filter(F.col("count") > 1)
             .withColumnRenamed("count", "#duplicates")
@@ -146,9 +146,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
         duplicate_count = duplicates_df.count()
 
         if duplicate_count == 0:
-            return DataframeExpectationSuccessMessage(
-                expectation_name=self.get_expectation_name()
-            )
+            return DataframeExpectationSuccessMessage(expectation_name=self.get_expectation_name())
 
         # Calculate total number of duplicate rows (not groups)
         total_duplicate_rows = duplicates_df.agg(F.sum("#duplicates")).collect()[0][0]
@@ -192,13 +190,9 @@ class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
             expected_value (int): Expected number of distinct values (exact match).
         """
         if expected_value < 0:
-            raise ValueError(
-                f"expected_value must be non-negative, got {expected_value}"
-            )
+            raise ValueError(f"expected_value must be non-negative, got {expected_value}")
 
-        description = (
-            f"column '{column_name}' has exactly {expected_value} distinct values"
-        )
+        description = f"column '{column_name}' has exactly {expected_value} distinct values"
 
         self.column_name = column_name
         self.expected_value = expected_value
@@ -214,8 +208,10 @@ class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Count distinct values (dropna=False includes NaN as a distinct value)
-            actual_count = data_frame[self.column_name].nunique(dropna=False)
+            actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if actual_count == self.expected_value:
                 return DataframeExpectationSuccessMessage(
@@ -240,8 +236,10 @@ class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
             # Count distinct values including nulls
-            actual_count = data_frame.select(self.column_name).distinct().count()
+            actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if actual_count == self.expected_value:
                 return DataframeExpectationSuccessMessage(
@@ -288,9 +286,7 @@ class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
         if threshold < 0:
             raise ValueError(f"threshold must be non-negative, got {threshold}")
 
-        description = (
-            f"column '{column_name}' has fewer than {threshold} distinct values"
-        )
+        description = f"column '{column_name}' has fewer than {threshold} distinct values"
 
         self.column_name = column_name
         self.threshold = threshold
@@ -306,8 +302,10 @@ class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Count distinct values (dropna=False includes NaN as a distinct value)
-            actual_count = data_frame[self.column_name].nunique(dropna=False)
+            actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if actual_count < self.threshold:
                 return DataframeExpectationSuccessMessage(
@@ -332,8 +330,10 @@ class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
             # Count distinct values including nulls
-            actual_count = data_frame.select(self.column_name).distinct().count()
+            actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if actual_count < self.threshold:
                 return DataframeExpectationSuccessMessage(
@@ -380,9 +380,7 @@ class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation
         if threshold < 0:
             raise ValueError(f"threshold must be non-negative, got {threshold}")
 
-        description = (
-            f"column '{column_name}' has more than {threshold} distinct values"
-        )
+        description = f"column '{column_name}' has more than {threshold} distinct values"
 
         self.column_name = column_name
         self.threshold = threshold
@@ -398,8 +396,10 @@ class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Count distinct values (dropna=False includes NaN as a distinct value)
-            actual_count = data_frame[self.column_name].nunique(dropna=False)
+            actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if actual_count > self.threshold:
                 return DataframeExpectationSuccessMessage(
@@ -424,8 +424,10 @@ class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
             # Count distinct values including nulls
-            actual_count = data_frame.select(self.column_name).distinct().count()
+            actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if actual_count > self.threshold:
                 return DataframeExpectationSuccessMessage(
@@ -475,11 +477,11 @@ class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
         if max_value < 0:
             raise ValueError(f"max_value must be non-negative, got {max_value}")
         if min_value > max_value:
-            raise ValueError(
-                f"min_value ({min_value}) must be <= max_value ({max_value})"
-            )
+            raise ValueError(f"min_value ({min_value}) must be <= max_value ({max_value})")
 
-        description = f"column '{column_name}' has between {min_value} and {max_value} distinct values"
+        description = (
+            f"column '{column_name}' has between {min_value} and {max_value} distinct values"
+        )
 
         self.column_name = column_name
         self.min_value = min_value
@@ -496,8 +498,10 @@ class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Count distinct values (dropna=False includes NaN as a distinct value)
-            actual_count = data_frame[self.column_name].nunique(dropna=False)
+            actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if self.min_value <= actual_count <= self.max_value:
                 return DataframeExpectationSuccessMessage(
@@ -522,8 +526,10 @@ class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
             # Count distinct values including nulls
-            actual_count = data_frame.select(self.column_name).distinct().count()
+            actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if self.min_value <= actual_count <= self.max_value:
                 return DataframeExpectationSuccessMessage(

@@ -83,9 +83,7 @@ class DataframeColumnExpectation(DataframeExpectation):
         num_violations = self.num_data_frame_rows(violations)
 
         if num_violations == 0:
-            return DataframeExpectationSuccessMessage(
-                expectation_name=self.get_expectation_name()
-            )
+            return DataframeExpectationSuccessMessage(expectation_name=self.get_expectation_name())
 
         return DataframeExpectationFailureMessage(
             expectation_str=str(self),

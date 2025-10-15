@@ -19,9 +19,7 @@ class DataframeExpectationResultMessage(ABC):
         """
         return self.message
 
-    def dataframe_to_str(
-        self, data_frame_type: DataFrameType, data_frame, rows: int
-    ) -> str:
+    def dataframe_to_str(self, data_frame_type: DataFrameType, data_frame, rows: int) -> str:
         """
         Print the DataFrame based on its type.
         """
@@ -67,14 +65,12 @@ class DataframeExpectationFailureMessage(DataframeExpectationResultMessage):
                 data_frame=violations_data_frame,
                 rows=limit_violations,
             )
-            self.message = f"{self.message} \nSome examples of violations: \n{violations_dataframe_str}"
+            self.message = (
+                f"{self.message} \nSome examples of violations: \n{violations_dataframe_str}"
+            )
 
     def get_violations_data_frame(self) -> Optional[DataFrameLike]:
         """
         Get the DataFrame with violations.
         """
-        return (
-            self.violations_data_frame
-            if hasattr(self, "violations_data_frame")
-            else None
-        )
+        return self.violations_data_frame if hasattr(self, "violations_data_frame") else None

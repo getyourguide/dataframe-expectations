@@ -15,14 +15,16 @@ from dataframe_expectations.result_message import (
 )
 
 
-
 def test_expectation_name():
     expectation = DataframeExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueIn",
         column_name="col1",
         values=[1, 2, 3],
     )
-    assert expectation.get_expectation_name() == "ExpectationValueIn", f"Expected 'ExpectationValueIn' but got: {expectation.get_expectation_name()}"
+    assert (
+        expectation.get_expectation_name() == "ExpectationValueIn"
+    ), f"Expected 'ExpectationValueIn' but got: {expectation.get_expectation_name()}"
+
 
 def test_expectation_pandas_success():
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -33,10 +35,9 @@ def test_expectation_pandas_success():
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 2, 1]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationValueIn"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueIn")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_violations():
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -58,6 +59,7 @@ def test_expectation_pandas_violations():
         )
     ), f"Expected failure message but got: {result}"
 
+
 def test_expectation_pyspark_success(spark):
     expectation = DataframeExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueIn",
@@ -67,10 +69,9 @@ def test_expectation_pyspark_success(spark):
     data_frame = spark.createDataFrame([(1,), (2,), (3,), (2,), (1,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationValueIn"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueIn")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_violations(spark):
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -92,6 +93,7 @@ def test_expectation_pyspark_violations(spark):
         )
     ), f"Expected failure message but got: {result}"
 
+
 def test_column_missing_error():
     expectation = DataframeExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueIn",
@@ -105,7 +107,10 @@ def test_column_missing_error():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_suite_pandas_success():
     expectations_suite = DataframeExpectationsSuite().expect_value_in(
@@ -115,6 +120,7 @@ def test_suite_pandas_success():
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
+
 def test_suite_pandas_violations():
     expectations_suite = DataframeExpectationsSuite().expect_value_in(
         column_name="col1", values=[1, 2, 3]
@@ -122,6 +128,7 @@ def test_suite_pandas_violations():
     data_frame = pd.DataFrame({"col1": [1, 4, 5, 2, 3]})
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
+
 
 def test_suite_pyspark_success(spark):
     expectations_suite = DataframeExpectationsSuite().expect_value_in(
@@ -131,6 +138,7 @@ def test_suite_pyspark_success(spark):
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
+
 def test_suite_pyspark_violations(spark):
     expectations_suite = DataframeExpectationsSuite().expect_value_in(
         column_name="col1", values=[1, 2, 3]
@@ -138,6 +146,7 @@ def test_suite_pyspark_violations(spark):
     data_frame = spark.createDataFrame([(1,), (4,), (5,), (2,), (3,)], ["col1"])
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
+
 
 def test_suite_pyspark_column_missing_error(spark):
     expectations_suite = DataframeExpectationsSuite().expect_value_in(

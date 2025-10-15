@@ -82,14 +82,14 @@ def clean_docstring_from_metadata(docstring: str) -> str:
 class ExpectationsDirective(SphinxDirective):
     """
     Custom directive to generate categorized expectations documentation.
-    
+
     Usage:
     .. expectations::
        :class: dataframe_expectations.expectations_suite.DataframeExpectationsSuite
        :show-summary: true
        :show-cards: true
     """
-    
+
     has_content = False
     required_arguments = 0
     optional_arguments = 0
@@ -104,7 +104,7 @@ class ExpectationsDirective(SphinxDirective):
         # Import the class
         class_path = self.options.get('class', 'dataframe_expectations.expectations_suite.DataframeExpectationsSuite')
         module_name, class_name = class_path.rsplit('.', 1)
-        
+
         try:
             module = __import__(module_name, fromlist=[class_name])
             cls = getattr(module, class_name)
@@ -150,7 +150,7 @@ class ExpectationsDirective(SphinxDirective):
     def _generate_summary_table(self, expectations_by_category, method_details) -> List[Node]:
         """Generate summary table nodes."""
         nodes_list = []
-        
+
         # Add section with title and proper ID
         summary_section = nodes.section()
         summary_section['ids'] = ['expectations-summary']
@@ -171,10 +171,10 @@ class ExpectationsDirective(SphinxDirective):
         # Add table head
         thead = nodes.thead()
         tgroup += thead
-        
+
         row = nodes.row()
         thead += row
-        
+
         for header in ["Category", "Subcategory", "Expectations"]:
             entry = nodes.entry()
             row += entry
@@ -187,7 +187,7 @@ class ExpectationsDirective(SphinxDirective):
         for category in sorted(expectations_by_category.keys()):
             for subcategory in sorted(expectations_by_category[category].keys()):
                 expectations = expectations_by_category[category][subcategory]
-                
+
                 row = nodes.row()
                 tbody += row
 
@@ -204,12 +204,12 @@ class ExpectationsDirective(SphinxDirective):
                 # Expectations cell
                 entry = nodes.entry()
                 row += entry
-                
+
                 exp_para = nodes.paragraph()
                 for i, exp in enumerate(sorted(expectations)):
                     if i > 0:
                         exp_para += nodes.Text(", ")
-                    
+
                     # Create clickable link to the card using raw HTML
                     raw_link = nodes.raw(
                         f'<a href="#card-{exp}" class="expectation-link">{exp}</a>',
@@ -217,7 +217,7 @@ class ExpectationsDirective(SphinxDirective):
                         format='html'
                     )
                     exp_para += raw_link
-                
+
                 entry += exp_para
 
         summary_section += table
@@ -233,7 +233,7 @@ class ExpectationsDirective(SphinxDirective):
             cat_section = nodes.section()
             cat_section['ids'] = [f"category-{category.lower().replace(' ', '-')}"]
             cat_section['names'] = [category.lower().replace(' ', '-')]
-            
+
             cat_header = nodes.title("", category)
             cat_header['classes'] = ['category-title']
             cat_section += cat_header
@@ -262,7 +262,7 @@ class ExpectationsDirective(SphinxDirective):
 
             cat_section += cards_container
             nodes_list.append(cat_section)
-            
+
         return nodes_list
 
     def _create_expectation_card(self, method_name: str, details: dict) -> Node:
@@ -275,7 +275,7 @@ class ExpectationsDirective(SphinxDirective):
         # Card header with method name
         card_header = nodes.container()
         card_header['classes'] = ['card-header']
-        
+
         method_title = nodes.paragraph()
         method_title['classes'] = ['method-name']
         method_title += nodes.Text(method_name)
@@ -299,7 +299,7 @@ class ExpectationsDirective(SphinxDirective):
         # Data quality issue tags (similar to Great Expectations)
         tags_container = nodes.container()
         tags_container['classes'] = ['tags-container']
-        
+
         # Add category as a tag
         category_tag = nodes.inline()
         category_tag['classes'] = ['tag', 'category-tag']
@@ -319,7 +319,7 @@ class ExpectationsDirective(SphinxDirective):
         if params:
             params_container = nodes.container()
             params_container['classes'] = ['params-preview']
-            
+
             params_title = nodes.paragraph()
             params_title['classes'] = ['params-title']
             params_title += nodes.Text("Parameters:")
@@ -357,7 +357,7 @@ class ExpectationsDirective(SphinxDirective):
 def setup(app: Sphinx) -> Dict[str, Any]:
     """Setup function for the Sphinx extension."""
     app.add_directive("expectations", ExpectationsDirective)
-    
+
     return {
         'version': '0.1',
         'parallel_read_safe': True,

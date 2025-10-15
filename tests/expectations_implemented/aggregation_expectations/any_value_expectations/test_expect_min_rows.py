@@ -15,7 +15,6 @@ from dataframe_expectations.result_message import (
 )
 
 
-
 def test_expectation_pandas_success_exact_count():
     """Test pandas success case with exact minimum row count."""
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -25,10 +24,9 @@ def test_expectation_pandas_success_exact_count():
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_success_above_min():
     """Test pandas success case with row count above minimum."""
@@ -36,15 +34,12 @@ def test_expectation_pandas_success_above_min():
         expectation_name="ExpectationMinRows",
         min_rows=3,
     )
-    data_frame = pd.DataFrame(
-        {"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]}
-    )
+    data_frame = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_success_single_row():
     """Test pandas success case with single row and min count of 1."""
@@ -55,10 +50,9 @@ def test_expectation_pandas_success_single_row():
     data_frame = pd.DataFrame({"col1": [42]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_success_zero_min_empty_df():
     """Test pandas success case with zero minimum and empty DataFrame."""
@@ -69,10 +63,9 @@ def test_expectation_pandas_success_zero_min_empty_df():
     data_frame = pd.DataFrame({"col1": []})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_success_zero_min_with_data():
     """Test pandas success case with zero minimum and data present."""
@@ -83,10 +76,9 @@ def test_expectation_pandas_success_zero_min_with_data():
     data_frame = pd.DataFrame({"col1": [1, 2, 3]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_failure_below_min():
     """Test pandas failure case when row count is below minimum."""
@@ -102,7 +94,10 @@ def test_expectation_pandas_failure_below_min():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 3 rows, expected at least 5.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pandas_failure_empty_with_min():
     """Test pandas failure case with empty DataFrame but minimum required."""
@@ -118,7 +113,10 @@ def test_expectation_pandas_failure_empty_with_min():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 0 rows, expected at least 2.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pandas_failure_single_row_needs_more():
     """Test pandas failure case with single row but higher minimum required."""
@@ -134,7 +132,10 @@ def test_expectation_pandas_failure_single_row_needs_more():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 1 rows, expected at least 3.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pandas_large_dataset():
     """Test pandas with larger dataset meeting minimum."""
@@ -143,15 +144,12 @@ def test_expectation_pandas_large_dataset():
         min_rows=100,
     )
     # Create DataFrame with 150 rows
-    data_frame = pd.DataFrame(
-        {"col1": range(150), "col2": [f"value_{i}" for i in range(150)]}
-    )
+    data_frame = pd.DataFrame({"col1": range(150), "col2": [f"value_{i}" for i in range(150)]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_large_dataset_failure():
     """Test pandas with dataset not meeting large minimum."""
@@ -160,9 +158,7 @@ def test_expectation_pandas_large_dataset_failure():
         min_rows=200,
     )
     # Create DataFrame with 150 rows
-    data_frame = pd.DataFrame(
-        {"col1": range(150), "col2": [f"value_{i}" for i in range(150)]}
-    )
+    data_frame = pd.DataFrame({"col1": range(150), "col2": [f"value_{i}" for i in range(150)]})
     result = expectation.validate(data_frame=data_frame)
 
     expected_failure_message = DataframeExpectationFailureMessage(
@@ -170,7 +166,10 @@ def test_expectation_pandas_large_dataset_failure():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 150 rows, expected at least 200.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pandas_with_nulls():
     """Test pandas expectation with null values (should still count rows)."""
@@ -178,15 +177,12 @@ def test_expectation_pandas_with_nulls():
         expectation_name="ExpectationMinRows",
         min_rows=3,
     )
-    data_frame = pd.DataFrame(
-        {"col1": [1, None, 3, None, 5], "col2": [None, "b", None, "d", None]}
-    )
+    data_frame = pd.DataFrame({"col1": [1, None, 3, None, 5], "col2": [None, "b", None, "d", None]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_success_exact_count(spark):
     """Test PySpark success case with exact minimum row count."""
@@ -194,15 +190,12 @@ def test_expectation_pyspark_success_exact_count(spark):
         expectation_name="ExpectationMinRows",
         min_rows=3,
     )
-    data_frame = spark.createDataFrame(
-        [(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"]
-    )
+    data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_success_above_min(spark):
     """Test PySpark success case with row count above minimum."""
@@ -215,10 +208,9 @@ def test_expectation_pyspark_success_above_min(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_success_single_row(spark):
     """Test PySpark success case with single row."""
@@ -229,10 +221,9 @@ def test_expectation_pyspark_success_single_row(spark):
     data_frame = spark.createDataFrame([(42,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_success_zero_min_empty_df(spark):
     """Test PySpark success case with zero minimum and empty DataFrame."""
@@ -244,10 +235,9 @@ def test_expectation_pyspark_success_zero_min_empty_df(spark):
     data_frame = spark.createDataFrame([], "col1: int")
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_success_zero_min_with_data(spark):
     """Test PySpark success case with zero minimum and data present."""
@@ -258,10 +248,9 @@ def test_expectation_pyspark_success_zero_min_with_data(spark):
     data_frame = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_failure_below_min(spark):
     """Test PySpark failure case when row count is below minimum."""
@@ -269,9 +258,7 @@ def test_expectation_pyspark_failure_below_min(spark):
         expectation_name="ExpectationMinRows",
         min_rows=5,
     )
-    data_frame = spark.createDataFrame(
-        [(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"]
-    )
+    data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
     result = expectation.validate(data_frame=data_frame)
 
     expected_failure_message = DataframeExpectationFailureMessage(
@@ -279,7 +266,10 @@ def test_expectation_pyspark_failure_below_min(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 3 rows, expected at least 5.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pyspark_failure_empty_with_min(spark):
     """Test PySpark failure case with empty DataFrame but minimum required."""
@@ -295,7 +285,10 @@ def test_expectation_pyspark_failure_empty_with_min(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 0 rows, expected at least 2.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pyspark_failure_single_row_needs_more(spark):
     """Test PySpark failure case with single row but higher minimum required."""
@@ -311,7 +304,10 @@ def test_expectation_pyspark_failure_single_row_needs_more(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 1 rows, expected at least 3.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pyspark_large_dataset(spark):
     """Test PySpark with larger dataset meeting minimum."""
@@ -324,10 +320,9 @@ def test_expectation_pyspark_large_dataset(spark):
     data_frame = spark.createDataFrame(data, ["col1", "col2"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_large_dataset_failure(spark):
     """Test PySpark with dataset not meeting large minimum."""
@@ -345,7 +340,10 @@ def test_expectation_pyspark_large_dataset_failure(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 75 rows, expected at least 100.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pyspark_with_nulls(spark):
     """Test PySpark expectation with null values (should still count rows)."""
@@ -359,10 +357,9 @@ def test_expectation_pyspark_with_nulls(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_suite_pandas_success():
     """Test integration with expectations suite for pandas success case."""
@@ -371,6 +368,7 @@ def test_suite_pandas_success():
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
+
 def test_suite_pandas_violations():
     """Test integration with expectations suite for pandas failure case."""
     expectations_suite = DataframeExpectationsSuite().expect_min_rows(min_rows=5)
@@ -378,14 +376,14 @@ def test_suite_pandas_violations():
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
+
 def test_suite_pyspark_success(spark):
     """Test integration with expectations suite for PySpark success case."""
     expectations_suite = DataframeExpectationsSuite().expect_min_rows(min_rows=2)
-    data_frame = spark.createDataFrame(
-        [(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"]
-    )
+    data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
+
 
 def test_suite_pyspark_violations(spark):
     """Test integration with expectations suite for PySpark failure case."""
@@ -393,6 +391,7 @@ def test_suite_pyspark_violations(spark):
     data_frame = spark.createDataFrame([(1, "a"), (2, "b")], ["col1", "col2"])
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
+
 
 def test_expectation_parameter_validation():
     """Test parameter validation for min_rows."""
@@ -406,7 +405,10 @@ def test_expectation_parameter_validation():
     # Test string representation
     expectation_str = str(expectation)
     assert "10" in expectation_str, f"Expected '10' in expectation string: {expectation_str}"
-    assert "ExpectationMinRows" in expectation_str, f"Expected 'ExpectationMinRows' in expectation string: {expectation_str}"
+    assert (
+        "ExpectationMinRows" in expectation_str
+    ), f"Expected 'ExpectationMinRows' in expectation string: {expectation_str}"
+
 
 def test_expectation_boundary_conditions():
     """Test various boundary conditions for min_rows."""
@@ -420,15 +422,16 @@ def test_expectation_boundary_conditions():
     data_frame = pd.DataFrame({"col1": [1]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
 
     # Empty DataFrame - should fail
     data_frame = pd.DataFrame({"col1": []})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(result, DataframeExpectationFailureMessage), f"Expected DataframeExpectationFailureMessage but got: {type(result)}"
+    assert isinstance(
+        result, DataframeExpectationFailureMessage
+    ), f"Expected DataframeExpectationFailureMessage but got: {type(result)}"
+
 
 def test_expectation_multiple_columns():
     """Test expectation with multiple columns (should still count total rows)."""
@@ -446,10 +449,9 @@ def test_expectation_multiple_columns():
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_mixed_data_types():
     """Test expectation with mixed data types in columns."""
@@ -468,10 +470,9 @@ def test_expectation_mixed_data_types():
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_low_min_count():
     """Test expectation with very low min_rows value."""
@@ -482,10 +483,9 @@ def test_expectation_low_min_count():
     data_frame = pd.DataFrame({"col1": [1, 2, 3]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_high_min_count():
     """Test expectation with very high min_rows value."""
@@ -501,7 +501,10 @@ def test_expectation_high_min_count():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 3 rows, expected at least 1000000.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_identical_values():
     """Test expectation with DataFrame containing identical values."""
@@ -517,10 +520,9 @@ def test_expectation_identical_values():
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_edge_case_min_count_equals_actual():
     """Test edge case where min_rows exactly equals actual row count."""
@@ -533,10 +535,9 @@ def test_expectation_edge_case_min_count_equals_actual():
         data_frame = pd.DataFrame({"col1": list(range(count))})
         result = expectation.validate(data_frame=data_frame)
         assert str(result) == str(
-            DataframeExpectationSuccessMessage(
-                expectation_name="ExpectationMinRows"
-            )
+            DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
         ), f"Expected success message for count {count} but got: {result}"
+
 
 def test_expectation_zero_min_count_edge_cases():
     """Test edge cases with zero minimum count."""
@@ -549,19 +550,16 @@ def test_expectation_zero_min_count_edge_cases():
     data_frame = pd.DataFrame({"col1": []})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
 
     # DataFrame with data should also pass
     data_frame = pd.DataFrame({"col1": [1, 2, 3]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_progressive_min_counts():
     """Test expectation with progressively increasing minimum counts."""
@@ -575,9 +573,7 @@ def test_expectation_progressive_min_counts():
         )
         result = expectation.validate(data_frame=data_frame)
         assert str(result) == str(
-            DataframeExpectationSuccessMessage(
-                expectation_name="ExpectationMinRows"
-            )
+            DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
         ), f"Expected success message for min_rows {min_rows} but got: {result}"
 
     # Should fail for min_rows > 5
@@ -593,7 +589,10 @@ def test_expectation_progressive_min_counts():
             data_frame_type=DataFrameType.PANDAS,
             message=f"DataFrame has 5 rows, expected at least {min_rows}.",
         )
-        assert str(result) == str(expected_failure_message), f"Expected failure message for min_rows {min_rows} but got: {result}"
+        assert str(result) == str(
+            expected_failure_message
+        ), f"Expected failure message for min_rows {min_rows} but got: {result}"
+
 
 def test_expectation_dataframe_structure_irrelevant():
     """Test that DataFrame structure doesn't affect row counting."""
@@ -607,15 +606,11 @@ def test_expectation_dataframe_structure_irrelevant():
     result1 = expectation.validate(data_frame=df1)
 
     # Multi-column DataFrame
-    df2 = pd.DataFrame(
-        {"col1": [1, 2, 3], "col2": ["a", "b", "c"], "col3": [1.1, 2.2, 3.3]}
-    )
+    df2 = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"], "col3": [1.1, 2.2, 3.3]})
     result2 = expectation.validate(data_frame=df2)
 
     # Both should have same result (success)
     assert str(result1) == str(result2), f"Expected same results but got: {result1} vs {result2}"
     assert str(result1) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationMinRows"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationMinRows")
     ), f"Expected success message but got: {result1}"

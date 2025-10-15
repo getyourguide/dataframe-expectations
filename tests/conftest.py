@@ -3,14 +3,12 @@ from pyspark.sql import SparkSession
 import pandas as pd
 import pandas.testing as pdt
 
+
 @pytest.fixture(scope="module")
 def spark() -> SparkSession:
     """create a spark session we can reuse for every test"""
 
-    return (
-        SparkSession.builder.master("local").appName("Test")
-        .getOrCreate()
-    )
+    return SparkSession.builder.master("local").appName("Test").getOrCreate()
 
 
 def assert_pandas_df_equal(df1: pd.DataFrame, df2: pd.DataFrame):

@@ -1,51 +1,51 @@
 fail_fast: false
-default_stages: [pre-commit]
+default_stages: [commit]
 
 repos:
   # ============================================================================
   # General checks
   # ============================================================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: trailing-whitespace
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
       - id: end-of-file-fixer
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
       - id: check-yaml
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
       - id: check-added-large-files
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
       - id: check-docstring-first
         files: \.py$
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
       - id: check-merge-conflict
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
       - id: check-case-conflict
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
 
   # ============================================================================
   # Ruff - Modern Python linter and formatter
   # ============================================================================
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.15
+    rev: v0.6.9
     hooks:
       # Ruff linter with auto-fix
       - id: ruff
         args: [--fix]
         files: ^(dataframe_expectations|tests)/.*\.py$
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
 
       # Ruff formatter (replaces black)
       - id: ruff-format
         files: ^(dataframe_expectations|tests)/.*\.py$
-        stages: [pre-commit, manual]
+        stages: [commit, manual]
 
   # ============================================================================
   # Type checking - mypy
   # ============================================================================
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.11.2
     hooks:
       - id: mypy
         files: ^dataframe_expectations/.*\.py$
@@ -56,4 +56,4 @@ repos:
           pyspark-stubs,
           types-PyYAML,
         ]
-        stages: [pre-commit, manual]
+        stages: [commit, manual]

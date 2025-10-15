@@ -1,4 +1,8 @@
-from typing import Union
+from typing import cast
+
+from pandas import DataFrame as PandasDataFrame
+from pyspark.sql import DataFrame as PySparkDataFrame
+from pyspark.sql import functions as F
 
 from dataframe_expectations import DataFrameLike, DataFrameType
 from dataframe_expectations.expectations.aggregation_expectation import (
@@ -53,7 +57,9 @@ class ExpectationMinRows(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate minimum rows in a pandas DataFrame."""
         try:
-            row_count = len(data_frame)
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
+            row_count = len(pandas_df)
 
             if row_count >= self.min_rows:
                 return DataframeExpectationSuccessMessage(
@@ -137,7 +143,9 @@ class ExpectationMaxRows(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate maximum rows in a pandas DataFrame."""
         try:
-            row_count = len(data_frame)
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
+            row_count = len(pandas_df)
 
             if row_count <= self.max_rows:
                 return DataframeExpectationSuccessMessage(
@@ -209,13 +217,9 @@ class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
             max_percentage (float): Maximum percentage of null values allowed (0.0-100.0).
         """
         if not 0 <= max_percentage <= 100:
-            raise ValueError(
-                f"max_percentage must be between 0.0 and 100.0, got {max_percentage}"
-            )
+            raise ValueError(f"max_percentage must be between 0.0 and 100.0, got {max_percentage}")
 
-        description = (
-            f"column '{column_name}' null percentage is at most {max_percentage}%"
-        )
+        description = f"column '{column_name}' null percentage is at most {max_percentage}%"
 
         self.column_name = column_name
         self.max_percentage = max_percentage
@@ -231,15 +235,17 @@ class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate maximum null percentage in a pandas DataFrame column."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Get total number of rows
-            total_rows = len(data_frame)
+            total_rows = len(pandas_df)
 
             if total_rows == 0:
                 # Empty DataFrame has 0% null values
                 actual_percentage = 0.0
             else:
                 # Count null and NaN values in the specific column using isnull() which handles both
-                null_count = data_frame[self.column_name].isnull().sum()
+                null_count = pandas_df[self.column_name].isnull().sum()
                 actual_percentage = (null_count / total_rows) * 100
 
             if actual_percentage <= self.max_percentage:
@@ -265,20 +271,21 @@ class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate maximum null percentage in a PySpark DataFrame column."""
         try:
-            from pyspark.sql import functions as F
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
 
             # Get total number of rows
-            total_rows = data_frame.count()
+            total_rows = pyspark_df.count()
 
             if total_rows == 0:
                 # Empty DataFrame has 0% null values
                 actual_percentage = 0.0
             else:
                 # Count null values in the specific column
-                null_count_result = data_frame.agg(
-                    F.sum(
-                        F.when(F.col(self.column_name).isNull(), 1).otherwise(0)
-                    ).alias("null_count")
+                null_count_result = pyspark_df.select(
+                    F.sum(F.when(F.col(self.column_name).isNull(), 1).otherwise(0)).alias(
+                        "null_count"
+                    )
                 ).collect()
 
                 null_count = null_count_result[0]["null_count"]
@@ -346,8 +353,10 @@ class ExpectationMaxNullCount(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate maximum null count in a pandas DataFrame column."""
         try:
+            # Cast to PandasDataFrame for type safety
+            pandas_df = cast(PandasDataFrame, data_frame)
             # Count null and NaN values in the specific column using isnull() which handles both
-            null_count = data_frame[self.column_name].isnull().sum()
+            null_count = pandas_df[self.column_name].isnull().sum()
 
             if null_count <= self.max_count:
                 return DataframeExpectationSuccessMessage(
@@ -372,13 +381,12 @@ class ExpectationMaxNullCount(DataframeAggregationExpectation):
     ) -> DataframeExpectationResultMessage:
         """Validate maximum null count in a PySpark DataFrame column."""
         try:
-            from pyspark.sql import functions as F
+            # Cast to PySparkDataFrame for type safety
+            pyspark_df = cast(PySparkDataFrame, data_frame)
 
             # Count null values in the specific column
-            null_count_result = data_frame.agg(
-                F.sum(F.when(F.col(self.column_name).isNull(), 1).otherwise(0)).alias(
-                    "null_count"
-                )
+            null_count_result = pyspark_df.select(
+                F.sum(F.when(F.col(self.column_name).isNull(), 1).otherwise(0)).alias("null_count")
             ).collect()
 
             # Handle the case where null_count might be None (e.g., empty DataFrame)

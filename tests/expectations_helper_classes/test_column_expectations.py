@@ -1,4 +1,3 @@
-from typing import Callable
 import pytest
 from unittest.mock import MagicMock
 
@@ -26,7 +25,10 @@ def test_get_expectation_name(expectation):
     """
     Test that the expectation name is the class name.
     """
-    assert expectation.get_expectation_name() == "MyColumnExpectation", f"Expected 'MyColumnExpectation' but got: {expectation.get_expectation_name()}"
+    assert (
+        expectation.get_expectation_name() == "MyColumnExpectation"
+    ), f"Expected 'MyColumnExpectation' but got: {expectation.get_expectation_name()}"
+
 
 def test_validate_for_pandas_df(expectation):
     """
@@ -39,13 +41,14 @@ def test_validate_for_pandas_df(expectation):
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
 
     # test validate_pandas called the right methods
-    result = expectation.validate(data_frame=data_frame)
+    _ = expectation.validate(data_frame=data_frame)
 
     expectation.row_validation.assert_called_once_with(
         data_frame_type=DataFrameType.PANDAS,
         data_frame=data_frame,
         fn_violations=expectation.fn_violations_pandas,
     )
+
 
 def test_validate_for_pyspark_df(expectation, spark):
     """
@@ -54,12 +57,10 @@ def test_validate_for_pyspark_df(expectation, spark):
 
     # Mock methods
     expectation.row_validation = MagicMock(return_value="mock_result")
-    data_frame = spark.createDataFrame(
-        [(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"]
-    )
+    data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
 
     # test validate_pyspark called the right methods
-    result = expectation.validate(data_frame=data_frame)
+    _ = expectation.validate(data_frame=data_frame)
 
     expectation.row_validation.assert_called_once_with(
         data_frame_type=DataFrameType.PYSPARK,

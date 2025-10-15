@@ -1,8 +1,8 @@
 DataFrame Expectations Documentation
 ====================================
 
-**DataFrameExpectations** is a Python library designed to validate **Pandas** and **PySpark** 
-DataFrames using customizable, reusable expectations. It simplifies testing in data pipelines 
+**DataFrameExpectations** is a Python library designed to validate **Pandas** and **PySpark**
+DataFrames using customizable, reusable expectations. It simplifies testing in data pipelines
 and end-to-end workflows by providing a standardized framework for DataFrame validation.
 
 .. toctree::

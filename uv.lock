@@ -311,7 +311,7 @@ dev = [
 docs = [
     { name = "pandas", specifier = ">=1.0.0" },
     { name = "pydata-sphinx-theme", specifier = ">=0.16.1" },
-    { name = "pyspark", specifier = ">=3.0.0" },
+    { name = "pyspark", specifier = ">=4.0.1" },
     { name = "sphinx", specifier = ">=4.0.0" },
     { name = "sphinx-autobuild", specifier = ">=2021.3.14" },
     { name = "tabulate" },

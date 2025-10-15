@@ -15,7 +15,6 @@ from dataframe_expectations.result_message import (
 )
 
 
-
 def test_expectation_name():
     """
     Test that the expectation name is correctly returned.
@@ -25,7 +24,10 @@ def test_expectation_name():
         column_name="col1",
         value=2,
     )
-    assert expectation.get_expectation_name() == "ExpectationValueGreaterThan", f"Expected 'ExpectationValueGreaterThan' but got: {expectation.get_expectation_name()}"
+    assert (
+        expectation.get_expectation_name() == "ExpectationValueGreaterThan"
+    ), f"Expected 'ExpectationValueGreaterThan' but got: {expectation.get_expectation_name()}"
+
 
 def test_expectation_pandas_success():
     """
@@ -39,10 +41,9 @@ def test_expectation_pandas_success():
     data_frame = pd.DataFrame({"col1": [3, 4, 5]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationValueGreaterThan"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueGreaterThan")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_violations():
     """
@@ -65,7 +66,10 @@ def test_expectation_pandas_violations():
         limit_violations=5,
     )
 
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pyspark_success(spark):
     """
@@ -79,10 +83,9 @@ def test_expectation_pyspark_success(spark):
     data_frame = spark.createDataFrame([(3,), (4,), (5,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationValueGreaterThan"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueGreaterThan")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_violations(spark):
     """
@@ -105,7 +108,10 @@ def test_expectation_pyspark_violations(spark):
         limit_violations=5,
     )
 
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_column_missing_error():
     """
@@ -125,7 +131,10 @@ def test_column_missing_error():
         message="Column 'col1' does not exist in the DataFrame.",
     )
 
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_suite_pandas_success():
     """
@@ -138,6 +147,7 @@ def test_suite_pandas_success():
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
+
 def test_suite_pandas_violations():
     """
     Test the greater than expectation for pandas dataframe with violations.
@@ -148,6 +158,7 @@ def test_suite_pandas_violations():
     data_frame = pd.DataFrame({"col1": [3, 4, 5]})
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
+
 
 def test_suite_pyspark_success(spark):
     """
@@ -160,6 +171,7 @@ def test_suite_pyspark_success(spark):
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
+
 def test_suite_pyspark_violations(spark):
     """
     Test the greater than expectation for pyspark dataframe with violations.
@@ -170,6 +182,7 @@ def test_suite_pyspark_violations(spark):
     data_frame = spark.createDataFrame([(3,), (4,), (5,)], ["col1"])
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
+
 
 def test_suite_column_missing_error():
     """

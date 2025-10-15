@@ -142,7 +142,7 @@
     .col-lg-3.navbar-header-items__start {
         max-width: 50% !important;
     }
-    
+
     .navbar-brand.logo .title.logo__title {
         font-size: 0.9rem !important;
     }
@@ -153,25 +153,25 @@
         flex-wrap: wrap !important;
         gap: 0.5rem !important;
     }
-    
+
     .col-lg-3.navbar-header-items__start,
     .col-lg-9.navbar-header-items {
         flex: 1 1 100% !important;
         max-width: 100% !important;
     }
-    
+
     .navbar-brand.logo .title.logo__title {
         font-size: 1rem !important;
         white-space: normal !important;
         line-height: 1.2 !important;
     }
-    
+
     .bd-sidebar-primary {
         width: 100% !important;
         position: relative !important;
         height: auto !important;
     }
-    
+
     .bd-main {
         flex-direction: column !important;
     }
@@ -262,7 +262,7 @@ table.docutils td a.expectation-link:hover {
     table.docutils {
         font-size: 0.9em !important;
     }
-    
+
     table.docutils th,
     table.docutils td {
         padding: 6px !important;
@@ -616,7 +616,7 @@ h2.category-title {
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)) !important;
         gap: 24px !important;
     }
-    
+
     .expectation-card {
         min-width: 350px !important;
     }
@@ -629,18 +629,18 @@ h2.category-title {
         margin: 1.5rem 0 !important;
         padding: 0 !important;
     }
-    
+
     .expectation-card {
         margin: 0 !important;
         min-height: 280px !important;
         min-width: auto !important;
     }
-    
+
     .bd-content {
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
     }
-    
+
     .bd-article-container {
         padding: 0 1.5rem !important;
     }

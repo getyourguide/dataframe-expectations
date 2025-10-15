@@ -15,7 +15,6 @@ from dataframe_expectations.result_message import (
 )
 
 
-
 def test_expectation_name():
     expectation = DataframeExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueBetween",
@@ -23,7 +22,10 @@ def test_expectation_name():
         min_value=2,
         max_value=5,
     )
-    assert expectation.get_expectation_name() == "ExpectationValueBetween", f"Expected 'ExpectationValueBetween' but got: {expectation.get_expectation_name()}"
+    assert (
+        expectation.get_expectation_name() == "ExpectationValueBetween"
+    ), f"Expected 'ExpectationValueBetween' but got: {expectation.get_expectation_name()}"
+
 
 def test_expectation_pandas_success():
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -35,10 +37,9 @@ def test_expectation_pandas_success():
     data_frame = pd.DataFrame({"col1": [2, 3, 4, 5]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationValueBetween"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueBetween")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pandas_violations():
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -57,7 +58,10 @@ def test_expectation_pandas_violations():
         message="Found 2 row(s) where 'col1' is not between 2 and 5.",
         limit_violations=5,
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_expectation_pyspark_success(spark):
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -69,10 +73,9 @@ def test_expectation_pyspark_success(spark):
     data_frame = spark.createDataFrame([(2,), (3,), (4,), (5,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(
-            expectation_name="ExpectationValueBetween"
-        )
+        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueBetween")
     ), f"Expected success message but got: {result}"
+
 
 def test_expectation_pyspark_violations(spark):
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -91,7 +94,10 @@ def test_expectation_pyspark_violations(spark):
         message="Found 2 row(s) where 'col1' is not between 2 and 5.",
         limit_violations=5,
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_column_missing_error():
     expectation = DataframeExpectationRegistry.get_expectation(
@@ -107,7 +113,10 @@ def test_column_missing_error():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
     )
-    assert str(result) == str(expected_failure_message), f"Expected failure message but got: {result}"
+    assert str(result) == str(
+        expected_failure_message
+    ), f"Expected failure message but got: {result}"
+
 
 def test_suite_pandas_success():
     expectations_suite = DataframeExpectationsSuite().expect_value_between(
@@ -117,6 +126,7 @@ def test_suite_pandas_success():
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
+
 def test_suite_pandas_violations():
     expectations_suite = DataframeExpectationsSuite().expect_value_between(
         column_name="col1", min_value=2, max_value=5
@@ -124,6 +134,7 @@ def test_suite_pandas_violations():
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 6]})
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
+
 
 def test_suite_pyspark_success(spark):
     expectations_suite = DataframeExpectationsSuite().expect_value_between(
@@ -133,6 +144,7 @@ def test_suite_pyspark_success(spark):
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
+
 def test_suite_pyspark_violations(spark):
     expectations_suite = DataframeExpectationsSuite().expect_value_between(
         column_name="col1", min_value=2, max_value=5
@@ -140,6 +152,7 @@ def test_suite_pyspark_violations(spark):
     data_frame = spark.createDataFrame([(1,), (2,), (3,), (6,)], ["col1"])
     with pytest.raises(DataframeExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
+
 
 def test_suite_column_missing_error():
     expectations_suite = DataframeExpectationsSuite().expect_value_between(
