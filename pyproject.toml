@@ -14,6 +14,8 @@ dependencies = [
 dev = [
     "numpy>=2.3.3",
     "pytest>=8.4.2",
+    "pre-commit>=3.0.0",
+    "ruff>=0.1.0",
 ]
 docs = [
     "sphinx>=4.0.0",
@@ -24,3 +26,16 @@ docs = [
     "tabulate", # If your code uses tabulate for formatting
     # Add any other dependencies your main package needs
 ]
+
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.mypy]
+python_version = 3.11
+warn_unused_configs = false
+disallow_untyped_defs = false
+warn_return_any = false
+ignore_missing_imports = true
+check_untyped_defs = false
