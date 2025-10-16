@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, python-small ]
     env:
       PYTHON_VERSION: "3.11"
     steps:
@@ -33,7 +33,7 @@ jobs:
           uv run pytest tests/ --cov=dataframe_expectations
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, python-small ]
     env:
       PYTHON_VERSION: "3.11"
     steps:
@@ -50,7 +50,7 @@ jobs:
           uv run pre-commit run --all-files --show-diff-on-failure
 
   docs:
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, python-small ]
     env:
       PYTHON_VERSION: "3.11"
     needs: [test, lint]
