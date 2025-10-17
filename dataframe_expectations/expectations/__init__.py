@@ -9,7 +9,7 @@ try:
     from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
 except ImportError:
     # Fallback for older PySpark versions that don't have connect
-    PySparkConnectDataFrame = None
+    PySparkConnectDataFrame = None  # type: ignore[misc,assignment]
 
 from dataframe_expectations import DataFrameLike, DataFrameType
 from dataframe_expectations.result_message import (

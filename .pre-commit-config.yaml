@@ -48,12 +48,14 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
-        files: ^dataframe_expectations/.*\.py$
+        files: ^(dataframe_expectations|tests)/.*\.py$
         args: [--config-file, ./pyproject.toml]
         additional_dependencies: [
           types-tabulate,
           pandas-stubs,
           pyspark-stubs,
           types-PyYAML,
+          pytest,
+          pytest-cov,
         ]
         stages: [pre-commit, manual]
