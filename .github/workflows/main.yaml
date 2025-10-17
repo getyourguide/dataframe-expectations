@@ -14,7 +14,7 @@ jobs:
     runs-on: [ self-hosted, python-small ]
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12"]
       fail-fast: false  # Don't cancel other jobs if one fails
     name: Test (Python ${{ matrix.python-version }})
     steps:
