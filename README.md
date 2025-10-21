@@ -103,3 +103,41 @@ Some examples of violations:
 
 ### How to contribute?
 Contributions are welcome! You can enhance the library by adding new expectations, refining existing ones, or improving the testing framework.
+
+### Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (SemVer):
+- **MAJOR** version for incompatible API changes
+- **MINOR** version for backward-compatible functionality additions
+- **PATCH** version for backward-compatible bug fixes
+
+To update the version, manually edit the version field in `pyproject.toml`:
+
+```toml
+[project]
+version = "0.2.0"  # Update this line
+```
+
+Alternatively, you can use uv to bump version number:
+
+```bash
+# Bump patch version (0.1.0 -> 0.1.1)
+uv version --bump patch
+
+# Bump minor version (0.1.0 -> 0.2.0)
+uv version --bump minor
+
+# Bump major version (0.1.0 -> 1.0.0)
+uv version --bump major
+
+# Set specific version
+uv version 0.2.0
+```
+
+Don't forget to update the [CHANGELOG.md](CHANGELOG.md) file with a detailed description of the changes you've introduced.
+
+### Security
+For security issues please contact security@getyourguide.com.
+
+### Legal
+dataframe-expectations is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE.txt) for the full text.
