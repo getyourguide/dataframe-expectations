@@ -94,11 +94,18 @@ ipython_config.py
 #   install all needed dependencies.
 # Pipfile.lock
 
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-uv.lock
+# sphinx
+# Sphinx documentation build output
+build/
+
+# Sphinx cache and temporary files
+source/.doctrees/
+.doctrees/
+
+# Auto-generated API documentation (if using sphinx-apidoc)
+source/_autosummary/
+source/_generated/
+source/api/
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
