@@ -13,11 +13,11 @@ except ImportError:
 
 from dataframe_expectations import DataFrameLike, DataFrameType
 from dataframe_expectations.result_message import (
-    DataframeExpectationResultMessage,
+    DataFrameExpectationResultMessage,
 )
 
 
-class DataframeExpectation(ABC):
+class DataFrameExpectation(ABC):
     """
     Base class for DataFrame expectations.
     """
@@ -75,7 +75,7 @@ class DataframeExpectation(ABC):
     @abstractmethod
     def validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Validate a pandas DataFrame against the expectation.
         """
@@ -86,7 +86,7 @@ class DataframeExpectation(ABC):
     @abstractmethod
     def validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Validate a PySpark DataFrame against the expectation.
         """

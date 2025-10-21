@@ -3,21 +3,21 @@ import pandas as pd
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
 def test_expectation_name_and_description():
     """Test that the expectation name and description are correctly returned."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnMaxBetween",
         column_name="test_col",
         min_value=10,
@@ -56,7 +56,7 @@ def test_pandas_success_registry_and_suite():
         data_frame = pd.DataFrame({"col1": data})
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name="col1",
             min_value=min_val,
@@ -64,11 +64,11 @@ def test_pandas_success_registry_and_suite():
         )
         result = expectation.validate(data_frame=data_frame)
         assert str(result) == str(
-            DataframeExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
+            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
         ), f"Registry test failed for {description}: expected success but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_max_between(
+        suite = DataFrameExpectationsSuite().expect_column_max_between(
             column_name="col1", min_value=min_val, max_value=max_val
         )
         suite_result = suite.run(data_frame=data_frame)
@@ -96,14 +96,14 @@ def test_pandas_failure_registry_and_suite():
         data_frame = pd.DataFrame({"col1": data})
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name="col1",
             min_value=min_val,
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataframeExpectationFailureMessage(
+        expected_failure = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PANDAS,
             message=expected_message,
@@ -113,10 +113,10 @@ def test_pandas_failure_registry_and_suite():
         ), f"Registry test failed for data {data}: expected failure message but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_max_between(
+        suite = DataFrameExpectationsSuite().expect_column_max_between(
             column_name="col1", min_value=min_val, max_value=max_val
         )
-        with pytest.raises(DataframeExpectationsSuiteFailure):
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.run(data_frame=data_frame)
 
 
@@ -126,14 +126,14 @@ def test_pandas_missing_column_registry_and_suite():
     expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
 
     # Test through registry
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnMaxBetween",
         column_name="nonexistent_col",
         min_value=30,
         max_value=40,
     )
     result = expectation.validate(data_frame=data_frame)
-    expected_failure = DataframeExpectationFailureMessage(
+    expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message=expected_message,
@@ -141,10 +141,10 @@ def test_pandas_missing_column_registry_and_suite():
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
 
     # Test through suite
-    suite = DataframeExpectationsSuite().expect_column_max_between(
+    suite = DataFrameExpectationsSuite().expect_column_max_between(
         column_name="nonexistent_col", min_value=30, max_value=40
     )
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         suite.run(data_frame=data_frame)
 
 
@@ -163,7 +163,7 @@ def test_pyspark_success_registry_and_suite(spark):
         data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name="col1",
             min_value=min_val,
@@ -171,11 +171,11 @@ def test_pyspark_success_registry_and_suite(spark):
         )
         result = expectation.validate(data_frame=data_frame)
         assert str(result) == str(
-            DataframeExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
+            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
         ), f"Registry test failed for {description}: expected success but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_max_between(
+        suite = DataFrameExpectationsSuite().expect_column_max_between(
             column_name="col1", min_value=min_val, max_value=max_val
         )
         suite_result = suite.run(data_frame=data_frame)
@@ -201,14 +201,14 @@ def test_pyspark_failure_registry_and_suite(spark):
         data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name="col1",
             min_value=min_val,
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataframeExpectationFailureMessage(
+        expected_failure = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             message=expected_message,
@@ -216,10 +216,10 @@ def test_pyspark_failure_registry_and_suite(spark):
         assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_max_between(
+        suite = DataFrameExpectationsSuite().expect_column_max_between(
             column_name="col1", min_value=min_val, max_value=max_val
         )
-        with pytest.raises(DataframeExpectationsSuiteFailure):
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.run(data_frame=data_frame)
 
 
@@ -251,14 +251,14 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
         data_frame = df_creator()
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name="col1",
             min_value=30,
             max_value=40,
         )
         result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataframeExpectationFailureMessage(
+        expected_failure = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             message=expected_message,
@@ -268,10 +268,10 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
         ), f"Registry test failed for {description}: expected failure message but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_max_between(
+        suite = DataFrameExpectationsSuite().expect_column_max_between(
             column_name="col1", min_value=30, max_value=40
         )
-        with pytest.raises(DataframeExpectationsSuiteFailure):
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.run(data_frame=data_frame)
 
 
@@ -281,14 +281,14 @@ def test_pyspark_missing_column_registry_and_suite(spark):
     expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
 
     # Test through registry
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnMaxBetween",
         column_name="nonexistent_col",
         min_value=30,
         max_value=40,
     )
     result = expectation.validate(data_frame=data_frame)
-    expected_failure = DataframeExpectationFailureMessage(
+    expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message=expected_message,
@@ -296,10 +296,10 @@ def test_pyspark_missing_column_registry_and_suite(spark):
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
 
     # Test through suite
-    suite = DataframeExpectationsSuite().expect_column_max_between(
+    suite = DataFrameExpectationsSuite().expect_column_max_between(
         column_name="nonexistent_col", min_value=30, max_value=40
     )
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         suite.run(data_frame=data_frame)
 
 
@@ -312,7 +312,7 @@ def test_boundary_values_both_dataframes(spark):
         ("pandas", pd.DataFrame({"col1": test_data})),
         ("pyspark", spark.createDataFrame([(val,) for val in test_data], ["col1"])),
     ]:
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name="col1",
             min_value=35,  # exact minimum boundary
@@ -320,10 +320,10 @@ def test_boundary_values_both_dataframes(spark):
         )
         result = expectation.validate(data_frame=data_frame)
         assert isinstance(
-            result, DataframeExpectationSuccessMessage
+            result, DataFrameExpectationSuccessMessage
         ), f"Minimum boundary test failed for {df_type}: expected success but got {type(result)}"
 
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name="col1",
             min_value=30,
@@ -331,13 +331,13 @@ def test_boundary_values_both_dataframes(spark):
         )
         result = expectation.validate(data_frame=data_frame)
         assert isinstance(
-            result, DataframeExpectationSuccessMessage
+            result, DataFrameExpectationSuccessMessage
         ), f"Maximum boundary test failed for {df_type}: expected success but got {type(result)}"
 
 
 def test_suite_chaining():
     """Test that the suite method returns self for method chaining."""
-    suite = DataframeExpectationsSuite()
+    suite = DataFrameExpectationsSuite()
     result = suite.expect_column_max_between(column_name="col1", min_value=30, max_value=40)
     assert result is suite, f"Expected suite chaining to return same instance but got: {result}"
 
@@ -350,7 +350,7 @@ def test_large_dataset_performance():
     large_data = np.random.uniform(10, 60, 1000).tolist()
     data_frame = pd.DataFrame({"col1": large_data})
 
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnMaxBetween",
         column_name="col1",
         min_value=55,
@@ -360,5 +360,5 @@ def test_large_dataset_performance():
     result = expectation.validate(data_frame=data_frame)
     # Should succeed as the max of uniform(10, 60) should be around 60
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
+        result, DataFrameExpectationSuccessMessage
     ), f"Large dataset test failed: expected success but got {type(result)}"

@@ -24,10 +24,13 @@ cd dataframe-expectations
 # 2. Install UV package manager
 pip install uv
 
-# 3. Install development dependencies
+# 3. Install development dependencies (this will automatically create a virtual environment)
 uv sync --group dev
 
-# 4. Run tests
+# 4. (Optional) To explicitly activate the virtual environment:
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# 5. Run tests (this will run the tests in the virtual environment)
 uv run pytest tests/ --cov=dataframe_expectations
 ```
 
@@ -35,10 +38,10 @@ uv run pytest tests/ --cov=dataframe_expectations
 
 **Pandas example:**
 ```python
-from dataframe_expectations.expectations_suite import DataframeExpectationsSuite
+from dataframe_expectations.expectations_suite import DataFameExpectationsSuite
 
 suite = (
-    DataframeExpectationsSuite()
+    DataFrameExpectationsSuite()
     .expect_value_greater_than("age", 18)
     .expect_value_less_than("age", 10)
 )
@@ -54,10 +57,10 @@ suite.run(test_pandas_df)
 
 **PySpark example:**
 ```python
-from dataframe_expectations.expectations_suite import DataframeExpectationsSuite
+from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
 
 suite = (
-    DataframeExpectationsSuite()
+    DataFrameExpectationsSuite()
     .expect_value_greater_than("age", 18)
     .expect_value_less_than("age", 40)
 )

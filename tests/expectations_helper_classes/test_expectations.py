@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 
 from dataframe_expectations import DataFrameLike, DataFrameType
-from dataframe_expectations.expectations import DataframeExpectation
+from dataframe_expectations.expectations import DataFrameExpectation
 
 
-class MyTestExpectation(DataframeExpectation):
+class MyTestExpectation(DataFrameExpectation):
     def validate_pandas(self, data_frame: DataFrameLike, **kwargs):
         """
         Mock implementation for pandas DataFrame validation.

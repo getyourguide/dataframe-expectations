@@ -4,15 +4,15 @@ from pyspark.sql.types import IntegerType, StructField, StructType
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
@@ -20,7 +20,7 @@ def test_expectation_name():
     """
     Test that the expectation name is correctly returned.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
@@ -34,7 +34,7 @@ def test_expectation_pandas_success_specific_columns():
     """
     Test the expectation for pandas DataFrame with no violations on specific columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1", "col2"],
     )
@@ -47,7 +47,7 @@ def test_expectation_pandas_success_specific_columns():
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -55,7 +55,7 @@ def test_expectation_pandas_violations_specific_columns():
     """
     Test the expectation for pandas DataFrame with violations on specific columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1", "col2"],
     )
@@ -71,7 +71,7 @@ def test_expectation_pandas_violations_specific_columns():
     # Expected violations shows only one row per duplicate group with count
     expected_violations = pd.DataFrame({"col1": [1], "col2": [10], "#duplicates": [2]})
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PANDAS,
             violations_data_frame=expected_violations,
@@ -86,14 +86,14 @@ def test_expectation_pandas_success_all_columns():
     """
     Test the expectation for pandas DataFrame with no violations on all columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=[],
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": [10, 20, 30], "col3": [100, 200, 300]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -101,7 +101,7 @@ def test_expectation_pandas_violations_all_columns():
     """
     Test the expectation for pandas DataFrame with violations on all columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=[],
     )
@@ -119,7 +119,7 @@ def test_expectation_pandas_violations_all_columns():
         {"col1": [1], "col2": [10], "col3": [100], "#duplicates": [2]}
     )
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PANDAS,
             violations_data_frame=expected_violations,
@@ -134,7 +134,7 @@ def test_expectation_pyspark_success_specific_columns(spark):
     """
     Test the expectation for PySpark DataFrame with no violations on specific columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1", "col2"],
     )
@@ -149,7 +149,7 @@ def test_expectation_pyspark_success_specific_columns(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -157,7 +157,7 @@ def test_expectation_pyspark_violations_specific_columns(spark):
     """
     Test the expectation for PySpark DataFrame with violations on specific columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1", "col2"],
     )
@@ -175,7 +175,7 @@ def test_expectation_pyspark_violations_specific_columns(spark):
     # Expected violations shows only one row per duplicate group with count
     expected_violations = spark.createDataFrame([(1, 10, 2)], ["col1", "col2", "#duplicates"])
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             violations_data_frame=expected_violations,
@@ -190,7 +190,7 @@ def test_expectation_pyspark_success_all_columns(spark):
     """
     Test the expectation for PySpark DataFrame with no violations on all columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=[],
     )
@@ -199,7 +199,7 @@ def test_expectation_pyspark_success_all_columns(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -207,7 +207,7 @@ def test_expectation_pyspark_violations_all_columns(spark):
     """
     Test the expectation for PySpark DataFrame with violations on all columns.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=[],
     )
@@ -226,7 +226,7 @@ def test_expectation_pyspark_violations_all_columns(spark):
         [(1, 10, 100, 2)], ["col1", "col2", "col3", "#duplicates"]
     )
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             violations_data_frame=expected_violations,
@@ -241,13 +241,13 @@ def test_column_missing_error_pandas():
     """
     Test that an error is raised when specified columns are missing in pandas DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["nonexistent_col"],
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 3]})
     result = expectation.validate(data_frame=data_frame)
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'nonexistent_col' does not exist in the DataFrame.",
@@ -261,13 +261,13 @@ def test_column_missing_error_pyspark(spark):
     """
     Test that an error is raised when specified columns are missing in PySpark DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["nonexistent_col"],
     )
     data_frame = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'nonexistent_col' does not exist in the DataFrame.",
@@ -281,14 +281,14 @@ def test_empty_dataframe_pandas():
     """
     Test the expectation on an empty pandas DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
     data_frame = pd.DataFrame({"col1": []})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -296,7 +296,7 @@ def test_empty_dataframe_pyspark(spark):
     """
     Test the expectation on an empty PySpark DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
@@ -305,7 +305,7 @@ def test_empty_dataframe_pyspark(spark):
     data_frame = spark.createDataFrame([], schema)
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -313,14 +313,14 @@ def test_single_row_dataframe_pandas():
     """
     Test the expectation on a single-row pandas DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
     data_frame = pd.DataFrame({"col1": [1]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -328,14 +328,14 @@ def test_single_row_dataframe_pyspark(spark):
     """
     Test the expectation on a single-row PySpark DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
     data_frame = spark.createDataFrame([(1,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
     ), f"Expected success message but got: {result}"
 
 
@@ -343,7 +343,7 @@ def test_with_nulls_pandas():
     """
     Test the expectation with null values in pandas DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1", "col2"],
     )
@@ -359,7 +359,7 @@ def test_with_nulls_pandas():
     expected_violations = pd.DataFrame({"col1": [None], "col2": [None], "#duplicates": [2]})
 
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PANDAS,
             violations_data_frame=expected_violations,
@@ -373,7 +373,7 @@ def test_with_nulls_pyspark(spark):
     """
     Test the expectation with null values in PySpark DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1", "col2"],
     )
@@ -398,7 +398,7 @@ def test_with_nulls_pyspark(spark):
     # Expected violations shows only one row per duplicate group with count
     expected_violations = spark.createDataFrame([(None, None, 2)], schema)
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             violations_data_frame=expected_violations,
@@ -413,7 +413,7 @@ def test_expectation_pandas_multiple_duplicate_groups():
     """
     Test the expectation with multiple groups of duplicates in pandas DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
@@ -428,7 +428,7 @@ def test_expectation_pandas_multiple_duplicate_groups():
     # Expected violations shows one row per duplicate group with count, ordered by count then by values
     expected_violations = pd.DataFrame({"col1": [1, 2, 3], "#duplicates": [2, 2, 2]})
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PANDAS,
             violations_data_frame=expected_violations,
@@ -442,7 +442,7 @@ def test_expectation_pyspark_multiple_duplicate_groups(spark):
     """
     Test the expectation with multiple groups of duplicates in PySpark DataFrame.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
@@ -462,7 +462,7 @@ def test_expectation_pyspark_multiple_duplicate_groups(spark):
     # Expected violations shows one row per duplicate group with count, ordered by count then by values
     expected_violations = spark.createDataFrame([(1, 2), (2, 2), (3, 2)], ["col1", "#duplicates"])
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             violations_data_frame=expected_violations,
@@ -477,7 +477,7 @@ def test_suite_pandas_success_specific_columns():
     """
     Test the expectation suite for pandas DataFrame with no violations on specific columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=["col1"])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=["col1"])
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": [10, 10, 10]})
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
@@ -487,9 +487,9 @@ def test_suite_pandas_violations_specific_columns():
     """
     Test the expectation suite for pandas DataFrame with violations on specific columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=["col1"])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=["col1"])
     data_frame = pd.DataFrame({"col1": [1, 1, 3], "col2": [10, 20, 30]})
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -497,7 +497,7 @@ def test_suite_pandas_success_all_columns():
     """
     Test the expectation suite for pandas DataFrame with no violations on all columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=[])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=[])
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": [10, 20, 30]})
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
@@ -507,9 +507,9 @@ def test_suite_pandas_violations_all_columns():
     """
     Test the expectation suite for pandas DataFrame with violations on all columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=[])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=[])
     data_frame = pd.DataFrame({"col1": [1, 1, 3], "col2": [10, 10, 30]})
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -517,7 +517,7 @@ def test_suite_pyspark_success_specific_columns(spark):
     """
     Test the expectation suite for PySpark DataFrame with no violations on specific columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=["col1"])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=["col1"])
     data_frame = spark.createDataFrame([(1, 10), (2, 10), (3, 10)], ["col1", "col2"])
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
@@ -527,9 +527,9 @@ def test_suite_pyspark_violations_specific_columns(spark):
     """
     Test the expectation suite for PySpark DataFrame with violations on specific columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=["col1"])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=["col1"])
     data_frame = spark.createDataFrame([(1, 10), (1, 20), (3, 30)], ["col1", "col2"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -537,7 +537,7 @@ def test_suite_pyspark_success_all_columns(spark):
     """
     Test the expectation suite for PySpark DataFrame with no violations on all columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=[])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=[])
     data_frame = spark.createDataFrame([(1, 10), (2, 20), (3, 30)], ["col1", "col2"])
     result = expectations_suite.run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
@@ -547,9 +547,9 @@ def test_suite_pyspark_violations_all_columns(spark):
     """
     Test the expectation suite for PySpark DataFrame with violations on all columns.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(column_names=[])
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=[])
     data_frame = spark.createDataFrame([(1, 10), (1, 10), (3, 30)], ["col1", "col2"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -557,11 +557,11 @@ def test_suite_pandas_column_missing_error():
     """
     Test that an error is raised when specified columns are missing in pandas DataFrame suite.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(
         column_names=["nonexistent_col"]
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 3]})
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -569,9 +569,9 @@ def test_suite_pyspark_column_missing_error(spark):
     """
     Test that an error is raised when specified columns are missing in PySpark DataFrame suite.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_unique_rows(
+    expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(
         column_names=["nonexistent_col"]
     )
     data_frame = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)

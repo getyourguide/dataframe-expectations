@@ -7,20 +7,20 @@ from pyspark.sql import functions as F
 
 from dataframe_expectations import DataFrameLike, DataFrameType
 from dataframe_expectations.expectations.aggregation_expectation import (
-    DataframeAggregationExpectation,
+    DataFrameAggregationExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationResultMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationResultMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
-class ExpectationUniqueRows(DataframeAggregationExpectation):
+class ExpectationUniqueRows(DataFrameAggregationExpectation):
     """
     Expectation that checks if there are no duplicate rows for the given column names. If columns list is empty, checks for duplicates across all columns.
 
@@ -74,7 +74,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Validate uniqueness in a pandas DataFrame.
         """
@@ -89,7 +89,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
         duplicates = pandas_df[pandas_df.duplicated(subset=check_columns, keep=False)]
 
         if len(duplicates) == 0:
-            return DataframeExpectationSuccessMessage(expectation_name=self.get_expectation_name())
+            return DataFrameExpectationSuccessMessage(expectation_name=self.get_expectation_name())
 
         # Add duplicate count column and keep only one row per duplicate group
         duplicate_counts = (
@@ -115,7 +115,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
             else "duplicate rows found"
         )
 
-        return DataframeExpectationFailureMessage(
+        return DataFrameExpectationFailureMessage(
             expectation_str=str(self),
             data_frame_type=DataFrameType.PANDAS,
             violations_data_frame=duplicates_with_counts,
@@ -124,7 +124,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Validate uniqueness in a PySpark DataFrame.
         """
@@ -146,7 +146,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
         duplicate_count = duplicates_df.count()
 
         if duplicate_count == 0:
-            return DataframeExpectationSuccessMessage(expectation_name=self.get_expectation_name())
+            return DataFrameExpectationSuccessMessage(expectation_name=self.get_expectation_name())
 
         # Calculate total number of duplicate rows (not groups)
         total_duplicate_rows = duplicates_df.agg(F.sum("#duplicates")).collect()[0][0]
@@ -158,7 +158,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
             else "duplicate rows found"
         )
 
-        return DataframeExpectationFailureMessage(
+        return DataFrameExpectationFailureMessage(
             expectation_str=str(self),
             data_frame_type=DataFrameType.PYSPARK,
             violations_data_frame=duplicates_df,
@@ -166,7 +166,7 @@ class ExpectationUniqueRows(DataframeAggregationExpectation):
         )
 
 
-class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
+class ExpectationDistinctColumnValuesEquals(DataFrameAggregationExpectation):
     """
     Expectation that validates a column has exactly a specified number of distinct values.
 
@@ -205,7 +205,7 @@ class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -214,18 +214,18 @@ class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
             actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if actual_count == self.expected_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected exactly {self.expected_value}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error counting distinct values: {str(e)}",
@@ -233,7 +233,7 @@ class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -242,25 +242,25 @@ class ExpectationDistinctColumnValuesEquals(DataframeAggregationExpectation):
             actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if actual_count == self.expected_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected exactly {self.expected_value}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error counting distinct values: {str(e)}",
             )
 
 
-class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
+class ExpectationDistinctColumnValuesLessThan(DataFrameAggregationExpectation):
     """
     Expectation that validates a column has fewer than a specified number of distinct values.
 
@@ -299,7 +299,7 @@ class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -308,18 +308,18 @@ class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
             actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if actual_count < self.threshold:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected fewer than {self.threshold}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error counting distinct values: {str(e)}",
@@ -327,7 +327,7 @@ class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -336,25 +336,25 @@ class ExpectationDistinctColumnValuesLessThan(DataframeAggregationExpectation):
             actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if actual_count < self.threshold:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected fewer than {self.threshold}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error counting distinct values: {str(e)}",
             )
 
 
-class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation):
+class ExpectationDistinctColumnValuesGreaterThan(DataFrameAggregationExpectation):
     """
     Expectation that validates a column has more than a specified number of distinct values.
 
@@ -393,7 +393,7 @@ class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -402,18 +402,18 @@ class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation
             actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if actual_count > self.threshold:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected more than {self.threshold}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error counting distinct values: {str(e)}",
@@ -421,7 +421,7 @@ class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -430,25 +430,25 @@ class ExpectationDistinctColumnValuesGreaterThan(DataframeAggregationExpectation
             actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if actual_count > self.threshold:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected more than {self.threshold}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error counting distinct values: {str(e)}",
             )
 
 
-class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
+class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
     """
     Expectation that validates a column has a number of distinct values within a specified range.
 
@@ -495,7 +495,7 @@ class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -504,18 +504,18 @@ class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
             actual_count = pandas_df[self.column_name].nunique(dropna=False)
 
             if self.min_value <= actual_count <= self.max_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected between {self.min_value} and {self.max_value}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error counting distinct values: {str(e)}",
@@ -523,7 +523,7 @@ class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate distinct values count in a PySpark DataFrame."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -532,18 +532,18 @@ class ExpectationDistinctColumnValuesBetween(DataframeAggregationExpectation):
             actual_count = pyspark_df.select(self.column_name).distinct().count()
 
             if self.min_value <= actual_count <= self.max_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' has {actual_count} distinct values, expected between {self.min_value} and {self.max_value}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error counting distinct values: {str(e)}",

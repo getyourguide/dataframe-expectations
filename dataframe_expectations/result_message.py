@@ -6,7 +6,7 @@ from tabulate import tabulate  # type: ignore
 from dataframe_expectations import DataFrameLike, DataFrameType
 
 
-class DataframeExpectationResultMessage(ABC):
+class DataFrameExpectationResultMessage(ABC):
     """
     Base class for expectation result message.
     """
@@ -34,7 +34,7 @@ class DataframeExpectationResultMessage(ABC):
         return tabulate(data_frame, headers="keys", tablefmt="pretty", showindex=False)
 
 
-class DataframeExpectationSuccessMessage(DataframeExpectationResultMessage):
+class DataFrameExpectationSuccessMessage(DataFrameExpectationResultMessage):
     def __init__(self, expectation_name: str, message: Optional[str] = None):
         """
         Initialize the expectation success message.
@@ -44,7 +44,7 @@ class DataframeExpectationSuccessMessage(DataframeExpectationResultMessage):
             self.message = f"{self.message}: {message}"
 
 
-class DataframeExpectationFailureMessage(DataframeExpectationResultMessage):
+class DataFrameExpectationFailureMessage(DataFrameExpectationResultMessage):
     def __init__(
         self,
         expectation_str: str,

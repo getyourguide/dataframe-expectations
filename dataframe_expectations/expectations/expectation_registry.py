@@ -1,22 +1,22 @@
 from typing import Callable, Dict
 
-from dataframe_expectations.expectations import DataframeExpectation
+from dataframe_expectations.expectations import DataFrameExpectation
 from dataframe_expectations.logging_utils import setup_logger
 
 logger = setup_logger(__name__)
 
 
-class DataframeExpectationRegistry:
+class DataFrameExpectationRegistry:
     """Registry for dataframe expectations."""
 
-    _expectations: Dict[str, Callable[..., DataframeExpectation]] = {}
+    _expectations: Dict[str, Callable[..., DataFrameExpectation]] = {}
     _loaded: bool = False
 
     @classmethod
     def register(cls, name: str):
         """Decorator to register an expectation factory function."""
 
-        def decorator(func: Callable[..., DataframeExpectation]):
+        def decorator(func: Callable[..., DataFrameExpectation]):
             logger.debug(f"Registering expectation '{name}' with function {func.__name__}")
 
             # check if the name is already registered
@@ -66,7 +66,7 @@ class DataframeExpectationRegistry:
                 logger.warning(f"Failed to import expectation module {module_name}: {e}")
 
     @classmethod
-    def get_expectation(cls, expectation_name: str, **kwargs) -> DataframeExpectation:
+    def get_expectation(cls, expectation_name: str, **kwargs) -> DataFrameExpectation:
         """Get an expectation instance by name."""
         cls._ensure_loaded()  # Lazy load expectations
         logger.debug(f"Retrieving expectation '{expectation_name}' with arguments: {kwargs}")
@@ -107,4 +107,4 @@ class DataframeExpectationRegistry:
 
 
 # Convenience decorator
-register_expectation = DataframeExpectationRegistry.register
+register_expectation = DataFrameExpectationRegistry.register

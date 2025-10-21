@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union, get_args
 
-from dataframe_expectations.expectations import DataframeExpectation
+from dataframe_expectations.expectations import DataFrameExpectation
 
 
 def requires_params(
@@ -21,7 +21,7 @@ def requires_params(
         def func(**kwargs): ...
     """
 
-    def decorator(func: Callable[..., DataframeExpectation]):
+    def decorator(func: Callable[..., DataFrameExpectation]):
         @wraps(func)
         def wrapper(**kwargs):
             func_name = func.__name__

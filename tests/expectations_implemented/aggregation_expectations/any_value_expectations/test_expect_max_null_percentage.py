@@ -4,21 +4,21 @@ import pytest
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
 def test_expectation_pandas_success_no_nulls():
     """Test pandas success case with no null values."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -32,13 +32,13 @@ def test_expectation_pandas_success_no_nulls():
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_success_within_threshold():
     """Test pandas success case with null percentage within threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=25.0,
@@ -52,13 +52,13 @@ def test_expectation_pandas_success_within_threshold():
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_success_exactly_at_threshold():
     """Test pandas success case with null percentage exactly at threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=20.0,
@@ -67,13 +67,13 @@ def test_expectation_pandas_success_exactly_at_threshold():
     data_frame = pd.DataFrame({"col1": [1, 2, None, 4, 5], "col2": [None, "b", "c", "d", "e"]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_success_with_nan():
     """Test pandas success case with NaN values within threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col2",
         max_percentage=50.0,
@@ -82,13 +82,13 @@ def test_expectation_pandas_success_with_nan():
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": [4.0, np.nan, 6.0]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_failure_exceeds_threshold():
     """Test pandas failure case when null percentage exceeds threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=20.0,
@@ -97,7 +97,7 @@ def test_expectation_pandas_failure_exceeds_threshold():
     data_frame = pd.DataFrame({"col1": [1, None, 3, None], "col2": [None, "b", "c", "d"]})
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 50.00% null values, expected at most 20.00%.",
@@ -109,7 +109,7 @@ def test_expectation_pandas_failure_exceeds_threshold():
 
 def test_expectation_pandas_failure_all_nulls_in_column():
     """Test pandas failure case with 100% null values in the specified column."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=50.0,
@@ -117,7 +117,7 @@ def test_expectation_pandas_failure_all_nulls_in_column():
     data_frame = pd.DataFrame({"col1": [None, None], "col2": [1, 2]})
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 100.00% null values, expected at most 50.00%.",
@@ -129,7 +129,7 @@ def test_expectation_pandas_failure_all_nulls_in_column():
 
 def test_expectation_pandas_boundary_zero_threshold():
     """Test pandas boundary case with 0.0% threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=0.0,
@@ -137,7 +137,7 @@ def test_expectation_pandas_boundary_zero_threshold():
     data_frame = pd.DataFrame({"col1": [1, None, 3]})
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 33.33% null values, expected at most 0.00%.",
@@ -149,7 +149,7 @@ def test_expectation_pandas_boundary_zero_threshold():
 
 def test_expectation_pandas_boundary_hundred_threshold():
     """Test pandas boundary case with 100.0% threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=100.0,
@@ -157,13 +157,13 @@ def test_expectation_pandas_boundary_hundred_threshold():
     data_frame = pd.DataFrame({"col1": [None, None, None], "col2": [None, None, None]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_empty_dataframe():
     """Test pandas edge case with empty DataFrame."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -172,13 +172,13 @@ def test_expectation_pandas_empty_dataframe():
     result = expectation.validate(data_frame=data_frame)
     # Empty DataFrame should have 0% nulls and pass
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_single_value_null():
     """Test pandas edge case with single null value."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=50.0,
@@ -186,7 +186,7 @@ def test_expectation_pandas_single_value_null():
     data_frame = pd.DataFrame({"col1": [None]})
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 100.00% null values, expected at most 50.00%.",
@@ -198,7 +198,7 @@ def test_expectation_pandas_single_value_null():
 
 def test_expectation_pandas_single_value_not_null():
     """Test pandas edge case with single non-null value."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -206,13 +206,13 @@ def test_expectation_pandas_single_value_not_null():
     data_frame = pd.DataFrame({"col1": [1]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_different_column_nulls_not_affecting():
     """Test that nulls in other columns don't affect the result."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -221,13 +221,13 @@ def test_expectation_pandas_different_column_nulls_not_affecting():
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": [None, None, None]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_success_no_nulls(spark):
     """Test PySpark success case with no null values."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -238,13 +238,13 @@ def test_expectation_pyspark_success_no_nulls(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_success_within_threshold(spark):
     """Test PySpark success case with null percentage within threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=30.0,
@@ -253,13 +253,13 @@ def test_expectation_pyspark_success_within_threshold(spark):
     data_frame = spark.createDataFrame([(1,), (None,), (3,), (4,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_success_exactly_at_threshold(spark):
     """Test PySpark success case with null percentage exactly at threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=40.0,
@@ -270,13 +270,13 @@ def test_expectation_pyspark_success_exactly_at_threshold(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_failure_exceeds_threshold(spark):
     """Test PySpark failure case when null percentage exceeds threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=25.0,
@@ -285,7 +285,7 @@ def test_expectation_pyspark_failure_exceeds_threshold(spark):
     data_frame = spark.createDataFrame([(1, None), (None, "b"), (None, "c")], ["col1", "col2"])
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 66.67% null values, expected at most 25.00%.",
@@ -297,7 +297,7 @@ def test_expectation_pyspark_failure_exceeds_threshold(spark):
 
 def test_expectation_pyspark_failure_all_nulls_in_column(spark):
     """Test PySpark failure case with 100% null values in the specified column."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=75.0,
@@ -305,7 +305,7 @@ def test_expectation_pyspark_failure_all_nulls_in_column(spark):
     data_frame = spark.createDataFrame([(None,), (None,), (None,)], "col1: int")
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 100.00% null values, expected at most 75.00%.",
@@ -317,7 +317,7 @@ def test_expectation_pyspark_failure_all_nulls_in_column(spark):
 
 def test_expectation_pyspark_boundary_zero_threshold(spark):
     """Test PySpark boundary case with 0.0% threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=0.0,
@@ -325,7 +325,7 @@ def test_expectation_pyspark_boundary_zero_threshold(spark):
     data_frame = spark.createDataFrame([(1,), (None,), (3,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 33.33% null values, expected at most 0.00%.",
@@ -337,7 +337,7 @@ def test_expectation_pyspark_boundary_zero_threshold(spark):
 
 def test_expectation_pyspark_boundary_hundred_threshold(spark):
     """Test PySpark boundary case with 100.0% threshold."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=100.0,
@@ -351,13 +351,13 @@ def test_expectation_pyspark_boundary_hundred_threshold(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_empty_dataframe(spark):
     """Test PySpark edge case with empty DataFrame."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -367,13 +367,13 @@ def test_expectation_pyspark_empty_dataframe(spark):
     result = expectation.validate(data_frame=data_frame)
     # Empty DataFrame should have 0% nulls and pass
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_single_value_null(spark):
     """Test PySpark edge case with single null value."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=50.0,
@@ -381,7 +381,7 @@ def test_expectation_pyspark_single_value_null(spark):
     data_frame = spark.createDataFrame([(None,)], "col1: int")
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 100.00% null values, expected at most 50.00%.",
@@ -393,7 +393,7 @@ def test_expectation_pyspark_single_value_null(spark):
 
 def test_expectation_pyspark_single_value_not_null(spark):
     """Test PySpark edge case with single non-null value."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -401,13 +401,13 @@ def test_expectation_pyspark_single_value_not_null(spark):
     data_frame = spark.createDataFrame([(1,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_different_column_nulls_not_affecting(spark):
     """Test that nulls in other columns don't affect the result."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=10.0,
@@ -423,13 +423,13 @@ def test_expectation_pyspark_different_column_nulls_not_affecting(spark):
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_suite_pandas_success():
     """Test integration with expectations suite for pandas success case."""
-    expectations_suite = DataframeExpectationsSuite().expect_max_null_percentage(
+    expectations_suite = DataFrameExpectationsSuite().expect_max_null_percentage(
         column_name="col1", max_percentage=30.0
     )
     # 4 values in col1, 1 nulls = 25% null (should pass)
@@ -439,18 +439,18 @@ def test_suite_pandas_success():
 
 def test_suite_pandas_violations():
     """Test integration with expectations suite for pandas failure case."""
-    expectations_suite = DataframeExpectationsSuite().expect_max_null_percentage(
+    expectations_suite = DataFrameExpectationsSuite().expect_max_null_percentage(
         column_name="col1", max_percentage=10.0
     )
     # 2 values in col1, 1 null = 50% null (exceeds 10%)
     data_frame = pd.DataFrame({"col1": [1, None], "col2": ["a", "b"]})
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
 def test_suite_pyspark_success(spark):
     """Test integration with expectations suite for PySpark success case."""
-    expectations_suite = DataframeExpectationsSuite().expect_max_null_percentage(
+    expectations_suite = DataFrameExpectationsSuite().expect_max_null_percentage(
         column_name="col1", max_percentage=50.0
     )
     # 2 values in col1, 1 null = 50% null (equals 50%)
@@ -461,19 +461,19 @@ def test_suite_pyspark_success(spark):
 
 def test_suite_pyspark_violations(spark):
     """Test integration with expectations suite for PySpark failure case."""
-    expectations_suite = DataframeExpectationsSuite().expect_max_null_percentage(
+    expectations_suite = DataFrameExpectationsSuite().expect_max_null_percentage(
         column_name="col1", max_percentage=20.0
     )
     # 2 values in col1, 1 null = 50% null (exceeds 20%)
     data_frame = spark.createDataFrame([(None, "a"), (2, None)], ["col1", "col2"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
 def test_expectation_parameter_validation():
     """Test parameter validation for column_name and max_percentage."""
     # Test with valid parameters
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="test_col",
         max_percentage=50.0,
@@ -493,7 +493,7 @@ def test_expectation_parameter_validation():
 
 def test_expectation_mixed_data_types():
     """Test expectation with mixed data types including various null representations."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="float_col",
         max_percentage=50.0,
@@ -508,13 +508,13 @@ def test_expectation_mixed_data_types():
     )
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_precision_boundary():
     """Test expectation with very precise percentage boundaries."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="col1",
         max_percentage=25.0,
@@ -523,13 +523,13 @@ def test_expectation_precision_boundary():
     data_frame = pd.DataFrame({"col1": [1, None, 3, 4]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxNullPercentage")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_column_not_exists_error():
     """Test expectation with non-existent column should fail gracefully."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxNullPercentage",
         column_name="nonexistent_col",
         max_percentage=50.0,
@@ -539,8 +539,8 @@ def test_expectation_column_not_exists_error():
 
     # Should get a failure message with error info
     assert isinstance(
-        result, DataframeExpectationFailureMessage
-    ), f"Expected DataframeExpectationFailureMessage but got: {type(result)}"
+        result, DataFrameExpectationFailureMessage
+    ), f"Expected DataFrameExpectationFailureMessage but got: {type(result)}"
     result_str = str(result)
     assert (
         "nonexistent_col" in result_str

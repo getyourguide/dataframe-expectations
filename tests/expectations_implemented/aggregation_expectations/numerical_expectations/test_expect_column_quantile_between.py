@@ -4,21 +4,21 @@ import pandas as pd
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
 def test_expectation_name_and_description():
     """Test that the expectation name and description are correctly returned."""
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnQuantileBetween",
         column_name="test_col",
         quantile=0.5,
@@ -42,7 +42,7 @@ def test_expectation_name_and_description():
     ]
 
     for quantile, expected_desc in test_cases:
-        exp = DataframeExpectationRegistry.get_expectation(
+        exp = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name="test_col",
             quantile=quantile,
@@ -75,7 +75,7 @@ def test_pandas_success_registry_and_suite():
         data_frame = pd.DataFrame({"col1": data})
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name="col1",
             quantile=quantile,
@@ -84,11 +84,11 @@ def test_pandas_success_registry_and_suite():
         )
         result = expectation.validate(data_frame=data_frame)
         assert str(result) == str(
-            DataframeExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
+            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
         ), f"Registry test failed for {description}: expected success but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_quantile_between(
+        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
             column_name="col1",
             quantile=quantile,
             min_value=min_val,
@@ -147,7 +147,7 @@ def test_pandas_failure_registry_and_suite():
         data_frame = pd.DataFrame({"col1": data})
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name="col1",
             quantile=quantile,
@@ -155,7 +155,7 @@ def test_pandas_failure_registry_and_suite():
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataframeExpectationFailureMessage(
+        expected_failure = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PANDAS,
             message=expected_message,
@@ -165,13 +165,13 @@ def test_pandas_failure_registry_and_suite():
         ), f"Registry test failed for quantile {quantile}: expected failure message but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_quantile_between(
+        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
             column_name="col1",
             quantile=quantile,
             min_value=min_val,
             max_value=max_val,
         )
-        with pytest.raises(DataframeExpectationsSuiteFailure):
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.run(data_frame=data_frame)
 
 
@@ -192,7 +192,7 @@ def test_pyspark_success_registry_and_suite(spark):
         data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name="col1",
             quantile=quantile,
@@ -201,11 +201,11 @@ def test_pyspark_success_registry_and_suite(spark):
         )
         result = expectation.validate(data_frame=data_frame)
         assert str(result) == str(
-            DataframeExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
+            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
         ), f"Registry test failed for {description}: expected success but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_quantile_between(
+        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
             column_name="col1",
             quantile=quantile,
             min_value=min_val,
@@ -249,7 +249,7 @@ def test_pyspark_failure_registry_and_suite(spark):
         data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name="col1",
             quantile=quantile,
@@ -257,7 +257,7 @@ def test_pyspark_failure_registry_and_suite(spark):
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataframeExpectationFailureMessage(
+        expected_failure = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             message=expected_message,
@@ -265,13 +265,13 @@ def test_pyspark_failure_registry_and_suite(spark):
         assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_quantile_between(
+        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
             column_name="col1",
             quantile=quantile,
             min_value=min_val,
             max_value=max_val,
         )
-        with pytest.raises(DataframeExpectationsSuiteFailure):
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.run(data_frame=data_frame)
 
 
@@ -303,7 +303,7 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
         data_frame = df_creator()
 
         # Test through registry
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name="col1",
             quantile=0.5,
@@ -311,7 +311,7 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
             max_value=30,
         )
         result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataframeExpectationFailureMessage(
+        expected_failure = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             message=expected_message,
@@ -321,10 +321,10 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
         ), f"Registry test failed for {description}: expected failure message but got {result}"
 
         # Test through suite
-        suite = DataframeExpectationsSuite().expect_column_quantile_between(
+        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
             column_name="col1", quantile=0.5, min_value=20, max_value=30
         )
-        with pytest.raises(DataframeExpectationsSuiteFailure):
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.run(data_frame=data_frame)
 
 
@@ -337,7 +337,7 @@ def test_invalid_quantile_range():
 
     for invalid_quantile, description in invalid_quantiles:
         with pytest.raises(ValueError) as context:
-            DataframeExpectationRegistry.get_expectation(
+            DataFrameExpectationRegistry.get_expectation(
                 expectation_name="ExpectationColumnQuantileBetween",
                 column_name="col1",
                 quantile=invalid_quantile,
@@ -357,7 +357,7 @@ def test_boundary_quantile_values():
     ]
 
     for quantile, expected_desc in boundary_cases:
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name="col1",
             quantile=quantile,
@@ -378,7 +378,7 @@ def test_large_dataset_performance():
     large_data = np.random.normal(50, 10, 1000).tolist()
     data_frame = pd.DataFrame({"col1": large_data})
 
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnQuantileBetween",
         column_name="col1",
         quantile=0.5,  # median
@@ -389,5 +389,5 @@ def test_large_dataset_performance():
     result = expectation.validate(data_frame=data_frame)
     # Should succeed as the median of normal(50, 10) should be around 50
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
+        result, DataFrameExpectationSuccessMessage
     ), f"Large dataset test failed: expected success but got {type(result)}"

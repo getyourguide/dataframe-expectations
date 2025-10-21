@@ -1,7 +1,7 @@
 from pyspark.sql import functions as F
 
 from dataframe_expectations.expectations.column_expectation import (
-    DataframeColumnExpectation,
+    DataFrameColumnExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
     register_expectation,
@@ -11,10 +11,10 @@ from dataframe_expectations.expectations.utils import requires_params
 
 @register_expectation("ExpectationValueEquals")
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
-def create_expectation_value_equals(**kwargs) -> DataframeColumnExpectation:
+def create_expectation_value_equals(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
     value = kwargs["value"]
-    return DataframeColumnExpectation(
+    return DataFrameColumnExpectation(
         expectation_name="ExpectationValueEquals",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] != value],
@@ -26,10 +26,10 @@ def create_expectation_value_equals(**kwargs) -> DataframeColumnExpectation:
 
 @register_expectation("ExpectationValueNotEquals")
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
-def create_expectation_value_not_equals(**kwargs) -> DataframeColumnExpectation:
+def create_expectation_value_not_equals(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
     value = kwargs["value"]
-    return DataframeColumnExpectation(
+    return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNotEquals",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] == value],
@@ -41,9 +41,9 @@ def create_expectation_value_not_equals(**kwargs) -> DataframeColumnExpectation:
 
 @register_expectation("ExpectationValueNull")
 @requires_params("column_name", types={"column_name": str})
-def create_expectation_value_null(**kwargs) -> DataframeColumnExpectation:
+def create_expectation_value_null(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
-    return DataframeColumnExpectation(
+    return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNull",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].notnull()],
@@ -55,9 +55,9 @@ def create_expectation_value_null(**kwargs) -> DataframeColumnExpectation:
 
 @register_expectation("ExpectationValueNotNull")
 @requires_params("column_name", types={"column_name": str})
-def create_expectation_value_not_null(**kwargs) -> DataframeColumnExpectation:
+def create_expectation_value_not_null(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
-    return DataframeColumnExpectation(
+    return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNotNull",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].isnull()],
@@ -69,10 +69,10 @@ def create_expectation_value_not_null(**kwargs) -> DataframeColumnExpectation:
 
 @register_expectation("ExpectationValueIn")
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
-def create_expectation_value_in(**kwargs) -> DataframeColumnExpectation:
+def create_expectation_value_in(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
     values = kwargs["values"]
-    return DataframeColumnExpectation(
+    return DataFrameColumnExpectation(
         expectation_name="ExpectationValueIn",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[~df[column_name].isin(values)],
@@ -84,10 +84,10 @@ def create_expectation_value_in(**kwargs) -> DataframeColumnExpectation:
 
 @register_expectation("ExpectationValueNotIn")
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
-def create_expectation_value_not_in(**kwargs) -> DataframeColumnExpectation:
+def create_expectation_value_not_in(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
     values = kwargs["values"]
-    return DataframeColumnExpectation(
+    return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNotIn",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].isin(values)],

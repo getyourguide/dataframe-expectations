@@ -7,20 +7,20 @@ from pyspark.sql import functions as F
 
 from dataframe_expectations import DataFrameLike, DataFrameType
 from dataframe_expectations.expectations.aggregation_expectation import (
-    DataframeAggregationExpectation,
+    DataFrameAggregationExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationResultMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationResultMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
-class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
+class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
     """
     Expectation that validates a quantile value of a column falls within a specified range.
 
@@ -90,7 +90,7 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate column quantile in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -107,7 +107,7 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
 
             # Handle case where all values are null
             if pd.isna(quantile_val):
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' contains only null values.",
@@ -115,11 +115,11 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
 
             # Check if quantile is within bounds
             if self.min_value <= quantile_val <= self.max_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=(
@@ -129,7 +129,7 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error calculating {self.quantile} quantile for column '{self.column_name}': {str(e)}",
@@ -137,7 +137,7 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate column quantile in a PySpark DataFrame."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -145,7 +145,7 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
             # First check if all values are null to avoid edge cases
             non_null_count = pyspark_df.select(F.count(self.column_name)).collect()[0][0]
             if non_null_count == 0:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' contains only null values.",
@@ -173,7 +173,7 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
             # Defensive check: quantile_val should not be None after the non-null count check above,
             # but we keep this for extra safety in case of unexpected Spark behavior or schema issues.
             if quantile_val is None:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' contains only null values.",
@@ -181,25 +181,25 @@ class ExpectationColumnQuantileBetween(DataframeAggregationExpectation):
 
             # Check if quantile is within bounds
             if self.min_value <= quantile_val <= self.max_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' {self.quantile_desc} value {quantile_val} is not between {self.min_value} and {self.max_value}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error calculating {self.quantile} quantile for column '{self.column_name}': {str(e)}",
             )
 
 
-class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
+class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
     """
     Expectation that validates the mean value of a column falls within a specified range.
 
@@ -243,7 +243,7 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate column mean in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -253,7 +253,7 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
 
             # Handle case where all values are null
             if pd.isna(mean_val):
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' contains only null values.",
@@ -261,18 +261,18 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
 
             # Check if mean is within bounds
             if self.min_value <= mean_val <= self.max_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' mean value {mean_val} is not between {self.min_value} and {self.max_value}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error calculating mean for column '{self.column_name}': {str(e)}",
@@ -280,7 +280,7 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate column mean in a PySpark DataFrame."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -291,7 +291,7 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
 
             # Handle case where all values are null
             if mean_val is None:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' contains only null values.",
@@ -299,18 +299,18 @@ class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
 
             # Check if mean is within bounds
             if self.min_value <= mean_val <= self.max_value:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' mean value {mean_val} is not between {self.min_value} and {self.max_value}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error calculating mean for column '{self.column_name}': {str(e)}",

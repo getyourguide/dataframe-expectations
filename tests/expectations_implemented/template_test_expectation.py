@@ -1,5 +1,5 @@
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 
 
@@ -8,7 +8,7 @@ def test_expectation_name():
     Test that the expectation name is correctly returned.
     This method should be implemented in the subclass.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDoesSomeCheck",
         column_name="col1",
         value=5,

@@ -1,15 +1,15 @@
 from typing import Callable
 
 from dataframe_expectations import DataFrameLike, DataFrameType
-from dataframe_expectations.expectations import DataframeExpectation
+from dataframe_expectations.expectations import DataFrameExpectation
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationResultMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationResultMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
-class DataframeColumnExpectation(DataframeExpectation):
+class DataFrameColumnExpectation(DataFrameExpectation):
     """
     Base class for DataFrame column expectations.
     This class is designed to validate a specific column in a DataFrame against a condition defined by
@@ -60,7 +60,7 @@ class DataframeColumnExpectation(DataframeExpectation):
         data_frame: DataFrameLike,
         fn_violations: Callable,
         **kwargs,
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Validate the DataFrame against the expectation.
 
@@ -71,7 +71,7 @@ class DataframeColumnExpectation(DataframeExpectation):
         """
 
         if self.column_name not in data_frame.columns:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=data_frame_type,
                 message=f"Column '{self.column_name}' does not exist in the DataFrame.",
@@ -83,9 +83,9 @@ class DataframeColumnExpectation(DataframeExpectation):
         num_violations = self.num_data_frame_rows(violations)
 
         if num_violations == 0:
-            return DataframeExpectationSuccessMessage(expectation_name=self.get_expectation_name())
+            return DataFrameExpectationSuccessMessage(expectation_name=self.get_expectation_name())
 
-        return DataframeExpectationFailureMessage(
+        return DataFrameExpectationFailureMessage(
             expectation_str=str(self),
             data_frame_type=data_frame_type,
             violations_data_frame=violations,
@@ -94,7 +94,7 @@ class DataframeColumnExpectation(DataframeExpectation):
 
     def validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         return self.row_validation(
             data_frame_type=DataFrameType.PANDAS,
             data_frame=data_frame,
@@ -104,7 +104,7 @@ class DataframeColumnExpectation(DataframeExpectation):
 
     def validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         return self.row_validation(
             data_frame_type=DataFrameType.PYSPARK,
             data_frame=data_frame,

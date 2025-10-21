@@ -5,13 +5,13 @@ import pandas as pd
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.column_expectation import (
-    DataframeColumnExpectation,
+    DataFrameColumnExpectation,
 )
 
 
 @pytest.fixture
 def expectation():
-    return DataframeColumnExpectation(
+    return DataFrameColumnExpectation(
         expectation_name="MyColumnExpectation",
         column_name="test_column",
         fn_violations_pandas=lambda df: df,

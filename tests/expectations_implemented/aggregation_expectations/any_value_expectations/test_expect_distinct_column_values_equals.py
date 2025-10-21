@@ -3,15 +3,15 @@ import pandas as pd
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
@@ -19,7 +19,7 @@ def test_expectation_name():
     """
     Test that the expectation name is correctly returned.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -33,7 +33,7 @@ def test_expectation_pandas_success():
     """
     Test the expectation for pandas DataFrame with no violations.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -42,7 +42,7 @@ def test_expectation_pandas_success():
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 2, 1]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
     ), f"Expected success message but got: {result}"
 
 
@@ -50,7 +50,7 @@ def test_expectation_pandas_success_with_nulls():
     """
     Test the expectation for pandas DataFrame with NaN values included in distinct count.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -59,7 +59,7 @@ def test_expectation_pandas_success_with_nulls():
     data_frame = pd.DataFrame({"col1": [1, 2, None, 2, 1]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
     ), f"Expected success message but got: {result}"
 
 
@@ -67,7 +67,7 @@ def test_expectation_pandas_violations_too_few():
     """
     Test the expectation for pandas DataFrame with too few distinct values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=5,
@@ -76,7 +76,7 @@ def test_expectation_pandas_violations_too_few():
     data_frame = pd.DataFrame({"col1": [1, 2, 1, 2, 1]})
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 2 distinct values, expected exactly 5.",
@@ -90,7 +90,7 @@ def test_expectation_pandas_violations_too_many():
     """
     Test the expectation for pandas DataFrame with too many distinct values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=2,
@@ -99,7 +99,7 @@ def test_expectation_pandas_violations_too_many():
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 4, 5]})
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 5 distinct values, expected exactly 2.",
@@ -113,7 +113,7 @@ def test_expectation_pandas_zero_expected():
     """
     Test the expectation for pandas DataFrame expecting zero distinct values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=0,
@@ -122,15 +122,15 @@ def test_expectation_pandas_zero_expected():
     data_frame = pd.DataFrame({"col1": []})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_expectation_pandas_one_expected():
     """
     Test the expectation for pandas DataFrame expecting exactly one distinct value.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=1,
@@ -139,15 +139,15 @@ def test_expectation_pandas_one_expected():
     data_frame = pd.DataFrame({"col1": [5, 5, 5, 5, 5]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_expectation_pyspark_success(spark):
     """
     Test the expectation for PySpark DataFrame with no violations.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -156,7 +156,7 @@ def test_expectation_pyspark_success(spark):
     data_frame = spark.createDataFrame([(1,), (2,), (3,), (2,), (1,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
     ), f"Expected success message but got: {result}"
 
 
@@ -164,7 +164,7 @@ def test_expectation_pyspark_success_with_nulls(spark):
     """
     Test the expectation for PySpark DataFrame with null values included in distinct count.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -173,7 +173,7 @@ def test_expectation_pyspark_success_with_nulls(spark):
     data_frame = spark.createDataFrame([(1,), (2,), (None,), (2,), (1,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationDistinctColumnValuesEquals")
     ), f"Expected success message but got: {result}"
 
 
@@ -181,7 +181,7 @@ def test_expectation_pyspark_violations_too_few(spark):
     """
     Test the expectation for PySpark DataFrame with too few distinct values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=5,
@@ -190,7 +190,7 @@ def test_expectation_pyspark_violations_too_few(spark):
     data_frame = spark.createDataFrame([(1,), (2,), (1,), (2,), (1,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 2 distinct values, expected exactly 5.",
@@ -204,7 +204,7 @@ def test_expectation_pyspark_violations_too_many(spark):
     """
     Test the expectation for PySpark DataFrame with too many distinct values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=2,
@@ -213,7 +213,7 @@ def test_expectation_pyspark_violations_too_many(spark):
     data_frame = spark.createDataFrame([(1,), (2,), (3,), (4,), (5,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 5 distinct values, expected exactly 2.",
@@ -227,7 +227,7 @@ def test_expectation_pyspark_zero_expected(spark):
     """
     Test the expectation for PySpark DataFrame expecting zero distinct values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=0,
@@ -236,15 +236,15 @@ def test_expectation_pyspark_zero_expected(spark):
     data_frame = spark.createDataFrame([], "col1 INT")
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_expectation_pyspark_one_expected(spark):
     """
     Test the expectation for PySpark DataFrame expecting exactly one distinct value.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=1,
@@ -253,22 +253,22 @@ def test_expectation_pyspark_one_expected(spark):
     data_frame = spark.createDataFrame([(5,), (5,), (5,), (5,), (5,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_column_missing_error():
     """
     Test that an error is raised when the specified column is missing.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
     )
     data_frame = pd.DataFrame({"col2": [1, 2, 3, 4, 5]})
     result = expectation.validate(data_frame=data_frame)
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
@@ -284,7 +284,7 @@ def test_invalid_parameters():
     """
     # Test negative expected_value
     with pytest.raises(ValueError) as context:
-        DataframeExpectationRegistry.get_expectation(
+        DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationDistinctColumnValuesEquals",
             column_name="col1",
             expected_value=-1,
@@ -298,7 +298,7 @@ def test_string_column_with_mixed_values():
     """
     Test the expectation with a string column containing mixed values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=4,
@@ -307,15 +307,15 @@ def test_string_column_with_mixed_values():
     data_frame = pd.DataFrame({"col1": ["A", "B", "C", "B", "A", None]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_string_column_case_sensitive():
     """
     Test that string comparisons are case-sensitive for distinct counting.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=4,
@@ -324,15 +324,15 @@ def test_string_column_case_sensitive():
     data_frame = pd.DataFrame({"col1": ["a", "A", "b", "B", "a", "A"]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_numeric_column_with_floats():
     """
     Test the expectation with a numeric column containing floats.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -341,15 +341,15 @@ def test_numeric_column_with_floats():
     data_frame = pd.DataFrame({"col1": [1.1, 2.2, 3.3, 2.2, 1.1]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_numeric_precision_handling():
     """
     Test that numeric precision is handled correctly for distinct counting.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -358,15 +358,15 @@ def test_numeric_precision_handling():
     data_frame = pd.DataFrame({"col1": [1.0, 1.1, 1.2, 1.0, 1.1]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_boolean_column():
     """
     Test the expectation with a boolean column.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=2,
@@ -375,15 +375,15 @@ def test_boolean_column():
     data_frame = pd.DataFrame({"col1": [True, False, True, False, True]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_boolean_column_with_none():
     """
     Test the expectation with a boolean column that includes None values.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -392,15 +392,15 @@ def test_boolean_column_with_none():
     data_frame = pd.DataFrame({"col1": [True, False, None, False, True]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_datetime_column():
     """
     Test the expectation with a datetime column.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -421,15 +421,15 @@ def test_datetime_column():
     )
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_datetime_column_with_timezone():
     """
     Test the expectation with a datetime column including timezone information.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=2,
@@ -447,15 +447,15 @@ def test_datetime_column_with_timezone():
     )
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_mixed_data_types_as_object():
     """
     Test the expectation with a column containing mixed data types (as object dtype).
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=4,
@@ -464,15 +464,15 @@ def test_mixed_data_types_as_object():
     data_frame = pd.DataFrame({"col1": ["text", 42, 3.14, None, "text", 42]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_large_dataset_performance():
     """
     Test the expectation with a larger dataset to ensure reasonable performance.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=1000,
@@ -481,15 +481,15 @@ def test_large_dataset_performance():
     data_frame = pd.DataFrame({"col1": list(range(1000)) * 5})  # 5000 rows, 1000 distinct values
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_suite_pandas_success():
     """
     Test the expectation suite for pandas DataFrame with no violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_distinct_column_values_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
         column_name="col1", expected_value=3
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 2, 1]})  # exactly 3 distinct values
@@ -501,11 +501,11 @@ def test_suite_pandas_violations():
     """
     Test the expectation suite for pandas DataFrame with violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_distinct_column_values_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
         column_name="col1", expected_value=5
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 1, 2, 1]})  # 2 distinct values, expected 5
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -513,7 +513,7 @@ def test_suite_pyspark_success(spark):
     """
     Test the expectation suite for PySpark DataFrame with no violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_distinct_column_values_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
         column_name="col1", expected_value=3
     )
     data_frame = spark.createDataFrame(
@@ -527,13 +527,13 @@ def test_suite_pyspark_violations(spark):
     """
     Test the expectation suite for PySpark DataFrame with violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_distinct_column_values_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
         column_name="col1", expected_value=5
     )
     data_frame = spark.createDataFrame(
         [(1,), (2,), (1,), (2,), (1,)], ["col1"]
     )  # 2 distinct values, expected 5
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -541,11 +541,11 @@ def test_suite_pyspark_column_missing_error(spark):
     """
     Test that an error is raised when the specified column is missing in PySpark DataFrame.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_distinct_column_values_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
         column_name="col1", expected_value=3
     )
     data_frame = spark.createDataFrame([(1,), (2,), (3,), (4,), (5,)], ["col2"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -553,7 +553,7 @@ def test_categorical_data():
     """
     Test the expectation with categorical data.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -562,15 +562,15 @@ def test_categorical_data():
     data_frame = pd.DataFrame({"col1": pd.Categorical(["A", "B", "C", "A", "B", "C", "A"])})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_duplicate_nan_handling():
     """
     Test that multiple NaN values are counted as one distinct value.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
@@ -579,15 +579,15 @@ def test_duplicate_nan_handling():
     data_frame = pd.DataFrame({"col1": [1, 2, None, None, None, 1, 2]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_very_large_expected_distinct_values():
     """
     Test the expectation with a very large expected count that doesn't match actual.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=1000000,
@@ -596,7 +596,7 @@ def test_very_large_expected_distinct_values():
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 2, 1]})
     result = expectation.validate(data_frame=data_frame)
 
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 3 distinct values, expected exactly 1000000.",
@@ -610,7 +610,7 @@ def test_string_with_whitespace_handling():
     """
     Test that strings with different whitespace are treated as distinct.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=4,
@@ -619,15 +619,15 @@ def test_string_with_whitespace_handling():
     data_frame = pd.DataFrame({"col1": ["test", " test", "test ", " test ", "test"]})
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
 
 
 def test_numeric_string_vs_numeric():
     """
     Test that numeric strings and numeric values are treated as distinct when in object column.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=2,
@@ -636,5 +636,5 @@ def test_numeric_string_vs_numeric():
     data_frame = pd.DataFrame({"col1": ["1", 1, "1", 1]}, dtype=object)
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(
-        result, DataframeExpectationSuccessMessage
-    ), f"Expected DataframeExpectationSuccessMessage but got: {type(result)}"
+        result, DataFrameExpectationSuccessMessage
+    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"

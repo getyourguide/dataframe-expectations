@@ -1,9 +1,9 @@
 """
-Dataframe Expectations Framework Sanity Check Script
+DataFrame Expectations Framework Sanity Check Script
 
 This script validates consistency across the entire expectations framework by checking:
 1. All expectations implemented in the expectations/ directory are registered in the registry
-2. All registered expectations have corresponding expect_* methods in DataframeExpectationsSuite
+2. All registered expectations have corresponding expect_* methods in DataFrameExpectationsSuite
 3. All registered expectations have corresponding unit tests in tests/dataframe_expectations/expectations_implemented/
 
 Usage:
@@ -110,7 +110,7 @@ class ExpectationsSanityChecker:
         return None
 
     def _discover_suite_methods(self):
-        """Find all expect_* methods in DataframeExpectationsSuite."""
+        """Find all expect_* methods in DataFrameExpectationsSuite."""
         if not self.suite_file.exists():
             self.issues.append(f"❌ Suite file not found: {self.suite_file}")
             return

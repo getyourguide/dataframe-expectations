@@ -3,15 +3,15 @@ import pandas as pd
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
@@ -19,7 +19,7 @@ def test_expectation_name():
     """
     Test that the expectation name is correctly returned.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueLessThan",
         column_name="col1",
         value=2,
@@ -33,7 +33,7 @@ def test_expectation_pandas_success():
     """
     Test the less than expectation for pandas dataframe.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueLessThan",
         column_name="col1",
         value=6,
@@ -41,7 +41,7 @@ def test_expectation_pandas_success():
     data_frame = pd.DataFrame({"col1": [3, 4, 5]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueLessThan")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationValueLessThan")
     ), f"Expected success message but got: {result}"
 
 
@@ -49,7 +49,7 @@ def test_expectation_pandas_violations():
     """
     Test the less than expectation for pandas dataframe with violations.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueLessThan",
         column_name="col1",
         value=5,
@@ -58,7 +58,7 @@ def test_expectation_pandas_violations():
     result = expectation.validate(data_frame=data_frame)
 
     expected_violations = pd.DataFrame({"col1": [5]})
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         violations_data_frame=expected_violations,
@@ -75,7 +75,7 @@ def test_expectation_pyspark_success(spark):
     """
     Test the less than expectation for pyspark dataframe.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueLessThan",
         column_name="col1",
         value=6,
@@ -83,7 +83,7 @@ def test_expectation_pyspark_success(spark):
     data_frame = spark.createDataFrame([(3,), (4,), (5,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationValueLessThan")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationValueLessThan")
     ), f"Expected success message but got: {result}"
 
 
@@ -91,7 +91,7 @@ def test_expectation_pyspark_violations(spark):
     """
     Test the less than expectation for pyspark dataframe with violations.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueLessThan",
         column_name="col1",
         value=5,
@@ -100,7 +100,7 @@ def test_expectation_pyspark_violations(spark):
     result = expectation.validate(data_frame=data_frame)
 
     expected_violations = spark.createDataFrame([(5,)], ["col1"])
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PYSPARK,
         violations_data_frame=expected_violations,
@@ -117,7 +117,7 @@ def test_column_missing_error():
     """
     Test the error when the specified column is missing in the dataframe.
     """
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueLessThan",
         column_name="col1",
         value=5,
@@ -125,7 +125,7 @@ def test_column_missing_error():
     data_frame = pd.DataFrame({"col2": [3, 4, 5]})
 
     result = expectation.validate(data_frame=data_frame)
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
@@ -140,7 +140,7 @@ def test_suite_pandas_success():
     """
     Test the expectation for pandas DataFrame with no violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_value_less_than(
+    expectations_suite = DataFrameExpectationsSuite().expect_value_less_than(
         column_name="col1", value=6
     )
 
@@ -153,12 +153,12 @@ def test_suite_pandas_violations():
     """
     Test the expectation for pandas DataFrame with violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_value_less_than(
+    expectations_suite = DataFrameExpectationsSuite().expect_value_less_than(
         column_name="col1", value=5
     )
     data_frame = pd.DataFrame({"col1": [3, 4, 5]})
 
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -166,7 +166,7 @@ def test_suite_pyspark_success(spark):
     """
     Test the expectation for PySpark DataFrame with no violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_value_less_than(
+    expectations_suite = DataFrameExpectationsSuite().expect_value_less_than(
         column_name="col1", value=6
     )
     data_frame = spark.createDataFrame([(3,), (4,), (5,)], ["col1"])
@@ -178,11 +178,11 @@ def test_suite_pyspark_violations(spark):
     """
     Test the expectation for PySpark DataFrame with violations.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_value_less_than(
+    expectations_suite = DataFrameExpectationsSuite().expect_value_less_than(
         column_name="col1", value=5
     )
     data_frame = spark.createDataFrame([(3,), (4,), (5,)], ["col1"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
@@ -190,9 +190,9 @@ def test_suite_column_missing_error():
     """
     Test the error when the specified column is missing in the DataFrame.
     """
-    expectations_suite = DataframeExpectationsSuite().expect_value_less_than(
+    expectations_suite = DataFrameExpectationsSuite().expect_value_less_than(
         column_name="col1", value=5
     )
     data_frame = pd.DataFrame({"col2": [3, 4, 5]})
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)

@@ -4,9 +4,9 @@ from tabulate import tabulate  # type: ignore
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationResultMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationResultMessage,
+    DataFrameExpectationSuccessMessage,
 )
 from tests.conftest import assert_pandas_df_equal
 
@@ -15,7 +15,7 @@ def test_result_message_empty():
     """
     By default the result message should be empty.
     """
-    result_message = DataframeExpectationResultMessage()
+    result_message = DataFrameExpectationResultMessage()
 
     assert (
         str(result_message) == ""
@@ -27,7 +27,7 @@ def test_data_frame_to_str_pandas():
     Test the dataframe_to_str method with a mock DataFrame.
     """
     pandas_dataframe = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
-    result_message = DataframeExpectationResultMessage()
+    result_message = DataFrameExpectationResultMessage()
 
     expected_dataframe_str = tabulate(
         pandas_dataframe.head(2), headers="keys", tablefmt="pretty", showindex=False
@@ -49,7 +49,7 @@ def test_dataframe_to_str_pyspark(spark):
     """
     pyspark_dataframe = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
 
-    result_message = DataframeExpectationResultMessage()
+    result_message = DataFrameExpectationResultMessage()
 
     expected_dataframe_str = tabulate(
         pyspark_dataframe.limit(2).toPandas(),
@@ -72,7 +72,7 @@ def test_dataframe_to_str_invalid_type():
     """
     Test the dataframe_to_str method with an invalid DataFrame type.
     """
-    result_message = DataframeExpectationResultMessage()
+    result_message = DataFrameExpectationResultMessage()
 
     with pytest.raises(ValueError) as context:
         result_message.dataframe_to_str(
@@ -89,7 +89,7 @@ def test_success_message_no_additional_message():
     Test the success message initialization and string representation. Test with no additional message
     """
     expectation_name = "TestExpectation"
-    success_message = DataframeExpectationSuccessMessage(expectation_name)
+    success_message = DataFrameExpectationSuccessMessage(expectation_name)
     message_str = str(success_message)
     assert (
         expectation_name in message_str
@@ -102,7 +102,7 @@ def test_success_message_with_additional_message():
     """
     expectation_name = "TestExpectation"
     additional_message = "This is a success message."
-    success_message_with_additional = DataframeExpectationSuccessMessage(
+    success_message_with_additional = DataFrameExpectationSuccessMessage(
         expectation_name, additional_message
     )
     message_str = str(success_message_with_additional)
@@ -120,7 +120,7 @@ def test_failure_message_default_params():
     """
     expectation_name = "TestExpectation"
     data_frame_type = None
-    failure_message = DataframeExpectationFailureMessage(expectation_name, data_frame_type)
+    failure_message = DataFrameExpectationFailureMessage(expectation_name, data_frame_type)
 
     message_str = str(failure_message)
     assert (
@@ -140,7 +140,7 @@ def test_failure_message_custom_message():
     expectation_name = "TestExpectation"
     data_frame_type = None
     custom_message = "This is a custom failure message."
-    failure_message = DataframeExpectationFailureMessage(
+    failure_message = DataFrameExpectationFailureMessage(
         expectation_str=expectation_name,
         data_frame_type=data_frame_type,
         message=custom_message,
@@ -167,7 +167,7 @@ def test_failure_message_with_violations_dataframe():
     expectation_name = "TestExpectation"
     data_frame_type = DataFrameType.PANDAS
     violations_dataframe = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
-    failure_message = DataframeExpectationFailureMessage(
+    failure_message = DataFrameExpectationFailureMessage(
         expectation_str=expectation_name,
         data_frame_type=data_frame_type,
         violations_data_frame=violations_dataframe,

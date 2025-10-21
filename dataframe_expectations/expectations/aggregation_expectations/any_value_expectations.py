@@ -6,20 +6,20 @@ from pyspark.sql import functions as F
 
 from dataframe_expectations import DataFrameLike, DataFrameType
 from dataframe_expectations.expectations.aggregation_expectation import (
-    DataframeAggregationExpectation,
+    DataFrameAggregationExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationResultMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationResultMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
-class ExpectationMinRows(DataframeAggregationExpectation):
+class ExpectationMinRows(DataFrameAggregationExpectation):
     """
     Expectation that validates a DataFrame has at least a minimum number of rows.
 
@@ -54,7 +54,7 @@ class ExpectationMinRows(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate minimum rows in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -62,18 +62,18 @@ class ExpectationMinRows(DataframeAggregationExpectation):
             row_count = len(pandas_df)
 
             if row_count >= self.min_rows:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"DataFrame has {row_count} rows, expected at least {self.min_rows}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error counting DataFrame rows: {str(e)}",
@@ -81,31 +81,31 @@ class ExpectationMinRows(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate minimum rows in a PySpark DataFrame."""
         try:
             row_count = data_frame.count()
 
             if row_count >= self.min_rows:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"DataFrame has {row_count} rows, expected at least {self.min_rows}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error counting DataFrame rows: {str(e)}",
             )
 
 
-class ExpectationMaxRows(DataframeAggregationExpectation):
+class ExpectationMaxRows(DataFrameAggregationExpectation):
     """
     Expectation that validates a DataFrame has at most a maximum number of rows.
 
@@ -140,7 +140,7 @@ class ExpectationMaxRows(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate maximum rows in a pandas DataFrame."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -148,18 +148,18 @@ class ExpectationMaxRows(DataframeAggregationExpectation):
             row_count = len(pandas_df)
 
             if row_count <= self.max_rows:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"DataFrame has {row_count} rows, expected at most {self.max_rows}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error counting DataFrame rows: {str(e)}",
@@ -167,31 +167,31 @@ class ExpectationMaxRows(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate maximum rows in a PySpark DataFrame."""
         try:
             row_count = data_frame.count()
 
             if row_count <= self.max_rows:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"DataFrame has {row_count} rows, expected at most {self.max_rows}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error counting DataFrame rows: {str(e)}",
             )
 
 
-class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
+class ExpectationMaxNullPercentage(DataFrameAggregationExpectation):
     """
     Expectation that validates the percentage of null/NaN values in a specific column
     is below a specified threshold.
@@ -232,7 +232,7 @@ class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate maximum null percentage in a pandas DataFrame column."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -249,18 +249,18 @@ class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
                 actual_percentage = (null_count / total_rows) * 100
 
             if actual_percentage <= self.max_percentage:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' has {actual_percentage:.2f}% null values, expected at most {self.max_percentage:.2f}%.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error calculating null percentage for column '{self.column_name}': {str(e)}",
@@ -268,7 +268,7 @@ class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate maximum null percentage in a PySpark DataFrame column."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -292,25 +292,25 @@ class ExpectationMaxNullPercentage(DataframeAggregationExpectation):
                 actual_percentage = (null_count / total_rows) * 100
 
             if actual_percentage <= self.max_percentage:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' has {actual_percentage:.2f}% null values, expected at most {self.max_percentage:.2f}%.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error calculating null percentage for column '{self.column_name}': {str(e)}",
             )
 
 
-class ExpectationMaxNullCount(DataframeAggregationExpectation):
+class ExpectationMaxNullCount(DataFrameAggregationExpectation):
     """
     Expectation that validates the absolute count of null/NaN values in a specific column
     is below a specified threshold.
@@ -350,7 +350,7 @@ class ExpectationMaxNullCount(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate maximum null count in a pandas DataFrame column."""
         try:
             # Cast to PandasDataFrame for type safety
@@ -359,18 +359,18 @@ class ExpectationMaxNullCount(DataframeAggregationExpectation):
             null_count = pandas_df[self.column_name].isnull().sum()
 
             if null_count <= self.max_count:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Column '{self.column_name}' has {null_count} null values, expected at most {self.max_count}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=f"Error calculating null count for column '{self.column_name}': {str(e)}",
@@ -378,7 +378,7 @@ class ExpectationMaxNullCount(DataframeAggregationExpectation):
 
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """Validate maximum null count in a PySpark DataFrame column."""
         try:
             # Cast to PySparkDataFrame for type safety
@@ -395,18 +395,18 @@ class ExpectationMaxNullCount(DataframeAggregationExpectation):
                 null_count = 0
 
             if null_count <= self.max_count:
-                return DataframeExpectationSuccessMessage(
+                return DataFrameExpectationSuccessMessage(
                     expectation_name=self.get_expectation_name()
                 )
             else:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Column '{self.column_name}' has {null_count} null values, expected at most {self.max_count}.",
                 )
 
         except Exception as e:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=f"Error calculating null count for column '{self.column_name}': {str(e)}",

@@ -2,24 +2,24 @@ from typing import List, Union, cast
 
 from dataframe_expectations.expectations import DataFrameLike
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.logging_utils import setup_logger
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 logger = setup_logger(__name__)
 
 
-class DataframeExpectationsSuiteFailure(Exception):
+class DataFrameExpectationsSuiteFailure(Exception):
     """Raised when one or more expectations in the suite fail."""
 
     def __init__(
         self,
         total_expectations: int,
-        failures: List[DataframeExpectationFailureMessage],
+        failures: List[DataFrameExpectationFailureMessage],
         *args,
     ):
         self.failures = failures
@@ -44,7 +44,7 @@ class DataframeExpectationsSuiteFailure(Exception):
         return "\n".join(lines)
 
 
-class DataframeExpectationsSuite:
+class DataFrameExpectationsSuite:
     """
     A suite of expectations for validating DataFrames.
     """
@@ -71,9 +71,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param value: The value to compare against.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueEquals",
             column_name=column_name,
             value=value,
@@ -97,9 +97,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param value: The value to compare against.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueNotEquals",
             column_name=column_name,
             value=value,
@@ -121,9 +121,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
 
         :param column_name: The name of the column to check.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueNull",
             column_name=column_name,
         )
@@ -144,9 +144,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
 
         :param column_name: The name of the column to check.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueNotNull",
             column_name=column_name,
         )
@@ -169,9 +169,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param values: The list of values to compare against.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueIn",
             column_name=column_name,
             values=values,
@@ -195,9 +195,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param values: The list of values to compare against.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueNotIn",
             column_name=column_name,
             values=values,
@@ -223,9 +223,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param value: The value to compare against.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueGreaterThan",
             column_name=column_name,
             value=value,
@@ -249,9 +249,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param value: The value to compare against.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueLessThan",
             column_name=column_name,
             value=value,
@@ -276,9 +276,9 @@ class DataframeExpectationsSuite:
         :param column_name: The name of the column to check.
         :param min_value: The minimum value for the range.
         :param max_value: The maximum value for the range.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationValueBetween",
             column_name=column_name,
             min_value=min_value,
@@ -305,9 +305,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param substring: The substring to search for.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringContains",
             column_name=column_name,
             substring=substring,
@@ -331,9 +331,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param substring: The substring to search for.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringNotContains",
             column_name=column_name,
             substring=substring,
@@ -357,9 +357,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param prefix: The prefix to search for.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringStartsWith",
             column_name=column_name,
             prefix=prefix,
@@ -383,9 +383,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param suffix: The suffix to search for.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringEndsWith",
             column_name=column_name,
             suffix=suffix,
@@ -409,9 +409,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param length: The length that the values should be less than.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringLengthLessThan",
             column_name=column_name,
             length=length,
@@ -435,9 +435,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param length: The length that the values should be greater than.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringLengthGreaterThan",
             column_name=column_name,
             length=length,
@@ -463,9 +463,9 @@ class DataframeExpectationsSuite:
         :param column_name: The name of the column to check.
         :param min_length: The minimum length that the values should be.
         :param max_length: The maximum length that the values should be.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringLengthBetween",
             column_name=column_name,
             min_length=min_length,
@@ -490,9 +490,9 @@ class DataframeExpectationsSuite:
 
         :param column_name: The name of the column to check.
         :param length: The length that the values should equal.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationStringLengthEquals",
             column_name=column_name,
             length=length,
@@ -513,9 +513,9 @@ class DataframeExpectationsSuite:
           category: DataFrame Aggregation Expectations
           subcategory: Any Value
         :param min_rows: The minimum number of rows expected.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationMinRows",
             min_rows=min_rows,
         )
@@ -533,9 +533,9 @@ class DataframeExpectationsSuite:
           category: DataFrame Aggregation Expectations
           subcategory: Any Value
         :param max_rows: The maximum number of rows expected.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationMaxRows",
             max_rows=max_rows,
         )
@@ -555,9 +555,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
         :param column_name: The name of the column to check for null percentage.
         :param max_percentage: The maximum allowed percentage of null/NaN values (0.0 to 100.0).
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationMaxNullPercentage",
             column_name=column_name,
             max_percentage=max_percentage,
@@ -578,9 +578,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
         :param column_name: The name of the column to check for null count.
         :param max_count: The maximum allowed count of null/NaN values.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationMaxNullCount",
             column_name=column_name,
             max_count=max_count,
@@ -601,9 +601,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
 
         :param column_names: The list of column names to check for uniqueness.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationUniqueRows",
             column_names=column_names,
         )
@@ -624,9 +624,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
         :param column_name: The name of the column to check.
         :param expected_value: The expected number of distinct values (exact match).
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationDistinctColumnValuesEquals",
             column_name=column_name,
             expected_value=expected_value,
@@ -647,9 +647,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
         :param column_name: The name of the column to check.
         :param threshold: The threshold for distinct values count (exclusive upper bound).
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationDistinctColumnValuesLessThan",
             column_name=column_name,
             threshold=threshold,
@@ -670,9 +670,9 @@ class DataframeExpectationsSuite:
           subcategory: Any Value
         :param column_name: The name of the column to check.
         :param threshold: The threshold for distinct values count (exclusive lower bound).
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationDistinctColumnValuesGreaterThan",
             column_name=column_name,
             threshold=threshold,
@@ -695,9 +695,9 @@ class DataframeExpectationsSuite:
         :param column_name: The name of the column to check.
         :param min_value: The minimum number of distinct values (inclusive lower bound).
         :param max_value: The maximum number of distinct values (inclusive upper bound).
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationDistinctColumnValuesBetween",
             column_name=column_name,
             min_value=min_value,
@@ -725,9 +725,9 @@ class DataframeExpectationsSuite:
         :param quantile: The quantile to compute (0.0 to 1.0, where 0.0=min, 0.5=median, 1.0=max).
         :param min_value: The minimum allowed value for the quantile.
         :param max_value: The maximum allowed value for the quantile.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnQuantileBetween",
             column_name=column_name,
             quantile=quantile,
@@ -755,9 +755,9 @@ class DataframeExpectationsSuite:
         :param column_name: The name of the column to check.
         :param min_value: The minimum allowed value for the column maximum.
         :param max_value: The maximum allowed value for the column maximum.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMaxBetween",
             column_name=column_name,
             min_value=min_value,
@@ -784,9 +784,9 @@ class DataframeExpectationsSuite:
         :param column_name: The name of the column to check.
         :param min_value: The minimum allowed value for the column minimum.
         :param max_value: The maximum allowed value for the column minimum.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMinBetween",
             column_name=column_name,
             min_value=min_value,
@@ -813,9 +813,9 @@ class DataframeExpectationsSuite:
         :param column_name: The name of the column to check.
         :param min_value: The minimum allowed value for the column mean.
         :param max_value: The maximum allowed value for the column mean.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMeanBetween",
             column_name=column_name,
             min_value=min_value,
@@ -842,9 +842,9 @@ class DataframeExpectationsSuite:
         :param column_name: The name of the column to check.
         :param min_value: The minimum allowed value for the column median.
         :param max_value: The maximum allowed value for the column median.
-        :return: an instance of DataframeExpectationsSuite.
+        :return: an instance of DataFrameExpectationsSuite.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationColumnMedianBetween",
             column_name=column_name,
             min_value=min_value,
@@ -865,7 +865,7 @@ class DataframeExpectationsSuite:
         :param data_frame: The DataFrame to validate.
         """
         from dataframe_expectations import DataFrameType
-        from dataframe_expectations.expectations import DataframeExpectation
+        from dataframe_expectations.expectations import DataFrameExpectation
 
         successes = []
         failures = []
@@ -879,7 +879,7 @@ class DataframeExpectationsSuite:
         logger.info(f"{header_prefix} {header_message} {header_suffix}")
 
         # PySpark caching optimization
-        data_frame_type = DataframeExpectation.infer_data_frame_type(data_frame)
+        data_frame_type = DataFrameExpectation.infer_data_frame_type(data_frame)
         was_already_cached = False
 
         if data_frame_type == DataFrameType.PYSPARK:
@@ -903,12 +903,12 @@ class DataframeExpectationsSuite:
             # Run all expectations
             for expectation in self.__expectations:
                 result = expectation.validate(data_frame=data_frame)
-                if isinstance(result, DataframeExpectationSuccessMessage):
+                if isinstance(result, DataFrameExpectationSuccessMessage):
                     logger.info(
                         f"{expectation.get_expectation_name()} ({expectation.get_description()}) ... OK"
                     )
                     successes.append(result)
-                elif isinstance(result, DataframeExpectationFailureMessage):
+                elif isinstance(result, DataFrameExpectationFailureMessage):
                     logger.info(
                         f"{expectation.get_expectation_name()} ({expectation.get_description()}) ... FAIL"
                     )
@@ -933,14 +933,14 @@ class DataframeExpectationsSuite:
         logger.info(f"{footer_prefix} {footer_message} {footer_suffix}")
 
         if len(failures) > 0:
-            raise DataframeExpectationsSuiteFailure(
+            raise DataFrameExpectationsSuiteFailure(
                 total_expectations=len(self.__expectations), failures=failures
             )
 
 
 if __name__ == "__main__":
     # Example usage
-    suite = DataframeExpectationsSuite()
+    suite = DataFrameExpectationsSuite()
     suite.expect_value_greater_than(column_name="age", value=18)
     suite.expect_value_less_than(column_name="salary", value=100000)
     suite.expect_unique_rows(column_names=["id"])

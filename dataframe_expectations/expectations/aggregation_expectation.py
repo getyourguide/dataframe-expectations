@@ -2,14 +2,14 @@ from abc import abstractmethod
 from typing import List, Union
 
 from dataframe_expectations import DataFrameLike, DataFrameType
-from dataframe_expectations.expectations import DataframeExpectation
+from dataframe_expectations.expectations import DataFrameExpectation
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationResultMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationResultMessage,
 )
 
 
-class DataframeAggregationExpectation(DataframeExpectation):
+class DataFrameAggregationExpectation(DataFrameExpectation):
     """
     Base class for DataFrame aggregation expectations.
     This class is designed to first aggregate data and then validate the aggregation results.
@@ -48,7 +48,7 @@ class DataframeAggregationExpectation(DataframeExpectation):
     @abstractmethod
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Aggregate and validate a pandas DataFrame against the expectation.
 
@@ -62,7 +62,7 @@ class DataframeAggregationExpectation(DataframeExpectation):
     @abstractmethod
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Aggregate and validate a PySpark DataFrame against the expectation.
 
@@ -75,7 +75,7 @@ class DataframeAggregationExpectation(DataframeExpectation):
 
     def validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Validate a pandas DataFrame against the expectation.
         Automatically checks column existence before calling the implementation.
@@ -83,7 +83,7 @@ class DataframeAggregationExpectation(DataframeExpectation):
         # Check if all required columns exist
         column_error = self._check_columns_exist(data_frame)
         if column_error:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PANDAS,
                 message=column_error,
@@ -94,7 +94,7 @@ class DataframeAggregationExpectation(DataframeExpectation):
 
     def validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
-    ) -> DataframeExpectationResultMessage:
+    ) -> DataFrameExpectationResultMessage:
         """
         Validate a PySpark DataFrame against the expectation.
         Automatically checks column existence before calling the implementation.
@@ -102,7 +102,7 @@ class DataframeAggregationExpectation(DataframeExpectation):
         # Check if all required columns exist
         column_error = self._check_columns_exist(data_frame)
         if column_error:
-            return DataframeExpectationFailureMessage(
+            return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
                 message=column_error,

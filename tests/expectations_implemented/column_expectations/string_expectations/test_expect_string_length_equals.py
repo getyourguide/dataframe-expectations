@@ -3,20 +3,20 @@ import pandas as pd
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations.expectation_registry import (
-    DataframeExpectationRegistry,
+    DataFrameExpectationRegistry,
 )
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
-    DataframeExpectationSuccessMessage,
+    DataFrameExpectationFailureMessage,
+    DataFrameExpectationSuccessMessage,
 )
 
 
 def test_expectation_name():
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringLengthEquals",
         column_name="col1",
         length=3,
@@ -27,7 +27,7 @@ def test_expectation_name():
 
 
 def test_expectation_pandas_success():
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringLengthEquals",
         column_name="col1",
         length=3,
@@ -35,12 +35,12 @@ def test_expectation_pandas_success():
     data_frame = pd.DataFrame({"col1": ["foo", "bar", "baz"]})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationStringLengthEquals")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationStringLengthEquals")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pandas_violations():
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringLengthEquals",
         column_name="col1",
         length=3,
@@ -50,7 +50,7 @@ def test_expectation_pandas_violations():
 
     expected_violations = pd.DataFrame({"col1": ["bazz", "foobar"]})
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PANDAS,
             violations_data_frame=expected_violations,
@@ -61,7 +61,7 @@ def test_expectation_pandas_violations():
 
 
 def test_expectation_pyspark_success(spark):
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringLengthEquals",
         column_name="col1",
         length=3,
@@ -69,12 +69,12 @@ def test_expectation_pyspark_success(spark):
     data_frame = spark.createDataFrame([("foo",), ("bar",), ("baz",)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
-        DataframeExpectationSuccessMessage(expectation_name="ExpectationStringLengthEquals")
+        DataFrameExpectationSuccessMessage(expectation_name="ExpectationStringLengthEquals")
     ), f"Expected success message but got: {result}"
 
 
 def test_expectation_pyspark_violations(spark):
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringLengthEquals",
         column_name="col1",
         length=3,
@@ -84,7 +84,7 @@ def test_expectation_pyspark_violations(spark):
 
     expected_violations = spark.createDataFrame([("bazz",), ("foobar",)], ["col1"])
     assert str(result) == str(
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
             data_frame_type=DataFrameType.PYSPARK,
             violations_data_frame=expected_violations,
@@ -95,14 +95,14 @@ def test_expectation_pyspark_violations(spark):
 
 
 def test_column_missing_error():
-    expectation = DataframeExpectationRegistry.get_expectation(
+    expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringLengthEquals",
         column_name="col1",
         length=3,
     )
     data_frame = pd.DataFrame({"col2": ["foo", "bar", "baz"]})
     result = expectation.validate(data_frame=data_frame)
-    expected_failure_message = DataframeExpectationFailureMessage(
+    expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
@@ -113,7 +113,7 @@ def test_column_missing_error():
 
 
 def test_suite_pandas_success():
-    expectations_suite = DataframeExpectationsSuite().expect_string_length_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_string_length_equals(
         column_name="col1", length=3
     )
     data_frame = pd.DataFrame({"col1": ["foo", "bar", "baz"]})
@@ -122,16 +122,16 @@ def test_suite_pandas_success():
 
 
 def test_suite_pandas_violations():
-    expectations_suite = DataframeExpectationsSuite().expect_string_length_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_string_length_equals(
         column_name="col1", length=3
     )
     data_frame = pd.DataFrame({"col1": ["foo", "bar", "bazz", "foobar"]})
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
 def test_suite_pyspark_success(spark):
-    expectations_suite = DataframeExpectationsSuite().expect_string_length_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_string_length_equals(
         column_name="col1", length=3
     )
     data_frame = spark.createDataFrame([("foo",), ("bar",), ("baz",)], ["col1"])
@@ -140,18 +140,18 @@ def test_suite_pyspark_success(spark):
 
 
 def test_suite_pyspark_violations(spark):
-    expectations_suite = DataframeExpectationsSuite().expect_string_length_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_string_length_equals(
         column_name="col1", length=3
     )
     data_frame = spark.createDataFrame([("foo",), ("bar",), ("bazz",), ("foobar",)], ["col1"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)
 
 
 def test_suite_pyspark_column_missing_error(spark):
-    expectations_suite = DataframeExpectationsSuite().expect_string_length_equals(
+    expectations_suite = DataFrameExpectationsSuite().expect_string_length_equals(
         column_name="col1", length=3
     )
     data_frame = spark.createDataFrame([("foo",), ("bar",), ("baz",)], ["col2"])
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.run(data_frame=data_frame)

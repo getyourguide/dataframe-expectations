@@ -58,5 +58,5 @@ Exception Classes
 -----------------
 
 .. automodule:: dataframe_expectations.expectations_suite
-   :members: DataframeExpectationsSuiteFailure
+   :members: DataFrameExpectationsSuiteFailure
    :show-inheritance:

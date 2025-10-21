@@ -8,11 +8,11 @@ Defining Your Expectations
 --------------------------
 
 Most use cases that involve validating a single column in the dataframe can be covered by the initialising the
-``DataframeColumnExpectation`` class with the correct parameters. Expectations implemented by initialising
-``DataframeColumnExpectation`` can be found in the ``column_expectations`` module, categorised based on the data-type of
+``DataFrameColumnExpectation`` class with the correct parameters. Expectations implemented by initialising
+``DataFrameColumnExpectation`` can be found in the ``column_expectations`` module, categorised based on the data-type of
 the column value.
 
-If you want to go ahead with implementing ``DataframeColumnExpectation``, you first need to identify the data-type of
+If you want to go ahead with implementing ``DataFrameColumnExpectation``, you first need to identify the data-type of
 the column value. Existing expectations are already categorised into ``string``, ``numerical`` or ``any_value``
 expectations. Create a new category in column_expectations if you think existing categories don't fit your use case.
 Once you have decided where the expectation needs to be added, you can define it as follows:
@@ -27,11 +27,11 @@ Once you have decided where the expectation needs to be added, you can define it
 
     @register_expectation("ExpectIsDivisible")
     @requires_params("column_name", "value", types={"column_name": str, "value": int})
-    def create_expectation_do_something_unexpected(**kwargs) -> DataframeColumnExpectation:
+    def create_expectation_do_something_unexpected(**kwargs) -> DataFrameColumnExpectation:
         column_name = kwargs["column_name"]
         value = kwargs["value"]
 
-        return DataframeColumnExpectation(
+        return DataFrameColumnExpectation(
             expectation_name="ExpectIsDivisible",
             column_name=column_name,
             fn_violations_pandas=lambda df: df[df[column_name] % value != 0], # function that finds violations
@@ -42,7 +42,7 @@ Once you have decided where the expectation needs to be added, you can define it
 
 For additional guidance, you can refer to the implementation of ``ExpectationValueGreaterThan`` and
 ``ExpectationValueLessThan`` in ``column_expectation_factory.py``. These examples demonstrate how to initialise the
-``DataframeColumnExpectation`` class with the right parameters and define filtering logic for different dataframes.
+``DataFrameColumnExpectation`` class with the right parameters and define filtering logic for different dataframes.
 The ``@register_expectation`` decorator is needed to add your expectation to the library. ``@requires_params`` decorator
 is a utility that helps you validate the input parameters.
 
@@ -52,8 +52,8 @@ Adding Aggregation-Based Expectations
 Just like the column expectations, you can find the aggregation-based expectations in the ``aggregation_expectations``
 module. For expectations that require aggregation operations (such as row counts, distinct value counts, null
 percentages, etc.), you should implement custom expectation classes by inheriting from
-``DataframeAggregationExpectation``. These types of expectations cannot be easily covered
-by the ``DataframeColumnExpectation`` class because they involve DataFrame-level or column-level aggregations rather
+``DataFrameAggregationExpectation``. These types of expectations cannot be easily covered
+by the ``DataFrameColumnExpectation`` class because they involve DataFrame-level or column-level aggregations rather
 than row-by-row validations.
 
 Existing expectations are already categorised into ``string``, ``numerical`` or ``any_value``
@@ -66,20 +66,20 @@ Here's an example of how to implement an aggregation-based expectation:
 
     from dataframe_expectations import DataFrameLike, DataFrameType
     from dataframe_expectations.expectations.aggregation_expectation import (
-        DataframeAggregationExpectation,
+        DataFrameAggregationExpectation,
     )
     from dataframe_expectations.expectations.expectation_registry import register_expectation
     from dataframe_expectations.expectations.utils import requires_params
     from dataframe_expectations.result_message import (
-        DataframeExpectationFailureMessage,
-        DataframeExpectationResultMessage,
-        DataframeExpectationSuccessMessage,
+        DataFrameExpectationFailureMessage,
+        DataFrameExpectationResultMessage,
+        DataFrameExpectationSuccessMessage,
     )
     import pandas as pd
     from pyspark.sql import functions as F
 
 
-    class ExpectationMinRows(DataframeAggregationExpectation):
+    class ExpectationMinRows(DataFrameAggregationExpectation):
         """
         Expectation that validates the DataFrame has at least a minimum number of rows.
         """
@@ -96,24 +96,24 @@ Here's an example of how to implement an aggregation-based expectation:
 
         def aggregate_and_validate_pandas(
             self, data_frame: DataFrameLike, **kwargs
-        ) -> DataframeExpectationResultMessage:
+        ) -> DataFrameExpectationResultMessage:
             """Validate minimum row count in a pandas DataFrame."""
             # Note: Parent class already checks if the column is present when column_names is not empty
             try:
                 row_count = len(data_frame)
 
                 if row_count >= self.min_count:
-                    return DataframeExpectationSuccessMessage(
+                    return DataFrameExpectationSuccessMessage(
                         expectation_name=self.get_expectation_name()
                     )
                 else:
-                    return DataframeExpectationFailureMessage(
+                    return DataFrameExpectationFailureMessage(
                         expectation_str=str(self),
                         data_frame_type=DataFrameType.PANDAS,
                         message=f"DataFrame has {row_count} row(s), expected at least {self.min_count}.",
                     )
             except Exception as e:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Error counting rows: {str(e)}",
@@ -121,24 +121,24 @@ Here's an example of how to implement an aggregation-based expectation:
 
         def aggregate_and_validate_pyspark(
             self, data_frame: DataFrameLike, **kwargs
-        ) -> DataframeExpectationResultMessage:
+        ) -> DataFrameExpectationResultMessage:
             """Validate minimum row count in a PySpark DataFrame."""
             # Note: Parent class already checks if the column is present when column_names is not empty
             try:
                 row_count = data_frame.count()
 
                 if row_count >= self.min_count:
-                    return DataframeExpectationSuccessMessage(
+                    return DataFrameExpectationSuccessMessage(
                         expectation_name=self.get_expectation_name()
                     )
                 else:
-                    return DataframeExpectationFailureMessage(
+                    return DataFrameExpectationFailureMessage(
                         expectation_str=str(self),
                         data_frame_type=DataFrameType.PYSPARK,
                         message=f"DataFrame has {row_count} row(s), expected at least {self.min_count}.",
                     )
             except Exception as e:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Error counting rows: {str(e)}",
@@ -161,7 +161,7 @@ Here's an example of how to implement an aggregation-based expectation:
 
 Key differences for aggregation-based expectations:
 
-1. **Inherit from** ``DataframeAggregationExpectation``: This base class provides the framework for aggregation operations and automatically handles column validation.
+1. **Inherit from** ``DataFrameAggregationExpectation``: This base class provides the framework for aggregation operations and automatically handles column validation.
 
 2. **Implement** ``aggregate_and_validate_pandas`` **and** ``aggregate_and_validate_pyspark``: These methods are specifically designed for aggregation operations rather than the generic ``validate_pandas`` and ``validate_pyspark`` methods.
 
@@ -175,7 +175,7 @@ Example of a column-based aggregation expectation:
 
 .. code-block:: python
 
-    class ExpectationColumnMeanBetween(DataframeAggregationExpectation):
+    class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
         """
         Expectation that validates the mean value of a column falls within a specified range.
         """
@@ -195,31 +195,31 @@ Example of a column-based aggregation expectation:
 
         def aggregate_and_validate_pandas(
             self, data_frame: DataFrameLike, **kwargs
-        ) -> DataframeExpectationResultMessage:
+        ) -> DataFrameExpectationResultMessage:
             """Validate column mean in a pandas DataFrame."""
             # Column validation is automatically handled by the parent class
             try:
                 mean_val = data_frame[self.column_name].mean()
 
                 if pd.isna(mean_val):
-                    return DataframeExpectationFailureMessage(
+                    return DataFrameExpectationFailureMessage(
                         expectation_str=str(self),
                         data_frame_type=DataFrameType.PANDAS,
                         message=f"Column '{self.column_name}' contains only null values.",
                     )
 
                 if self.min_value <= mean_val <= self.max_value:
-                    return DataframeExpectationSuccessMessage(
+                    return DataFrameExpectationSuccessMessage(
                         expectation_name=self.get_expectation_name()
                     )
                 else:
-                    return DataframeExpectationFailureMessage(
+                    return DataFrameExpectationFailureMessage(
                         expectation_str=str(self),
                         data_frame_type=DataFrameType.PANDAS,
                         message=f"Column '{self.column_name}' mean value {mean_val} is not between {self.min_value} and {self.max_value}.",
                     )
             except Exception as e:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PANDAS,
                     message=f"Error calculating mean for column '{self.column_name}': {str(e)}",
@@ -227,7 +227,7 @@ Example of a column-based aggregation expectation:
 
         def aggregate_and_validate_pyspark(
             self, data_frame: DataFrameLike, **kwargs
-        ) -> DataframeExpectationResultMessage:
+        ) -> DataFrameExpectationResultMessage:
             """Validate column mean in a PySpark DataFrame."""
             # Column validation is automatically handled by the parent class
             try:
@@ -235,24 +235,24 @@ Example of a column-based aggregation expectation:
                 mean_val = mean_result[0]["mean_val"]
 
                 if mean_val is None:
-                    return DataframeExpectationFailureMessage(
+                    return DataFrameExpectationFailureMessage(
                         expectation_str=str(self),
                         data_frame_type=DataFrameType.PYSPARK,
                         message=f"Column '{self.column_name}' contains only null values.",
                     )
 
                 if self.min_value <= mean_val <= self.max_value:
-                    return DataframeExpectationSuccessMessage(
+                    return DataFrameExpectationSuccessMessage(
                         expectation_name=self.get_expectation_name()
                     )
                 else:
-                    return DataframeExpectationFailureMessage(
+                    return DataFrameExpectationFailureMessage(
                         expectation_str=str(self),
                         data_frame_type=DataFrameType.PYSPARK,
                         message=f"Column '{self.column_name}' mean value {mean_val} is not between {self.min_value} and {self.max_value}.",
                     )
             except Exception as e:
-                return DataframeExpectationFailureMessage(
+                return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
                     data_frame_type=DataFrameType.PYSPARK,
                     message=f"Error calculating mean for column '{self.column_name}': {str(e)}",
@@ -268,7 +268,7 @@ Key considerations for aggregation-based expectations:
 
 4. **Message clarity**: Provide clear, informative error messages that help users understand what went wrong.
 
-5. **Automatic column validation**: The ``DataframeAggregationExpectation`` base class automatically validates that required columns exist before calling your ``aggregate_and_validate_*`` methods. Simply specify the required columns in the ``column_names`` parameter during initialization.
+5. **Automatic column validation**: The ``DataFrameAggregationExpectation`` base class automatically validates that required columns exist before calling your ``aggregate_and_validate_*`` methods. Simply specify the required columns in the ``column_names`` parameter during initialization.
 
 6. **Focus on aggregation logic**: Since column validation is handled automatically, you can focus purely on implementing your aggregation and validation logic without worrying about column existence checks.
 
@@ -286,8 +286,8 @@ For more examples, check the aggregation_expectations module.
 Custom Expectations with Full Control
 --------------------------------------
 
-While the ``DataframeColumnExpectation`` covers most use cases there might be other instances where you need more control
-over the validation logic. For such instances you can define a new expectation by inheriting the ``DataframeExpectation``
+While the ``DataFrameColumnExpectation`` covers most use cases there might be other instances where you need more control
+over the validation logic. For such instances you can define a new expectation by inheriting the ``DataFrameExpectation``
 class.
 
 To help you get started, here's a template you can customize to fit your specific use case:
@@ -297,14 +297,14 @@ To help you get started, here's a template you can customize to fit your specifi
     from typing import Callable
 
     from dataframe_expectations import DataFrameLike, DataFrameType
-    from dataframe_expectations.expectations import DataframeExpectation
+    from dataframe_expectations.expectations import DataFrameExpectation
     from dataframe_expectations.result_message import (
-        DataframeExpectationFailureMessage,
-        DataframeExpectationResultMessage,
-        DataframeExpectationSuccessMessage,
+        DataFrameExpectationFailureMessage,
+        DataFrameExpectationResultMessage,
+        DataFrameExpectationSuccessMessage,
     )
 
-    class ExpectTheUnexpected(DataframeExpectation):
+    class ExpectTheUnexpected(DataFrameExpectation):
         """
         Description of the expectation
         """
@@ -326,31 +326,31 @@ To help you get started, here's a template you can customize to fit your specifi
 
         def validate_pandas(
             self, data_frame: DataFrameLike, **kwargs
-        ) -> DataframeExpectationResultMessage:
+        ) -> DataFrameExpectationResultMessage:
             """
             Validate a pandas DataFrame against the expectation.
             """
-            <Add your validation logic here for Pandas DataFrame. Return either DataframeExpectationSuccessMessage or DataframeExpectationFailureMessage>
+            <Add your validation logic here for Pandas DataFrame. Return either DataFrameExpectationSuccessMessage or DataFrameExpectationFailureMessage>
 
         def validate_pyspark(
             self, data_frame: DataFrameLike, **kwargs
-        ) -> DataframeExpectationResultMessage:
+        ) -> DataFrameExpectationResultMessage:
             """
             Validate a PySpark DataFrame against the expectation.
             """
-            <Add your validation logic here for PySpark DataFrame. Return either DataframeExpectationSuccessMessage or DataframeExpectationFailureMessage>
+            <Add your validation logic here for PySpark DataFrame. Return either DataFrameExpectationSuccessMessage or DataFrameExpectationFailureMessage>
 
-Adding to DataframeExpectationsSuite
+Adding to DataFrameExpectationsSuite
 -------------------------------------
 
-The ``DataframeExpectationsSuite`` encapsulates all the expectations that are provided by this library.
-After defining and testing your expectation, integrate it into the ``DataframeExpectationsSuite`` by creating a new
+The ``DataFrameExpectationsSuite`` encapsulates all the expectations that are provided by this library.
+After defining and testing your expectation, integrate it into the ``DataFrameExpectationsSuite`` by creating a new
 method with a descriptive name starting with the prefix ``expect_`` (this is needed to generate documentation later).
 Here's an example:
 
 .. code-block:: python
 
-    class DataframeExpectationsSuite:
+    class DataFrameExpectationsSuite:
         """
         A suite of expectations for validating DataFrames.
         """
@@ -366,10 +366,10 @@ Here's an example:
             Define what the expectation does
             :param column_name: The name of the column to check.
             :param value: The value to compare against.
-            :return: An instance of DataframeExpectationsSuite.
+            :return: An instance of DataFrameExpectationsSuite.
             """
 
-            expectation = DataframeExpectationRegistry.get_expectation(
+            expectation = DataFrameExpectationRegistry.get_expectation(
                 expectation_name="ExpectIsDivisible",
                 column_name=column_name,
                 value=value,
@@ -392,11 +392,11 @@ To ensure your expectations work as expected (pun intended), make sure to add un
 
     from dataframe_expectations import DataFrameType
     from dataframe_expectations.expectations.expectation_registry import (
-        DataframeExpectationRegistry,
+        DataFrameExpectationRegistry,
     )
     from dataframe_expectations.result_message import (
-        DataframeExpectationFailureMessage,
-        DataframeExpectationSuccessMessage,
+        DataFrameExpectationFailureMessage,
+        DataFrameExpectationSuccessMessage,
     )
 
 
@@ -405,7 +405,7 @@ To ensure your expectations work as expected (pun intended), make sure to add un
         Test that the expectation name is correctly returned.
         This method should be implemented in the subclass.
         """
-        expectation = DataframeExpectationRegistry.get_expectation(
+        expectation = DataFrameExpectationRegistry.get_expectation(
             expectation_name="ExpectationDoesSomeCheck",
             column_name="col1",
             value=5,
@@ -476,7 +476,7 @@ Updating the Documentation
 
 After the expectation is ready for use, the last thing remaining is adding your expectation to the documentation. The documentation is automatically generated using a CI pipeline with the ``uv`` package manager and is available at ``docs/build/html/expectations.html``.
 
-Make sure to add the docstring for the function you added to ``DataframeExpectationsSuite`` before submitting your changes. The CI pipeline will automatically update the documentation using the make targets in the ``docs`` folder when your changes are merged.
+Make sure to add the docstring for the function you added to ``DataFrameExpectationsSuite`` before submitting your changes. The CI pipeline will automatically update the documentation using the make targets in the ``docs`` folder when your changes are merged.
 
 If you need to build the documentation locally for testing, you can use the make targets available in the ``docs`` folder.
 

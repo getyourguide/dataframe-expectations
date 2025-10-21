@@ -3,11 +3,11 @@ import pandas as pd
 
 from dataframe_expectations import DataFrameType
 from dataframe_expectations.expectations_suite import (
-    DataframeExpectationsSuite,
-    DataframeExpectationsSuiteFailure,
+    DataFrameExpectationsSuite,
+    DataFrameExpectationsSuiteFailure,
 )
 from dataframe_expectations.result_message import (
-    DataframeExpectationFailureMessage,
+    DataFrameExpectationFailureMessage,
 )
 
 
@@ -17,13 +17,13 @@ def test_suite_success():
     """
 
     # No expectations
-    suite = DataframeExpectationsSuite()
+    suite = DataFrameExpectationsSuite()
     result = suite.run(data_frame=pd.DataFrame())
     assert result is None, "Expected no result for empty suite"
 
     # All succeeding expectations
     suite = (
-        DataframeExpectationsSuite()
+        DataFrameExpectationsSuite()
         .expect_value_greater_than(column_name="col1", value=2)
         .expect_value_less_than(column_name="col1", value=10)
     )
@@ -39,13 +39,13 @@ def test_suite_failure():
 
     # Any 1 violation causes the suite to fail
     suite = (
-        DataframeExpectationsSuite()
+        DataFrameExpectationsSuite()
         .expect_value_greater_than(column_name="col1", value=2)
         .expect_value_less_than(column_name="col1", value=3)
     )
     data_Frame = pd.DataFrame({"col1": [3, 4, 5]})
 
-    with pytest.raises(DataframeExpectationsSuiteFailure):
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
         suite.run(data_frame=data_Frame)
 
 
@@ -55,7 +55,7 @@ def test_invalid_data_frame_type():
     """
 
     suite = (
-        DataframeExpectationsSuite()
+        DataFrameExpectationsSuite()
         .expect_value_greater_than(column_name="col1", value=2)
         .expect_value_less_than(column_name="col1", value=10)
     )
@@ -70,7 +70,7 @@ def test_suite_with_supported_dataframe_types(spark):
     Test the ExpectationsSuite with all supported DataFrame types.
     """
 
-    suite = DataframeExpectationsSuite().expect_min_rows(min_rows=1)
+    suite = DataFrameExpectationsSuite().expect_min_rows(min_rows=1)
 
     # Test with pandas DataFrame
     pandas_df = pd.DataFrame({"col1": [1, 2, 3]})
@@ -87,7 +87,7 @@ def test_suite_with_unsupported_dataframe_types():
     """
     Test the ExpectationsSuite with unsupported DataFrame types.
     """
-    suite = DataframeExpectationsSuite().expect_min_rows(min_rows=1)
+    suite = DataFrameExpectationsSuite().expect_min_rows(min_rows=1)
 
     # Test various unsupported types
     unsupported_types = [
@@ -126,7 +126,7 @@ def test_suite_with_pyspark_connect_dataframe():
             self.is_cached = False
             return self
 
-    suite = DataframeExpectationsSuite().expect_min_rows(min_rows=0)
+    suite = DataFrameExpectationsSuite().expect_min_rows(min_rows=0)
 
     with patch(
         "dataframe_expectations.expectations.PySparkConnectDataFrame",
@@ -134,13 +134,13 @@ def test_suite_with_pyspark_connect_dataframe():
     ):
         # Create mock expectation that can handle Connect DataFrame
         with patch.object(
-            suite._DataframeExpectationsSuite__expectations[0], "validate"
+            suite._DataFrameExpectationsSuite__expectations[0], "validate"
         ) as mock_validate:
             from dataframe_expectations.result_message import (
-                DataframeExpectationSuccessMessage,
+                DataFrameExpectationSuccessMessage,
             )
 
-            mock_validate.return_value = DataframeExpectationSuccessMessage(
+            mock_validate.return_value = DataFrameExpectationSuccessMessage(
                 expectation_name="MockExpectation"
             )
 
@@ -151,19 +151,19 @@ def test_suite_with_pyspark_connect_dataframe():
 
 def test_expectation_suite_failure_message():
     failed_expectation_messages = [
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str="ExpectationValueGreaterThan",
             data_frame_type=DataFrameType.PANDAS,
             message="Failed expectation 1",
         ),
-        DataframeExpectationFailureMessage(
+        DataFrameExpectationFailureMessage(
             expectation_str="ExpectationValueGreaterThan",
             data_frame_type=DataFrameType.PANDAS,
             message="Failed expectation 2",
         ),
     ]
 
-    suite_failure = DataframeExpectationsSuiteFailure(
+    suite_failure = DataFrameExpectationsSuiteFailure(
         total_expectations=4,
         failures=failed_expectation_messages,
     )

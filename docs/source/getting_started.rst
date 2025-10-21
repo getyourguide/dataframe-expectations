@@ -31,7 +31,7 @@ Pandas Example
 .. code-block:: python
 
     import pandas as pd
-    from dataframe_expectations.expectations_suite import DataframeExpectationsSuite
+    from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
 
     # Create a sample DataFrame
     df = pd.DataFrame({
@@ -42,7 +42,7 @@ Pandas Example
 
     # Build a validation suite
     suite = (
-         DataframeExpectationsSuite()
+         DataFrameExpectationsSuite()
          .expect_min_rows(3)  # At least 3 rows
          .expect_max_rows(10)  # At most 10 rows
          .expect_value_greater_than("age", 18)  # All ages > 18
@@ -60,7 +60,7 @@ PySpark Example
 .. code-block:: python
 
     from pyspark.sql import SparkSession
-    from dataframe_expectations.expectations_suite import DataframeExpectationsSuite
+    from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
 
     # Initialize Spark
     spark = SparkSession.builder.appName("DataFrameExpectations").getOrCreate()
@@ -76,7 +76,7 @@ PySpark Example
 
     # Build a validation suite (same API as Pandas!)
     suite = (
-         DataframeExpectationsSuite()
+         DataFrameExpectationsSuite()
          .expect_min_rows(3)
          .expect_max_rows(10)
          .expect_value_greater_than("age", 18)

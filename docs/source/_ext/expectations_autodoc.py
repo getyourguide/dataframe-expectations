@@ -13,7 +13,7 @@ from docutils.parsers.rst import directives
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
-from dataframe_expectations.expectations_suite import DataframeExpectationsSuite
+from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
 
 
 def parse_metadata_from_docstring(docstring: str) -> Tuple[str, str]:
@@ -85,7 +85,7 @@ class ExpectationsDirective(SphinxDirective):
 
     Usage:
     .. expectations::
-       :class: dataframe_expectations.expectations_suite.DataframeExpectationsSuite
+       :class: dataframe_expectations.expectations_suite.DataFrameExpectationsSuite
        :show-summary: true
        :show-cards: true
     """
@@ -102,7 +102,7 @@ class ExpectationsDirective(SphinxDirective):
     def run(self) -> List[Node]:
         """Generate the expectations documentation."""
         # Import the class
-        class_path = self.options.get('class', 'dataframe_expectations.expectations_suite.DataframeExpectationsSuite')
+        class_path = self.options.get('class', 'dataframe_expectations.expectations_suite.DataFrameExpectationsSuite')
         module_name, class_name = class_path.rsplit('.', 1)
 
         try:
@@ -343,8 +343,8 @@ class ExpectationsDirective(SphinxDirective):
 
         # Create link to API reference using raw HTML
         api_link = nodes.raw(
-            f'<a href="api_reference.html#dataframe_expectations.expectations_suite.DataframeExpectationsSuite.{method_name}" class="btn btn-details">View API Reference</a>',
-            f'<a href="api_reference.html#dataframe_expectations.expectations_suite.DataframeExpectationsSuite.{method_name}" class="btn btn-details">View API Reference</a>',
+            f'<a href="api_reference.html#dataframe_expectations.expectations_suite.DataFrameExpectationsSuite.{method_name}" class="btn btn-details">View API Reference</a>',
+            f'<a href="api_reference.html#dataframe_expectations.expectations_suite.DataFrameExpectationsSuite.{method_name}" class="btn btn-details">View API Reference</a>',
             format='html'
         )
         card_footer += api_link

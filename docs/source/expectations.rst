@@ -6,6 +6,6 @@ This page provides comprehensive documentation for all available DataFrame expec
 The expectations are automatically categorized and organized for easy browsing.
 
 .. expectations::
-   :class: dataframe_expectations.expectations_suite.DataframeExpectationsSuite
+   :class: dataframe_expectations.expectations_suite.DataFrameExpectationsSuite
    :show-summary:
    :show-cards:
