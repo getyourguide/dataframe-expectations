@@ -42,13 +42,11 @@ def test_data_frame_type_enum():
         DataFrameType.PYSPARK.value == "pyspark"
     ), f"Expected 'pyspark' but got: {DataFrameType.PYSPARK.value}"
 
-    # Test string representation
+    # Test string comparison (now works directly!)
+    assert DataFrameType.PANDAS == "pandas", "Expected DataFrameType.PANDAS == 'pandas' to be True"
     assert (
-        str(DataFrameType.PANDAS) == "pandas"
-    ), f"Expected 'pandas' but got: {str(DataFrameType.PANDAS)}"
-    assert (
-        str(DataFrameType.PYSPARK) == "pyspark"
-    ), f"Expected 'pyspark' but got: {str(DataFrameType.PYSPARK)}"
+        DataFrameType.PYSPARK == "pyspark"
+    ), "Expected DataFrameType.PYSPARK == 'pyspark' to be True"
 
 
 def test_get_expectation_name():
