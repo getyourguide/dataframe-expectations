@@ -33,9 +33,9 @@ def test_register_and_get_expectation():
         return DummyExpectation(foo=foo)
 
     instance = DataFrameExpectationRegistry.get_expectation("DummyExpectation", foo=123)
-    assert isinstance(
-        instance, DummyExpectation
-    ), f"Expected DummyExpectation instance but got: {type(instance)}"
+    assert isinstance(instance, DummyExpectation), (
+        f"Expected DummyExpectation instance but got: {type(instance)}"
+    )
     assert instance.foo == 123, f"Expected foo=123 but got: {instance.foo}"
 
 
@@ -54,9 +54,9 @@ def test_duplicate_registration_raises():
         def dummy2(foo=None):
             return DummyExpectation(foo=foo)
 
-    assert "already registered" in str(
-        context.value
-    ), f"Expected 'already registered' in error message but got: {str(context.value)}"
+    assert "already registered" in str(context.value), (
+        f"Expected 'already registered' in error message but got: {str(context.value)}"
+    )
 
 
 def test_get_unknown_expectation_raises():
@@ -65,9 +65,9 @@ def test_get_unknown_expectation_raises():
     """
     with pytest.raises(ValueError) as context:
         DataFrameExpectationRegistry.get_expectation("NonExistent")
-    assert "Unknown expectation" in str(
-        context.value
-    ), f"Expected 'Unknown expectation' in error message but got: {str(context.value)}"
+    assert "Unknown expectation" in str(context.value), (
+        f"Expected 'Unknown expectation' in error message but got: {str(context.value)}"
+    )
 
 
 def test_list_expectations():
@@ -98,16 +98,16 @@ def test_remove_expectation():
         return DummyExpectation(foo=foo)
 
     names_before = DataFrameExpectationRegistry.list_expectations()
-    assert (
-        "ToRemove" in names_before
-    ), f"Expected 'ToRemove' in expectations list before removal but got: {names_before}"
+    assert "ToRemove" in names_before, (
+        f"Expected 'ToRemove' in expectations list before removal but got: {names_before}"
+    )
 
     DataFrameExpectationRegistry.remove_expectation("ToRemove")
 
     names_after = DataFrameExpectationRegistry.list_expectations()
-    assert (
-        "ToRemove" not in names_after
-    ), f"Expected 'ToRemove' not in expectations list after removal but got: {names_after}"
+    assert "ToRemove" not in names_after, (
+        f"Expected 'ToRemove' not in expectations list after removal but got: {names_after}"
+    )
 
 
 def test_remove_nonexistent_expectation_raises():
@@ -116,6 +116,6 @@ def test_remove_nonexistent_expectation_raises():
     """
     with pytest.raises(ValueError) as context:
         DataFrameExpectationRegistry.remove_expectation("DefinitelyNotThere")
-    assert "not found" in str(
-        context.value
-    ), f"Expected 'not found' in error message but got: {str(context.value)}"
+    assert "not found" in str(context.value), (
+        f"Expected 'not found' in error message but got: {str(context.value)}"
+    )

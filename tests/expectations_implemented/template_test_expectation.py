@@ -13,9 +13,9 @@ def test_expectation_name():
         column_name="col1",
         value=5,
     )
-    assert (
-        expectation.get_expectation_name() == "ExpectationDoesSomeCheck"
-    ), f"Expected 'ExpectationDoesSomeCheck' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "ExpectationDoesSomeCheck", (
+        f"Expected 'ExpectationDoesSomeCheck' but got: {expectation.get_expectation_name()}"
+    )
 
 
 def test_expectation_pandas_success():

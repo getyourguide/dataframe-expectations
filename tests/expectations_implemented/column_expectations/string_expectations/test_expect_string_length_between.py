@@ -22,9 +22,9 @@ def test_expectation_name():
         min_length=3,
         max_length=6,
     )
-    assert (
-        expectation.get_expectation_name() == "ExpectationStringLengthBetween"
-    ), f"Expected 'ExpectationStringLengthBetween' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "ExpectationStringLengthBetween", (
+        f"Expected 'ExpectationStringLengthBetween' but got: {expectation.get_expectation_name()}"
+    )
 
 
 def test_expectation_pandas_success():
@@ -113,9 +113,9 @@ def test_column_missing_error():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_suite_pandas_success():

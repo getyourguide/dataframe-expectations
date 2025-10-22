@@ -24,9 +24,9 @@ def test_expectation_name():
         expectation_name="ExpectationUniqueRows",
         column_names=["col1"],
     )
-    assert (
-        expectation.get_expectation_name() == "ExpectationUniqueRows"
-    ), f"Expected 'ExpectationUniqueRows' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "ExpectationUniqueRows", (
+        f"Expected 'ExpectationUniqueRows' but got: {expectation.get_expectation_name()}"
+    )
 
 
 # Tests for specific columns - Pandas
@@ -252,9 +252,9 @@ def test_column_missing_error_pandas():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'nonexistent_col' does not exist in the DataFrame.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_column_missing_error_pyspark(spark):
@@ -272,9 +272,9 @@ def test_column_missing_error_pyspark(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'nonexistent_col' does not exist in the DataFrame.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_empty_dataframe_pandas():

@@ -28,9 +28,9 @@ def test_requires_params_missing_param():
 
     with pytest.raises(ValueError) as context:
         func(a=1)
-    assert "missing required parameters" in str(
-        context.value
-    ), f"Expected 'missing required parameters' in error message but got: {str(context.value)}"
+    assert "missing required parameters" in str(context.value), (
+        f"Expected 'missing required parameters' in error message but got: {str(context.value)}"
+    )
 
 
 def test_requires_params_type_success():
@@ -56,9 +56,9 @@ def test_requires_params_type_error():
 
     with pytest.raises(TypeError) as context:
         func(a="not-an-int", b="hello")
-    assert "type validation errors" in str(
-        context.value
-    ), f"Expected 'type validation errors' in error message but got: {str(context.value)}"
+    assert "type validation errors" in str(context.value), (
+        f"Expected 'type validation errors' in error message but got: {str(context.value)}"
+    )
 
 
 def test_requires_params_union_type_success():

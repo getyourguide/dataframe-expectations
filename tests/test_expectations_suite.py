@@ -102,9 +102,9 @@ def test_suite_with_unsupported_dataframe_types():
     for unsupported_data in unsupported_types:
         with pytest.raises(ValueError) as context:
             suite.run(data_frame=unsupported_data)
-        assert "Unsupported DataFrame type" in str(
-            context.value
-        ), f"Expected unsupported type error for {type(unsupported_data)}"
+        assert "Unsupported DataFrame type" in str(context.value), (
+            f"Expected unsupported type error for {type(unsupported_data)}"
+        )
 
 
 def test_suite_with_pyspark_connect_dataframe():
@@ -179,6 +179,6 @@ def test_expectation_suite_failure_message():
         f"{'=' * 80}"
     )
 
-    assert (
-        str(suite_failure) == expected_str
-    ), f"Expected suite failure message but got: {str(suite_failure)}"
+    assert str(suite_failure) == expected_str, (
+        f"Expected suite failure message but got: {str(suite_failure)}"
+    )

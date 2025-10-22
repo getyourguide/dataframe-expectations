@@ -81,9 +81,9 @@ def test_expectation_pandas_failure_exceeds_max():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 5 rows, expected at most 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_failure_zero_max_with_data():
@@ -100,9 +100,9 @@ def test_expectation_pandas_failure_zero_max_with_data():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 1 rows, expected at most 0.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_boundary_zero_max_empty_df():
@@ -133,9 +133,9 @@ def test_expectation_pandas_large_dataset():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 150 rows, expected at most 100.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_with_nulls():
@@ -152,9 +152,9 @@ def test_expectation_pandas_with_nulls():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 5 rows, expected at most 4.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_success_exact_count(spark):
@@ -228,9 +228,9 @@ def test_expectation_pyspark_failure_exceeds_max(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 5 rows, expected at most 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_failure_zero_max_with_data(spark):
@@ -247,9 +247,9 @@ def test_expectation_pyspark_failure_zero_max_with_data(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 1 rows, expected at most 0.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_boundary_zero_max_empty_df(spark):
@@ -281,9 +281,9 @@ def test_expectation_pyspark_large_dataset(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 75 rows, expected at most 50.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_with_nulls(spark):
@@ -303,9 +303,9 @@ def test_expectation_pyspark_with_nulls(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 5 rows, expected at most 4.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_suite_pandas_success():
@@ -352,9 +352,9 @@ def test_expectation_parameter_validation():
     # Test string representation
     expectation_str = str(expectation)
     assert "100" in expectation_str, f"Expected '100' in expectation string: {expectation_str}"
-    assert (
-        "ExpectationMaxRows" in expectation_str
-    ), f"Expected 'ExpectationMaxRows' in expectation string: {expectation_str}"
+    assert "ExpectationMaxRows" in expectation_str, (
+        f"Expected 'ExpectationMaxRows' in expectation string: {expectation_str}"
+    )
 
 
 def test_expectation_boundary_conditions():
@@ -381,9 +381,9 @@ def test_expectation_boundary_conditions():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 2 rows, expected at most 1.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_multiple_columns():
@@ -407,9 +407,9 @@ def test_expectation_multiple_columns():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 4 rows, expected at most 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_mixed_data_types():
@@ -465,9 +465,9 @@ def test_expectation_identical_values():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 4 rows, expected at most 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_edge_case_max_rows_equals_actual():

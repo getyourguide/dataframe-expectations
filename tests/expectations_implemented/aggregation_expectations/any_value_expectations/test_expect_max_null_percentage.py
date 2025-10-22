@@ -102,9 +102,9 @@ def test_expectation_pandas_failure_exceeds_threshold():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 50.00% null values, expected at most 20.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_failure_all_nulls_in_column():
@@ -122,9 +122,9 @@ def test_expectation_pandas_failure_all_nulls_in_column():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 100.00% null values, expected at most 50.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_boundary_zero_threshold():
@@ -142,9 +142,9 @@ def test_expectation_pandas_boundary_zero_threshold():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 33.33% null values, expected at most 0.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_boundary_hundred_threshold():
@@ -191,9 +191,9 @@ def test_expectation_pandas_single_value_null():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 100.00% null values, expected at most 50.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_single_value_not_null():
@@ -290,9 +290,9 @@ def test_expectation_pyspark_failure_exceeds_threshold(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 66.67% null values, expected at most 25.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_failure_all_nulls_in_column(spark):
@@ -310,9 +310,9 @@ def test_expectation_pyspark_failure_all_nulls_in_column(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 100.00% null values, expected at most 75.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_boundary_zero_threshold(spark):
@@ -330,9 +330,9 @@ def test_expectation_pyspark_boundary_zero_threshold(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 33.33% null values, expected at most 0.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_boundary_hundred_threshold(spark):
@@ -386,9 +386,9 @@ def test_expectation_pyspark_single_value_null(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 100.00% null values, expected at most 50.00%.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_single_value_not_null(spark):
@@ -483,12 +483,12 @@ def test_expectation_parameter_validation():
     # Test string representation
     expectation_str = str(expectation)
     assert "50.0" in expectation_str, f"Expected '50.0' in expectation string: {expectation_str}"
-    assert (
-        "test_col" in expectation_str
-    ), f"Expected 'test_col' in expectation string: {expectation_str}"
-    assert (
-        "ExpectationMaxNullPercentage" in expectation_str
-    ), f"Expected 'ExpectationMaxNullPercentage' in expectation string: {expectation_str}"
+    assert "test_col" in expectation_str, (
+        f"Expected 'test_col' in expectation string: {expectation_str}"
+    )
+    assert "ExpectationMaxNullPercentage" in expectation_str, (
+        f"Expected 'ExpectationMaxNullPercentage' in expectation string: {expectation_str}"
+    )
 
 
 def test_expectation_mixed_data_types():
@@ -538,10 +538,10 @@ def test_expectation_column_not_exists_error():
     result = expectation.validate(data_frame=data_frame)
 
     # Should get a failure message with error info
-    assert isinstance(
-        result, DataFrameExpectationFailureMessage
-    ), f"Expected DataFrameExpectationFailureMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationFailureMessage), (
+        f"Expected DataFrameExpectationFailureMessage but got: {type(result)}"
+    )
     result_str = str(result)
-    assert (
-        "nonexistent_col" in result_str
-    ), f"Expected 'nonexistent_col' in result message: {result_str}"
+    assert "nonexistent_col" in result_str, (
+        f"Expected 'nonexistent_col' in result message: {result_str}"
+    )

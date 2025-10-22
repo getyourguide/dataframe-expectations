@@ -25,9 +25,9 @@ def test_get_expectation_name(expectation):
     """
     Test that the expectation name is the class name.
     """
-    assert (
-        expectation.get_expectation_name() == "MyColumnExpectation"
-    ), f"Expected 'MyColumnExpectation' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "MyColumnExpectation", (
+        f"Expected 'MyColumnExpectation' but got: {expectation.get_expectation_name()}"
+    )
 
 
 def test_validate_for_pandas_df(expectation):

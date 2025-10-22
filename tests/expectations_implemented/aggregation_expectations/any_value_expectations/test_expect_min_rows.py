@@ -94,9 +94,9 @@ def test_expectation_pandas_failure_below_min():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 3 rows, expected at least 5.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_failure_empty_with_min():
@@ -113,9 +113,9 @@ def test_expectation_pandas_failure_empty_with_min():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 0 rows, expected at least 2.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_failure_single_row_needs_more():
@@ -132,9 +132,9 @@ def test_expectation_pandas_failure_single_row_needs_more():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 1 rows, expected at least 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_large_dataset():
@@ -166,9 +166,9 @@ def test_expectation_pandas_large_dataset_failure():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 150 rows, expected at least 200.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_with_nulls():
@@ -266,9 +266,9 @@ def test_expectation_pyspark_failure_below_min(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 3 rows, expected at least 5.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_failure_empty_with_min(spark):
@@ -285,9 +285,9 @@ def test_expectation_pyspark_failure_empty_with_min(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 0 rows, expected at least 2.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_failure_single_row_needs_more(spark):
@@ -304,9 +304,9 @@ def test_expectation_pyspark_failure_single_row_needs_more(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 1 rows, expected at least 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_large_dataset(spark):
@@ -340,9 +340,9 @@ def test_expectation_pyspark_large_dataset_failure(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="DataFrame has 75 rows, expected at least 100.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_with_nulls(spark):
@@ -405,9 +405,9 @@ def test_expectation_parameter_validation():
     # Test string representation
     expectation_str = str(expectation)
     assert "10" in expectation_str, f"Expected '10' in expectation string: {expectation_str}"
-    assert (
-        "ExpectationMinRows" in expectation_str
-    ), f"Expected 'ExpectationMinRows' in expectation string: {expectation_str}"
+    assert "ExpectationMinRows" in expectation_str, (
+        f"Expected 'ExpectationMinRows' in expectation string: {expectation_str}"
+    )
 
 
 def test_expectation_boundary_conditions():
@@ -428,9 +428,9 @@ def test_expectation_boundary_conditions():
     # Empty DataFrame - should fail
     data_frame = pd.DataFrame({"col1": []})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationFailureMessage
-    ), f"Expected DataFrameExpectationFailureMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationFailureMessage), (
+        f"Expected DataFrameExpectationFailureMessage but got: {type(result)}"
+    )
 
 
 def test_expectation_multiple_columns():
@@ -501,9 +501,9 @@ def test_expectation_high_min_count():
         data_frame_type=DataFrameType.PANDAS,
         message="DataFrame has 3 rows, expected at least 1000000.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_identical_values():
@@ -589,9 +589,9 @@ def test_expectation_progressive_min_counts():
             data_frame_type=DataFrameType.PANDAS,
             message=f"DataFrame has 5 rows, expected at least {min_rows}.",
         )
-        assert str(result) == str(
-            expected_failure_message
-        ), f"Expected failure message for min_rows {min_rows} but got: {result}"
+        assert str(result) == str(expected_failure_message), (
+            f"Expected failure message for min_rows {min_rows} but got: {result}"
+        )
 
 
 def test_expectation_dataframe_structure_irrelevant():

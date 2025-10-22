@@ -27,9 +27,9 @@ def test_expectation_name_and_description():
     )
 
     # Test expectation name
-    assert (
-        expectation.get_expectation_name() == "ExpectationColumnQuantileBetween"
-    ), f"Expected 'ExpectationColumnQuantileBetween' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "ExpectationColumnQuantileBetween", (
+        f"Expected 'ExpectationColumnQuantileBetween' but got: {expectation.get_expectation_name()}"
+    )
 
     # Test description messages for different quantiles
     test_cases = [
@@ -49,12 +49,12 @@ def test_expectation_name_and_description():
             min_value=10,
             max_value=20,
         )
-        assert (
-            exp.quantile_desc == expected_desc
-        ), f"Expected quantile_desc '{expected_desc}' for quantile {quantile} but got: {exp.quantile_desc}"
-        assert (
-            expected_desc in exp.get_description()
-        ), f"Expected '{expected_desc}' in description: {exp.get_description()}"
+        assert exp.quantile_desc == expected_desc, (
+            f"Expected quantile_desc '{expected_desc}' for quantile {quantile} but got: {exp.quantile_desc}"
+        )
+        assert expected_desc in exp.get_description(), (
+            f"Expected '{expected_desc}' in description: {exp.get_description()}"
+        )
 
 
 def test_pandas_success_registry_and_suite():
@@ -95,9 +95,9 @@ def test_pandas_success_registry_and_suite():
             max_value=max_val,
         )
         suite_result = suite.run(data_frame=data_frame)
-        assert (
-            suite_result is None
-        ), f"Suite test failed for {description}: expected None but got {suite_result}"
+        assert suite_result is None, (
+            f"Suite test failed for {description}: expected None but got {suite_result}"
+        )
 
 
 def test_pandas_failure_registry_and_suite():
@@ -160,9 +160,9 @@ def test_pandas_failure_registry_and_suite():
             data_frame_type=DataFrameType.PANDAS,
             message=expected_message,
         )
-        assert (
-            str(result) == str(expected_failure)
-        ), f"Registry test failed for quantile {quantile}: expected failure message but got {result}"
+        assert str(result) == str(expected_failure), (
+            f"Registry test failed for quantile {quantile}: expected failure message but got {result}"
+        )
 
         # Test through suite
         suite = DataFrameExpectationsSuite().expect_column_quantile_between(
@@ -212,9 +212,9 @@ def test_pyspark_success_registry_and_suite(spark):
             max_value=max_val,
         )
         suite_result = suite.run(data_frame=data_frame)
-        assert (
-            suite_result is None
-        ), f"Suite test failed for {description}: expected None but got {suite_result}"
+        assert suite_result is None, (
+            f"Suite test failed for {description}: expected None but got {suite_result}"
+        )
 
 
 def test_pyspark_failure_registry_and_suite(spark):
@@ -316,9 +316,9 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
             data_frame_type=DataFrameType.PYSPARK,
             message=expected_message,
         )
-        assert str(result) == str(
-            expected_failure
-        ), f"Registry test failed for {description}: expected failure message but got {result}"
+        assert str(result) == str(expected_failure), (
+            f"Registry test failed for {description}: expected failure message but got {result}"
+        )
 
         # Test through suite
         suite = DataFrameExpectationsSuite().expect_column_quantile_between(
@@ -344,9 +344,9 @@ def test_invalid_quantile_range():
                 min_value=20,
                 max_value=30,
             )
-        assert "Quantile must be between 0.0 and 1.0" in str(
-            context.value
-        ), f"Expected quantile validation error for {description} but got: {str(context.value)}"
+        assert "Quantile must be between 0.0 and 1.0" in str(context.value), (
+            f"Expected quantile validation error for {description} but got: {str(context.value)}"
+        )
 
 
 def test_boundary_quantile_values():
@@ -364,12 +364,12 @@ def test_boundary_quantile_values():
             min_value=15,
             max_value=25,
         )
-        assert (
-            expectation.quantile == quantile
-        ), f"Expected quantile {quantile} but got: {expectation.quantile}"
-        assert (
-            expectation.quantile_desc == expected_desc
-        ), f"Expected quantile_desc '{expected_desc}' but got: {expectation.quantile_desc}"
+        assert expectation.quantile == quantile, (
+            f"Expected quantile {quantile} but got: {expectation.quantile}"
+        )
+        assert expectation.quantile_desc == expected_desc, (
+            f"Expected quantile_desc '{expected_desc}' but got: {expectation.quantile_desc}"
+        )
 
 
 def test_large_dataset_performance():
@@ -388,6 +388,6 @@ def test_large_dataset_performance():
 
     result = expectation.validate(data_frame=data_frame)
     # Should succeed as the median of normal(50, 10) should be around 50
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Large dataset test failed: expected success but got {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Large dataset test failed: expected success but got {type(result)}"
+    )

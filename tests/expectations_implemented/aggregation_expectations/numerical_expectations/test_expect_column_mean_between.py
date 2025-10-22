@@ -25,9 +25,9 @@ def test_expectation_name_and_description():
     )
 
     # Test expectation name
-    assert (
-        expectation.get_expectation_name() == "ExpectationColumnMeanBetween"
-    ), f"Expected 'ExpectationColumnMeanBetween' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "ExpectationColumnMeanBetween", (
+        f"Expected 'ExpectationColumnMeanBetween' but got: {expectation.get_expectation_name()}"
+    )
 
     # Test description
     description = expectation.get_description()
@@ -77,9 +77,9 @@ def test_pandas_success_registry_and_suite():
             column_name="col1", min_value=min_val, max_value=max_val
         )
         suite_result = suite.run(data_frame=data_frame)
-        assert (
-            suite_result is None
-        ), f"Suite test failed for {description}: expected None but got {suite_result}"
+        assert suite_result is None, (
+            f"Suite test failed for {description}: expected None but got {suite_result}"
+        )
 
 
 def test_pandas_failure_registry_and_suite():
@@ -117,9 +117,9 @@ def test_pandas_failure_registry_and_suite():
             data_frame_type=DataFrameType.PANDAS,
             message=expected_message,
         )
-        assert str(result) == str(
-            expected_failure
-        ), f"Registry test failed for {description}: expected failure message but got {result}"
+        assert str(result) == str(expected_failure), (
+            f"Registry test failed for {description}: expected failure message but got {result}"
+        )
 
         # Test through suite
         suite = DataFrameExpectationsSuite().expect_column_mean_between(
@@ -188,9 +188,9 @@ def test_pyspark_success_registry_and_suite(spark):
             column_name="col1", min_value=min_val, max_value=max_val
         )
         suite_result = suite.run(data_frame=data_frame)
-        assert (
-            suite_result is None
-        ), f"Suite test failed for {description}: expected None but got {suite_result}"
+        assert suite_result is None, (
+            f"Suite test failed for {description}: expected None but got {suite_result}"
+        )
 
 
 def test_pyspark_failure_registry_and_suite(spark):
@@ -271,9 +271,9 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
             data_frame_type=DataFrameType.PYSPARK,
             message=expected_message,
         )
-        assert str(result) == str(
-            expected_failure
-        ), f"Registry test failed for {description}: expected failure message but got {result}"
+        assert str(result) == str(expected_failure), (
+            f"Registry test failed for {description}: expected failure message but got {result}"
+        )
 
         # Test through suite
         suite = DataFrameExpectationsSuite().expect_column_mean_between(
@@ -336,9 +336,9 @@ def test_boundary_values_both_dataframes(spark):
                 max_value=max_val,
             )
             result = expectation.validate(data_frame=data_frame)
-            assert isinstance(
-                result, DataFrameExpectationSuccessMessage
-            ), f"Boundary test failed for {df_type} with {boundary_desc}: expected success but got {type(result)}"
+            assert isinstance(result, DataFrameExpectationSuccessMessage), (
+                f"Boundary test failed for {df_type} with {boundary_desc}: expected success but got {type(result)}"
+            )
 
 
 def test_precision_handling():
@@ -367,9 +367,9 @@ def test_precision_handling():
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        assert isinstance(
-            result, DataFrameExpectationSuccessMessage
-        ), f"Precision test failed for {description}: expected success but got {type(result)}"
+        assert isinstance(result, DataFrameExpectationSuccessMessage), (
+            f"Precision test failed for {description}: expected success but got {type(result)}"
+        )
 
 
 def test_suite_chaining():
@@ -396,9 +396,9 @@ def test_large_dataset_performance():
 
     result = expectation.validate(data_frame=data_frame)
     # Should succeed as the mean of normal(50, 10) should be around 50
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Large dataset test failed: expected success but got {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Large dataset test failed: expected success but got {type(result)}"
+    )
 
 
 def test_outlier_handling(spark):
@@ -421,13 +421,13 @@ def test_outlier_handling(spark):
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        assert isinstance(
-            result, DataFrameExpectationSuccessMessage
-        ), f"Pandas outlier test failed for {description}: expected success but got {type(result)}"
+        assert isinstance(result, DataFrameExpectationSuccessMessage), (
+            f"Pandas outlier test failed for {description}: expected success but got {type(result)}"
+        )
 
         # Test with PySpark
         pyspark_df = spark.createDataFrame([(val,) for val in data], ["col1"])
         result_pyspark = expectation.validate(data_frame=pyspark_df)
-        assert isinstance(
-            result_pyspark, DataFrameExpectationSuccessMessage
-        ), f"PySpark outlier test failed for {description}: expected success but got {type(result_pyspark)}"
+        assert isinstance(result_pyspark, DataFrameExpectationSuccessMessage), (
+            f"PySpark outlier test failed for {description}: expected success but got {type(result_pyspark)}"
+        )

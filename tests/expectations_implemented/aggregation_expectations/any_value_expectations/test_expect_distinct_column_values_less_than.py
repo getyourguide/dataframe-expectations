@@ -24,9 +24,9 @@ def test_expectation_name():
         column_name="col1",
         threshold=5,
     )
-    assert (
-        expectation.get_expectation_name() == "ExpectationDistinctColumnValuesLessThan"
-    ), f"Expected 'ExpectationDistinctColumnValuesLessThan' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "ExpectationDistinctColumnValuesLessThan", (
+        f"Expected 'ExpectationDistinctColumnValuesLessThan' but got: {expectation.get_expectation_name()}"
+    )
 
 
 def test_expectation_pandas_success():
@@ -79,9 +79,9 @@ def test_expectation_pandas_success_zero_values():
     # Empty DataFrame has 0 distinct values which is < 1
     data_frame = pd.DataFrame({"col1": []})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_expectation_pandas_violations_equal_to_threshold():
@@ -102,9 +102,9 @@ def test_expectation_pandas_violations_equal_to_threshold():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 3 distinct values, expected fewer than 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_violations_above_threshold():
@@ -125,9 +125,9 @@ def test_expectation_pandas_violations_above_threshold():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 5 distinct values, expected fewer than 2.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pandas_single_value_success():
@@ -142,9 +142,9 @@ def test_expectation_pandas_single_value_success():
     # DataFrame with 1 distinct value which is < 3
     data_frame = pd.DataFrame({"col1": [5, 5, 5, 5, 5]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_expectation_pyspark_success(spark):
@@ -197,9 +197,9 @@ def test_expectation_pyspark_success_zero_values(spark):
     # Empty DataFrame has 0 distinct values which is < 1
     data_frame = spark.createDataFrame([], "col1 INT")
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_expectation_pyspark_violations_equal_to_threshold(spark):
@@ -220,9 +220,9 @@ def test_expectation_pyspark_violations_equal_to_threshold(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 3 distinct values, expected fewer than 3.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_violations_above_threshold(spark):
@@ -243,9 +243,9 @@ def test_expectation_pyspark_violations_above_threshold(spark):
         data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' has 5 distinct values, expected fewer than 2.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_expectation_pyspark_single_value_success(spark):
@@ -260,9 +260,9 @@ def test_expectation_pyspark_single_value_success(spark):
     # DataFrame with 1 distinct value which is < 3
     data_frame = spark.createDataFrame([(5,), (5,), (5,), (5,), (5,)], ["col1"])
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_column_missing_error():
@@ -281,9 +281,9 @@ def test_column_missing_error():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_invalid_parameters():
@@ -297,9 +297,9 @@ def test_invalid_parameters():
             column_name="col1",
             threshold=-1,
         )
-    assert "threshold must be non-negative" in str(
-        context.value
-    ), f"Expected 'threshold must be non-negative' in error message: {str(context.value)}"
+    assert "threshold must be non-negative" in str(context.value), (
+        f"Expected 'threshold must be non-negative' in error message: {str(context.value)}"
+    )
 
 
 def test_zero_threshold_edge_case():
@@ -315,16 +315,16 @@ def test_zero_threshold_edge_case():
     # Empty DataFrame has 0 distinct values, which is NOT < 0
     data_frame_empty = pd.DataFrame({"col1": []})
     result_empty = expectation.validate(data_frame=data_frame_empty)
-    assert isinstance(
-        result_empty, DataFrameExpectationFailureMessage
-    ), f"Expected DataFrameExpectationFailureMessage but got: {type(result_empty)}"
+    assert isinstance(result_empty, DataFrameExpectationFailureMessage), (
+        f"Expected DataFrameExpectationFailureMessage but got: {type(result_empty)}"
+    )
 
     # Any non-empty DataFrame will have >= 1 distinct values, which is NOT < 0
     data_frame_non_empty = pd.DataFrame({"col1": [1, 1, 1]})
     result_non_empty = expectation.validate(data_frame=data_frame_non_empty)
-    assert isinstance(
-        result_non_empty, DataFrameExpectationFailureMessage
-    ), f"Expected DataFrameExpectationFailureMessage but got: {type(result_non_empty)}"
+    assert isinstance(result_non_empty, DataFrameExpectationFailureMessage), (
+        f"Expected DataFrameExpectationFailureMessage but got: {type(result_non_empty)}"
+    )
 
 
 def test_string_column_with_mixed_values():
@@ -339,9 +339,9 @@ def test_string_column_with_mixed_values():
     # String column with 4 distinct values ["A", "B", "C", None] which is < 5
     data_frame = pd.DataFrame({"col1": ["A", "B", "C", "B", "A", None]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_string_column_case_sensitive():
@@ -356,9 +356,9 @@ def test_string_column_case_sensitive():
     # String column with 4 distinct values ["a", "A", "b", "B"] which is < 5
     data_frame = pd.DataFrame({"col1": ["a", "A", "b", "B", "a", "A"]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_numeric_column_with_floats():
@@ -373,9 +373,9 @@ def test_numeric_column_with_floats():
     # Float column with 3 distinct values [1.1, 2.2, 3.3] which is < 5
     data_frame = pd.DataFrame({"col1": [1.1, 2.2, 3.3, 2.2, 1.1]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_boolean_column_success():
@@ -390,9 +390,9 @@ def test_boolean_column_success():
     # Boolean column with 2 distinct values [True, False] which is < 3
     data_frame = pd.DataFrame({"col1": [True, False, True, False, True]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_boolean_column_failure():
@@ -413,9 +413,9 @@ def test_boolean_column_failure():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 2 distinct values, expected fewer than 2.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_boolean_single_value():
@@ -430,9 +430,9 @@ def test_boolean_single_value():
     # Boolean column with only 1 distinct value [True] which is < 2
     data_frame = pd.DataFrame({"col1": [True, True, True, True, True]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_datetime_column():
@@ -459,9 +459,9 @@ def test_datetime_column():
         }
     )
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_mixed_data_types_as_object():
@@ -476,9 +476,9 @@ def test_mixed_data_types_as_object():
     # Mixed data types: 4 distinct values ["text", 42, 3.14, None] which is < 5
     data_frame = pd.DataFrame({"col1": ["text", 42, 3.14, None, "text", 42]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_large_dataset_success():
@@ -493,9 +493,9 @@ def test_large_dataset_success():
     # Create a DataFrame with exactly 1000 distinct values (< 1001)
     data_frame = pd.DataFrame({"col1": list(range(1000)) * 5})  # 5000 rows, 1000 distinct values
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_large_dataset_failure():
@@ -516,9 +516,9 @@ def test_large_dataset_failure():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 1000 distinct values, expected fewer than 1000.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_suite_pandas_success():
@@ -597,9 +597,9 @@ def test_categorical_data():
     # Categorical data with 3 distinct categories which is < 5
     data_frame = pd.DataFrame({"col1": pd.Categorical(["A", "B", "C", "A", "B", "C", "A"])})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_duplicate_nan_handling():
@@ -614,9 +614,9 @@ def test_duplicate_nan_handling():
     # Multiple NaN values should be counted as 1, total = 3 distinct values < 5
     data_frame = pd.DataFrame({"col1": [1, 2, None, None, None, 1, 2]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_string_with_whitespace_handling():
@@ -631,9 +631,9 @@ def test_string_with_whitespace_handling():
     # 4 distinct strings with different whitespace < 5
     data_frame = pd.DataFrame({"col1": ["test", " test", "test ", " test ", "test"]})
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_numeric_string_vs_numeric():
@@ -648,9 +648,9 @@ def test_numeric_string_vs_numeric():
     # String "1" and integer 1 are distinct, so 2 distinct values < 3
     data_frame = pd.DataFrame({"col1": ["1", 1, "1", 1]}, dtype=object)
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
 
 
 def test_very_low_threshold():
@@ -671,9 +671,9 @@ def test_very_low_threshold():
         data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' has 3 distinct values, expected fewer than 1.",
     )
-    assert str(result) == str(
-        expected_failure_message
-    ), f"Expected failure message but got: {result}"
+    assert str(result) == str(expected_failure_message), (
+        f"Expected failure message but got: {result}"
+    )
 
 
 def test_exclusive_boundary_validation():
@@ -688,9 +688,9 @@ def test_exclusive_boundary_validation():
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 1, 2]})  # exactly 3 distinct values
     result = expectation.validate(data_frame=data_frame)
-    assert isinstance(
-        result, DataFrameExpectationFailureMessage
-    ), f"Expected DataFrameExpectationFailureMessage but got: {type(result)}"
+    assert isinstance(result, DataFrameExpectationFailureMessage), (
+        f"Expected DataFrameExpectationFailureMessage but got: {type(result)}"
+    )
 
     # Test with threshold = 4, actual = 3 (should pass because 3 < 4)
     expectation_pass = DataFrameExpectationRegistry.get_expectation(
@@ -699,9 +699,9 @@ def test_exclusive_boundary_validation():
         threshold=4,
     )
     result_pass = expectation_pass.validate(data_frame=data_frame)
-    assert isinstance(
-        result_pass, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result_pass)}"
+    assert isinstance(result_pass, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result_pass)}"
+    )
 
 
 def test_boundary_with_one_distinct_value():
@@ -716,9 +716,9 @@ def test_boundary_with_one_distinct_value():
     )
     data_frame = pd.DataFrame({"col1": [5, 5, 5, 5]})  # 1 distinct value < 2
     result_pass = expectation_pass.validate(data_frame=data_frame)
-    assert isinstance(
-        result_pass, DataFrameExpectationSuccessMessage
-    ), f"Expected DataFrameExpectationSuccessMessage but got: {type(result_pass)}"
+    assert isinstance(result_pass, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result_pass)}"
+    )
 
     # Single distinct value should fail when threshold = 1
     expectation_fail = DataFrameExpectationRegistry.get_expectation(
@@ -727,6 +727,6 @@ def test_boundary_with_one_distinct_value():
         threshold=1,
     )
     result_fail = expectation_fail.validate(data_frame=data_frame)
-    assert isinstance(
-        result_fail, DataFrameExpectationFailureMessage
-    ), f"Expected DataFrameExpectationFailureMessage but got: {type(result_fail)}"
+    assert isinstance(result_fail, DataFrameExpectationFailureMessage), (
+        f"Expected DataFrameExpectationFailureMessage but got: {type(result_fail)}"
+    )

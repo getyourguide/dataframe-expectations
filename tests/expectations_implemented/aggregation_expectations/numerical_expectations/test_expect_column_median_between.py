@@ -25,9 +25,9 @@ def test_expectation_name_and_description():
     )
 
     # Test expectation name (should delegate to quantile expectation)
-    assert (
-        expectation.get_expectation_name() == "ExpectationColumnQuantileBetween"
-    ), f"Expected 'ExpectationColumnQuantileBetween' but got: {expectation.get_expectation_name()}"
+    assert expectation.get_expectation_name() == "ExpectationColumnQuantileBetween", (
+        f"Expected 'ExpectationColumnQuantileBetween' but got: {expectation.get_expectation_name()}"
+    )
 
     # Test description
     description = expectation.get_description()
@@ -37,12 +37,12 @@ def test_expectation_name_and_description():
     assert "20" in description, f"Expected '20' in description: {description}"
 
     # Test that quantile is correctly set to 0.5
-    assert (
-        expectation.quantile == 0.5
-    ), f"Expected quantile to be 0.5 but got: {expectation.quantile}"
-    assert (
-        expectation.quantile_desc == "median"
-    ), f"Expected quantile_desc to be 'median' but got: {expectation.quantile_desc}"
+    assert expectation.quantile == 0.5, (
+        f"Expected quantile to be 0.5 but got: {expectation.quantile}"
+    )
+    assert expectation.quantile_desc == "median", (
+        f"Expected quantile_desc to be 'median' but got: {expectation.quantile_desc}"
+    )
 
 
 def test_pandas_success_registry_and_suite():
@@ -87,9 +87,9 @@ def test_pandas_success_registry_and_suite():
             column_name="col1", min_value=min_val, max_value=max_val
         )
         suite_result = suite.run(data_frame=data_frame)
-        assert (
-            suite_result is None
-        ), f"Suite test failed for {description}: expected None but got {suite_result}"
+        assert suite_result is None, (
+            f"Suite test failed for {description}: expected None but got {suite_result}"
+        )
 
 
 def test_pandas_failure_registry_and_suite():
@@ -126,9 +126,9 @@ def test_pandas_failure_registry_and_suite():
             data_frame_type=DataFrameType.PANDAS,
             message=expected_message,
         )
-        assert str(result) == str(
-            expected_failure
-        ), f"Registry test failed for {description}: expected failure message but got {result}"
+        assert str(result) == str(expected_failure), (
+            f"Registry test failed for {description}: expected failure message but got {result}"
+        )
 
         # Test through suite
         suite = DataFrameExpectationsSuite().expect_column_median_between(
@@ -199,9 +199,9 @@ def test_pyspark_success_registry_and_suite(spark):
             column_name="col1", min_value=min_val, max_value=max_val
         )
         suite_result = suite.run(data_frame=data_frame)
-        assert (
-            suite_result is None
-        ), f"Suite test failed for {description}: expected None but got {suite_result}"
+        assert suite_result is None, (
+            f"Suite test failed for {description}: expected None but got {suite_result}"
+        )
 
 
 def test_pyspark_failure_registry_and_suite(spark):
@@ -288,9 +288,9 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
             data_frame_type=DataFrameType.PYSPARK,
             message=expected_message,
         )
-        assert str(result) == str(
-            expected_failure
-        ), f"Registry test failed for {description}: expected failure message but got {result}"
+        assert str(result) == str(expected_failure), (
+            f"Registry test failed for {description}: expected failure message but got {result}"
+        )
 
         # Test through suite
         suite = DataFrameExpectationsSuite().expect_column_median_between(
@@ -353,9 +353,9 @@ def test_boundary_values_both_dataframes(spark):
                 max_value=max_val,
             )
             result = expectation.validate(data_frame=data_frame)
-            assert isinstance(
-                result, DataFrameExpectationSuccessMessage
-            ), f"Boundary test failed for {df_type} with {boundary_desc}: expected success but got {type(result)}"
+            assert isinstance(result, DataFrameExpectationSuccessMessage), (
+                f"Boundary test failed for {df_type} with {boundary_desc}: expected success but got {type(result)}"
+            )
 
 
 def test_median_calculation_specifics(spark):
@@ -385,17 +385,17 @@ def test_median_calculation_specifics(spark):
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        assert isinstance(
-            result, DataFrameExpectationSuccessMessage
-        ), f"Pandas median test failed for {description}: expected success but got {type(result)}"
+        assert isinstance(result, DataFrameExpectationSuccessMessage), (
+            f"Pandas median test failed for {description}: expected success but got {type(result)}"
+        )
 
         # Test PySpark (for non-single element cases)
         if len(data) > 1:
             pyspark_df = spark.createDataFrame([(val,) for val in data], ["col1"])
             result_pyspark = expectation.validate(data_frame=pyspark_df)
-            assert isinstance(
-                result_pyspark, DataFrameExpectationSuccessMessage
-            ), f"PySpark median test failed for {description}: expected success but got {type(result_pyspark)}"
+            assert isinstance(result_pyspark, DataFrameExpectationSuccessMessage), (
+                f"PySpark median test failed for {description}: expected success but got {type(result_pyspark)}"
+            )
 
 
 def test_precision_handling():
@@ -426,9 +426,9 @@ def test_precision_handling():
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        assert isinstance(
-            result, DataFrameExpectationSuccessMessage
-        ), f"Precision test failed for {description}: expected success but got {type(result)}"
+        assert isinstance(result, DataFrameExpectationSuccessMessage), (
+            f"Precision test failed for {description}: expected success but got {type(result)}"
+        )
 
 
 def test_suite_chaining():
@@ -499,13 +499,13 @@ def test_outlier_resistance(spark):
             max_value=max_val,
         )
         result = expectation.validate(data_frame=data_frame)
-        assert isinstance(
-            result, DataFrameExpectationSuccessMessage
-        ), f"Pandas outlier test failed for {description}: expected success but got {type(result)}"
+        assert isinstance(result, DataFrameExpectationSuccessMessage), (
+            f"Pandas outlier test failed for {description}: expected success but got {type(result)}"
+        )
 
         # Test with PySpark
         pyspark_df = spark.createDataFrame([(val,) for val in data], ["col1"])
         result_pyspark = expectation.validate(data_frame=pyspark_df)
-        assert isinstance(
-            result_pyspark, DataFrameExpectationSuccessMessage
-        ), f"PySpark outlier test failed for {description}: expected success but got {type(result_pyspark)}"
+        assert isinstance(result_pyspark, DataFrameExpectationSuccessMessage), (
+            f"PySpark outlier test failed for {description}: expected success but got {type(result_pyspark)}"
+        )

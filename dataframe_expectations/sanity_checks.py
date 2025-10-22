@@ -104,9 +104,7 @@ class ExpectationsSanityChecker:
         if isinstance(decorator, ast.Call) and decorator.args:
             first_arg = decorator.args[0]
             if isinstance(first_arg, ast.Constant):
-                return first_arg.value
-            elif isinstance(first_arg, ast.Str):  # Python < 3.8 compatibility
-                return first_arg.s
+                return str(first_arg.value)
         return None
 
     def _discover_suite_methods(self):
