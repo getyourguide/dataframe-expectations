@@ -1,0 +1,71 @@
+name: CI
+
+on: [push]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}${{ github.ref_name != github.event.repository.default_branch && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.ref_name != github.event.repository.default_branch }}
+
+jobs:
+  test:
+    runs-on: [ self-hosted, python-small ]
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+      fail-fast: false  # Don't cancel other jobs if one fails
+    name: Test (Python ${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python and UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          uv sync --group dev
+      - name: Run sanity check
+        run: |
+          uv run python sanity_checks.py
+        working-directory: dataframe_expectations
+      - name: Run tests
+        run: |
+          uv run pytest tests/ --cov=dataframe_expectations
+
+  lint:
+    runs-on: [ self-hosted, python-small ]
+    env:
+      PYTHON_VERSION: "3.11"  # Use a single version for linting
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python and UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: |
+          uv sync --group dev
+      - name: Pre-commit
+        run: |
+          uv run pre-commit run --all-files --show-diff-on-failure
+
+  docs:
+    runs-on: [ self-hosted, python-small ]
+    env:
+      PYTHON_VERSION: "3.11"  # Use a single version for docs
+    needs: [test, lint]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python and UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: |
+          uv sync --group docs
+      - name: Build docs
+        run: |
+          uv run sphinx-build source build/html
+        working-directory: docs

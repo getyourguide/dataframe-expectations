@@ -1,0 +1,34 @@
+version: 2
+updates:
+  # UV package manager support
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    # Group updates to reduce PR noise
+    groups:
+      major-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+      patch-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+    # Ignore dependencies that need manual review
+    ignore:
+      - dependency-name: "pyspark"
+        # PySpark updates can break compatibility, needs manual testing
+      - dependency-name: "pandas"
+        update-types: ["version-update:semver-major"]
+        # Only allow minor/patch updates for pandas to avoid breaking changes

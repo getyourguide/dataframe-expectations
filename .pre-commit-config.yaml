@@ -1,0 +1,61 @@
+fail_fast: false
+default_stages: [pre-commit]
+
+repos:
+  # ============================================================================
+  # General checks
+  # ============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        stages: [pre-commit, manual]
+      - id: end-of-file-fixer
+        stages: [pre-commit, manual]
+      - id: check-yaml
+        stages: [pre-commit, manual]
+      - id: check-added-large-files
+        stages: [pre-commit, manual]
+      - id: check-docstring-first
+        files: \.py$
+        stages: [pre-commit, manual]
+      - id: check-merge-conflict
+        stages: [pre-commit, manual]
+      - id: check-case-conflict
+        stages: [pre-commit, manual]
+
+  # ============================================================================
+  # Ruff - Modern Python linter and formatter
+  # ============================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.1
+    hooks:
+      # Ruff linter with auto-fix
+      - id: ruff
+        args: [--fix]
+        files: ^(dataframe_expectations|tests)/.*\.py$
+        stages: [pre-commit, manual]
+
+      # Ruff formatter (replaces black)
+      - id: ruff-format
+        files: ^(dataframe_expectations|tests)/.*\.py$
+        stages: [pre-commit, manual]
+
+  # ============================================================================
+  # Type checking - mypy
+  # ============================================================================
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        files: ^(dataframe_expectations|tests)/.*\.py$
+        args: [--config-file, ./pyproject.toml]
+        additional_dependencies: [
+          types-tabulate,
+          pandas-stubs,
+          pyspark-stubs,
+          types-PyYAML,
+          pytest,
+          pytest-cov,
+        ]
+        stages: [pre-commit, manual]
