@@ -333,7 +333,7 @@ class ExpectationsSanityChecker:
 
             # Check if any relevant files changed
             relevant_patterns = [
-                "mltools/dataframe_expectations/",
+                "dataframe_expectations/",
                 "tests/dataframe_expectations/",
             ]
 
