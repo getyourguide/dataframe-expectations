@@ -51,7 +51,7 @@ jobs:
         run: |
           uv run pre-commit run --all-files --show-diff-on-failure
 
-  docs:
+  build-docs:
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.11"  # Use a single version for docs
@@ -68,4 +68,12 @@ jobs:
       - name: Build docs
         run: |
           uv run sphinx-build source build/html
+          touch build/html/.nojekyll
         working-directory: docs
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/build/html
+          force_orphan: true
