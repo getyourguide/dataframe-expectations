@@ -3,7 +3,10 @@
 ![CI](https://github.com/getyourguide/dataframe-expectations/workflows/CI/badge.svg)
 ![Publish to PyPI](https://github.com/getyourguide/dataframe-expectations/workflows/Publish%20to%20PyPI/badge.svg)
 [![PyPI version](https://badge.fury.io/py/dataframe-expectations.svg)](https://badge.fury.io/py/dataframe-expectations)
+![PyPI downloads](https://img.shields.io/pypi/dm/dataframe-expectations)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Documentation](https://img.shields.io/badge/docs-available-blue.svg)](https://code.getyourguide.com/dataframe-expectations/)
 
 **DataFrameExpectations** is a Python library designed to validate **Pandas** and **PySpark** DataFrames using customizable, reusable expectations. It simplifies testing in data pipelines and end-to-end workflows by providing a standardized framework for DataFrame validation.
 
