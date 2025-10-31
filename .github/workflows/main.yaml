@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: [ self-hosted, python-small ]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Python and UV
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -35,7 +35,7 @@ jobs:
           uv run pytest tests/ --cov=dataframe_expectations
 
   lint:
-    runs-on: [ self-hosted, python-small ]
+    runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.11"  # Use a single version for linting
     steps:
@@ -51,11 +51,15 @@ jobs:
         run: |
           uv run pre-commit run --all-files --show-diff-on-failure
 
-  docs:
-    runs-on: [ self-hosted, python-small ]
+  build-docs:
+    runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.11"  # Use a single version for docs
     needs: [test, lint]
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Install Python and UV
@@ -68,4 +72,14 @@ jobs:
       - name: Build docs
         run: |
           uv run sphinx-build source build/html
+          touch build/html/.nojekyll
         working-directory: docs
+      - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/build/html
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v4
