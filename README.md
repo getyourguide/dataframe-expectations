@@ -1,10 +1,16 @@
 ## 🎯 DataFrameExpectations
 
+![CI](https://github.com/getyourguide/dataframe-expectations/workflows/CI/badge.svg)
+![Publish to PyPI](https://github.com/getyourguide/dataframe-expectations/workflows/Publish%20to%20PyPI/badge.svg)
+[![PyPI version](https://badge.fury.io/py/dataframe-expectations.svg)](https://badge.fury.io/py/dataframe-expectations)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
 **DataFrameExpectations** is a Python library designed to validate **Pandas** and **PySpark** DataFrames using customizable, reusable expectations. It simplifies testing in data pipelines and end-to-end workflows by providing a standardized framework for DataFrame validation.
 
 Instead of using different validation approaches for DataFrames, this library provides a
 standardized solution for this use case. As a result, any contributions made here—such as adding new expectations—can be leveraged by all users of the library.
-You can find the complete list of expectations [here](docs/build/html/expectations.html).
+
+📚 **[View Documentation](https://code.getyourguide.com/dataframe-expectations/)** | 📋 **[List of Expectations](https://code.getyourguide.com/dataframe-expectations/expectations.html)**
 
 
 ### Installation:
@@ -106,35 +112,26 @@ Contributions are welcome! You can enhance the library by adding new expectation
 
 ### Versioning
 
-This project follows [Semantic Versioning](https://semver.org/) (SemVer):
-- **MAJOR** version for incompatible API changes
-- **MINOR** version for backward-compatible functionality additions
-- **PATCH** version for backward-compatible bug fixes
+This project follows [Semantic Versioning](https://semver.org/) (SemVer) and uses [Release Please](https://github.com/googleapis/release-please) for automated version management.
 
-To update the version, manually edit the version field in `pyproject.toml`:
+Versions are automatically determined based on [Conventional Commits](https://www.conventionalcommits.org/):
 
-```toml
-[project]
-version = "0.2.0"  # Update this line
-```
+- `feat:` - New feature → **MINOR** version bump (0.1.0 → 0.2.0)
+- `fix:` - Bug fix → **PATCH** version bump (0.1.0 → 0.1.1)
+- `feat!:` or `BREAKING CHANGE:` - Breaking change → **MAJOR** version bump (0.1.0 → 1.0.0)
 
-Alternatively, you can use uv to bump version number:
-
+**Example commits:**
 ```bash
-# Bump patch version (0.1.0 -> 0.1.1)
-uv version --bump patch
-
-# Bump minor version (0.1.0 -> 0.2.0)
-uv version --bump minor
-
-# Bump major version (0.1.0 -> 1.0.0)
-uv version --bump major
-
-# Set specific version
-uv version 0.2.0
+git commit -m "feat: add new expectation for null values"
+git commit -m "fix: correct validation logic in expect_value_greater_than"
+git commit -m "feat!: remove deprecated API methods"
 ```
 
-Don't forget to update the [CHANGELOG.md](CHANGELOG.md) file with a detailed description of the changes you've introduced.
+When changes are pushed to the main branch, Release Please automatically:
+1. Creates or updates a Release PR with version bump and changelog
+2. When merged, creates a GitHub Release and publishes to PyPI
+
+No manual version updates needed - just use conventional commit messages!
 
 ### Security
 For security issues please contact security@getyourguide.com.
