@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Python and UV
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Python and UV
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies

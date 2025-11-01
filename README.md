@@ -122,6 +122,7 @@ Versions are automatically determined based on [Conventional Commits](https://ww
 - `feat:` - New feature → **MINOR** version bump (0.1.0 → 0.2.0)
 - `fix:` - Bug fix → **PATCH** version bump (0.1.0 → 0.1.1)
 - `feat!:` or `BREAKING CHANGE:` - Breaking change → **MAJOR** version bump (0.1.0 → 1.0.0)
+- `chore:`, `docs:`, `style:`, `refactor:`, `test:`, `ci:` - No version bump
 
 **Example commits:**
 ```bash
