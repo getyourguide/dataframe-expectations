@@ -52,6 +52,10 @@ def requires_params(
 
             return func(**kwargs)
 
+        # Attach metadata to wrapper for registry to extract
+        wrapper._required_params = required_params  # type: ignore[attr-defined]
+        wrapper._param_types = types or {}  # type: ignore[attr-defined]
+
         return wrapper
 
     return decorator

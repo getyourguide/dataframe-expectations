@@ -9,7 +9,16 @@ from dataframe_expectations.expectations.expectation_registry import (
 from dataframe_expectations.expectations.utils import requires_params
 
 
-@register_expectation("ExpectationValueGreaterThan")
+@register_expectation(
+    "ExpectationValueGreaterThan",
+    description="Check if the values in a column are greater than a specified value",
+    category="Column Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "value": "The value to compare against",
+    },
+)
 @requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
 def create_expectation_value_greater_than(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -24,7 +33,16 @@ def create_expectation_value_greater_than(**kwargs) -> DataFrameColumnExpectatio
     )
 
 
-@register_expectation("ExpectationValueLessThan")
+@register_expectation(
+    "ExpectationValueLessThan",
+    description="Check if the values in a column are less than a specified value",
+    category="Column Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "value": "The value to compare against",
+    },
+)
 @requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
 def create_expectation_value_less_than(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -39,7 +57,17 @@ def create_expectation_value_less_than(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationValueBetween")
+@register_expectation(
+    "ExpectationValueBetween",
+    description="Check if the values in a column are between two specified values",
+    category="Column Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "min_value": "The minimum value for the range",
+        "max_value": "The maximum value for the range",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",

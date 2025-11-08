@@ -9,7 +9,16 @@ from dataframe_expectations.expectations.expectation_registry import (
 from dataframe_expectations.expectations.utils import requires_params
 
 
-@register_expectation("ExpectationValueEquals")
+@register_expectation(
+    "ExpectationValueEquals",
+    description="Check if the values in a column equal a specified value",
+    category="Column Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "value": "The value to compare against",
+    },
+)
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
 def create_expectation_value_equals(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -24,7 +33,16 @@ def create_expectation_value_equals(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationValueNotEquals")
+@register_expectation(
+    "ExpectationValueNotEquals",
+    description="Check if the values in a column do not equal a specified value",
+    category="Column Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "value": "The value to compare against",
+    },
+)
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
 def create_expectation_value_not_equals(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -39,7 +57,15 @@ def create_expectation_value_not_equals(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationValueNull")
+@register_expectation(
+    "ExpectationValueNull",
+    description="Check if the values in a column are null",
+    category="Column Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check",
+    },
+)
 @requires_params("column_name", types={"column_name": str})
 def create_expectation_value_null(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -53,7 +79,15 @@ def create_expectation_value_null(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationValueNotNull")
+@register_expectation(
+    "ExpectationValueNotNull",
+    description="Check if the values in a column are not null",
+    category="Column Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check",
+    },
+)
 @requires_params("column_name", types={"column_name": str})
 def create_expectation_value_not_null(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -67,7 +101,16 @@ def create_expectation_value_not_null(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationValueIn")
+@register_expectation(
+    "ExpectationValueIn",
+    description="Check if the values in a column are in a specified list of values",
+    category="Column Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "values": "The list of values to compare against",
+    },
+)
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
 def create_expectation_value_in(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -82,7 +125,16 @@ def create_expectation_value_in(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationValueNotIn")
+@register_expectation(
+    "ExpectationValueNotIn",
+    description="Check if the values in a column are not in a specified list of values",
+    category="Column Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "values": "The list of values to compare against",
+    },
+)
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
 def create_expectation_value_not_in(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]

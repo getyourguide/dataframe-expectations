@@ -414,7 +414,15 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
 
 
 # Factory functions for the registry
-@register_expectation("ExpectationMinRows")
+@register_expectation(
+    "ExpectationMinRows",
+    description="Check if the DataFrame has at least a minimum number of rows",
+    category="DataFrame Aggregation Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "min_rows": "The minimum number of rows expected",
+    },
+)
 @requires_params("min_rows", types={"min_rows": int})
 def create_expectation_min_rows(**kwargs) -> ExpectationMinRows:
     """
@@ -429,7 +437,15 @@ def create_expectation_min_rows(**kwargs) -> ExpectationMinRows:
     return ExpectationMinRows(min_rows=kwargs["min_rows"])
 
 
-@register_expectation("ExpectationMaxRows")
+@register_expectation(
+    "ExpectationMaxRows",
+    description="Check if the DataFrame has at most a maximum number of rows",
+    category="DataFrame Aggregation Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "max_rows": "The maximum number of rows expected",
+    },
+)
 @requires_params("max_rows", types={"max_rows": int})
 def create_expectation_max_rows(**kwargs) -> ExpectationMaxRows:
     """
@@ -444,7 +460,16 @@ def create_expectation_max_rows(**kwargs) -> ExpectationMaxRows:
     return ExpectationMaxRows(max_rows=kwargs["max_rows"])
 
 
-@register_expectation("ExpectationMaxNullPercentage")
+@register_expectation(
+    "ExpectationMaxNullPercentage",
+    description="Check if the percentage of null/NaN values in a specific column is below a threshold",
+    category="Column Aggregation Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check for null percentage",
+        "max_percentage": "The maximum allowed percentage of null/NaN values (0.0 to 100.0)",
+    },
+)
 @requires_params(
     "column_name",
     "max_percentage",
@@ -467,7 +492,16 @@ def create_expectation_max_null_percentage(**kwargs) -> ExpectationMaxNullPercen
     )
 
 
-@register_expectation("ExpectationMaxNullCount")
+@register_expectation(
+    "ExpectationMaxNullCount",
+    description="Check if the count of null/NaN values in a specific column is below a threshold",
+    category="Column Aggregation Expectations",
+    subcategory="Any Value",
+    params_doc={
+        "column_name": "The name of the column to check for null count",
+        "max_count": "The maximum allowed count of null/NaN values",
+    },
+)
 @requires_params(
     "column_name",
     "max_count",

@@ -60,6 +60,18 @@ repos:
         ]
         stages: [pre-commit, manual]
 
+
+  # ============================================================================
+  # Stub methods check - custom local hook
+  # ============================================================================
+  - repo: local
+    hooks:
+      - id: check-stub-methods
+        name: Check expectation stubs are up-to-date
+        entry: python scripts/generate_suite_stubs.py --check
+        language: system
+        pass_filenames: false
+
   # ============================================================================
   # Commit message validation - Conventional Commits
   # ============================================================================

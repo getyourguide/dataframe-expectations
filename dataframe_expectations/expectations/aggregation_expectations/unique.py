@@ -551,7 +551,15 @@ class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
 
 
 # Register the expectations
-@register_expectation("ExpectationUniqueRows")
+@register_expectation(
+    "ExpectationUniqueRows",
+    description="Check if all rows in the DataFrame are unique based on specified columns",
+    category="DataFrame Aggregation Expectations",
+    subcategory="Unique",
+    params_doc={
+        "column_names": "List of column names to check for uniqueness. Empty list checks all columns",
+    },
+)
 @requires_params("column_names", types={"column_names": list})
 def create_expectation_unique(**kwargs) -> ExpectationUniqueRows:
     """
@@ -564,7 +572,16 @@ def create_expectation_unique(**kwargs) -> ExpectationUniqueRows:
     return ExpectationUniqueRows(column_names=column_names)
 
 
-@register_expectation("ExpectationDistinctColumnValuesEquals")
+@register_expectation(
+    "ExpectationDistinctColumnValuesEquals",
+    description="Check if a column has exactly a specified number of distinct values",
+    category="Column Aggregation Expectations",
+    subcategory="Unique",
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "expected_value": "The expected number of distinct values",
+    },
+)
 @requires_params(
     "column_name",
     "expected_value",
@@ -589,7 +606,16 @@ def create_expectation_distinct_column_values_equals(
     )
 
 
-@register_expectation("ExpectationDistinctColumnValuesLessThan")
+@register_expectation(
+    "ExpectationDistinctColumnValuesLessThan",
+    description="Check if a column has fewer than a specified number of distinct values",
+    category="Column Aggregation Expectations",
+    subcategory="Unique",
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "threshold": "The maximum number of distinct values (exclusive)",
+    },
+)
 @requires_params(
     "column_name",
     "threshold",
@@ -614,7 +640,16 @@ def create_expectation_distinct_column_values_less_than(
     )
 
 
-@register_expectation("ExpectationDistinctColumnValuesGreaterThan")
+@register_expectation(
+    "ExpectationDistinctColumnValuesGreaterThan",
+    description="Check if a column has more than a specified number of distinct values",
+    category="Column Aggregation Expectations",
+    subcategory="Unique",
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "threshold": "The minimum number of distinct values (exclusive)",
+    },
+)
 @requires_params(
     "column_name",
     "threshold",
@@ -639,7 +674,17 @@ def create_expectation_distinct_column_values_greater_than(
     )
 
 
-@register_expectation("ExpectationDistinctColumnValuesBetween")
+@register_expectation(
+    "ExpectationDistinctColumnValuesBetween",
+    description="Check if a column has a number of distinct values within a specified range",
+    category="Column Aggregation Expectations",
+    subcategory="Unique",
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "min_value": "The minimum number of distinct values (inclusive)",
+        "max_value": "The maximum number of distinct values (inclusive)",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",

@@ -9,7 +9,16 @@ from dataframe_expectations.expectations.expectation_registry import (
 from dataframe_expectations.expectations.utils import requires_params
 
 
-@register_expectation("ExpectationStringContains")
+@register_expectation(
+    "ExpectationStringContains",
+    description="Check if the values in a string column contain a specified substring",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "substring": "The substring to search for",
+    },
+)
 @requires_params("column_name", "substring", types={"column_name": str, "substring": str})
 def create_expectation_string_contains(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -24,7 +33,16 @@ def create_expectation_string_contains(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationStringNotContains")
+@register_expectation(
+    "ExpectationStringNotContains",
+    description="Check if the values in a string column do not contain a specified substring",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "substring": "The substring to search for",
+    },
+)
 @requires_params("column_name", "substring", types={"column_name": str, "substring": str})
 def create_expectation_string_not_contains(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -39,7 +57,16 @@ def create_expectation_string_not_contains(**kwargs) -> DataFrameColumnExpectati
     )
 
 
-@register_expectation("ExpectationStringStartsWith")
+@register_expectation(
+    "ExpectationStringStartsWith",
+    description="Check if the values in a string column start with a specified prefix",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "prefix": "The prefix to search for",
+    },
+)
 @requires_params("column_name", "prefix", types={"column_name": str, "prefix": str})
 def create_expectation_string_starts_with(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -54,7 +81,16 @@ def create_expectation_string_starts_with(**kwargs) -> DataFrameColumnExpectatio
     )
 
 
-@register_expectation("ExpectationStringEndsWith")
+@register_expectation(
+    "ExpectationStringEndsWith",
+    description="Check if the values in a string column end with a specified suffix",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "suffix": "The suffix to search for",
+    },
+)
 @requires_params("column_name", "suffix", types={"column_name": str, "suffix": str})
 def create_expectation_string_ends_with(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -69,7 +105,16 @@ def create_expectation_string_ends_with(**kwargs) -> DataFrameColumnExpectation:
     )
 
 
-@register_expectation("ExpectationStringLengthLessThan")
+@register_expectation(
+    "ExpectationStringLengthLessThan",
+    description="Check if the length of the values in a string column is less than a specified length",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "length": "The length that the values should be less than",
+    },
+)
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
 def create_expectation_string_length_less_than(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]
@@ -84,7 +129,16 @@ def create_expectation_string_length_less_than(**kwargs) -> DataFrameColumnExpec
     )
 
 
-@register_expectation("ExpectationStringLengthGreaterThan")
+@register_expectation(
+    "ExpectationStringLengthGreaterThan",
+    description="Check if the length of the values in a string column is greater than a specified length",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "length": "The length that the values should be greater than",
+    },
+)
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
 def create_expectation_string_length_greater_than(
     **kwargs,
@@ -101,7 +155,17 @@ def create_expectation_string_length_greater_than(
     )
 
 
-@register_expectation("ExpectationStringLengthBetween")
+@register_expectation(
+    "ExpectationStringLengthBetween",
+    description="Check if the length of the values in a string column is between two specified lengths",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "min_length": "The minimum length that the values should be",
+        "max_length": "The maximum length that the values should be",
+    },
+)
 @requires_params(
     "column_name",
     "min_length",
@@ -127,7 +191,16 @@ def create_expectation_string_length_between(**kwargs) -> DataFrameColumnExpecta
     )
 
 
-@register_expectation("ExpectationStringLengthEquals")
+@register_expectation(
+    "ExpectationStringLengthEquals",
+    description="Check if the length of the values in a string column equals a specified length",
+    category="Column Expectations",
+    subcategory="String",
+    params_doc={
+        "column_name": "The name of the column to check",
+        "length": "The length that the values should equal",
+    },
+)
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
 def create_expectation_string_length_equals(**kwargs) -> DataFrameColumnExpectation:
     column_name = kwargs["column_name"]

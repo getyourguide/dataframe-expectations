@@ -318,7 +318,18 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
 
 
 # Register the main expectation
-@register_expectation("ExpectationColumnQuantileBetween")
+@register_expectation(
+    "ExpectationColumnQuantileBetween",
+    description="Check if a specific quantile of a numeric column falls within a specified range",
+    category="Column Aggregation Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "quantile": "The quantile to calculate (0.0 to 1.0, e.g., 0.5 for median)",
+        "min_value": "The minimum allowed value for the quantile",
+        "max_value": "The maximum allowed value for the quantile",
+    },
+)
 @requires_params(
     "column_name",
     "quantile",
@@ -326,12 +337,12 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
     "max_value",
     types={
         "column_name": str,
-        "quantile": float,
+        "quantile": (int, float),
         "min_value": (int, float),
         "max_value": (int, float),
     },
 )
-def create_expectation_column_quantile_to_be_between(
+def create_expectation_column_quantile_between(
     **kwargs,
 ) -> ExpectationColumnQuantileBetween:
     """
@@ -355,7 +366,17 @@ def create_expectation_column_quantile_to_be_between(
 
 
 # Convenience functions for common quantiles
-@register_expectation("ExpectationColumnMaxBetween")
+@register_expectation(
+    "ExpectationColumnMaxBetween",
+    description="Check if the maximum value of a numeric column falls within a specified range",
+    category="Column Aggregation Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed maximum value",
+        "max_value": "The maximum allowed maximum value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -384,7 +405,17 @@ def create_expectation_column_max_to_be_between(
     )
 
 
-@register_expectation("ExpectationColumnMinBetween")
+@register_expectation(
+    "ExpectationColumnMinBetween",
+    description="Check if the minimum value of a numeric column falls within a specified range",
+    category="Column Aggregation Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed minimum value",
+        "max_value": "The maximum allowed minimum value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -413,7 +444,17 @@ def create_expectation_column_min_to_be_between(
     )
 
 
-@register_expectation("ExpectationColumnMeanBetween")
+@register_expectation(
+    "ExpectationColumnMeanBetween",
+    description="Check if the mean (average) of a numeric column falls within a specified range",
+    category="Column Aggregation Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed mean value",
+        "max_value": "The maximum allowed mean value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -443,7 +484,17 @@ def create_expectation_column_mean_to_be_between(
     )
 
 
-@register_expectation("ExpectationColumnMedianBetween")
+@register_expectation(
+    "ExpectationColumnMedianBetween",
+    description="Check if the median of a numeric column falls within a specified range",
+    category="Column Aggregation Expectations",
+    subcategory="Numerical",
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed median value",
+        "max_value": "The maximum allowed median value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
