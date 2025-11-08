@@ -24,6 +24,7 @@ class ExpectationsSanityChecker:
         self.project_root = project_root
         self.expectations_dir = project_root / "dataframe_expectations" / "expectations"
         self.suite_file = project_root / "dataframe_expectations" / "expectations_suite.py"
+        self.stub_file = project_root / "dataframe_expectations" / "expectations_suite.pyi"
         self.tests_dir = project_root / "tests" / "expectations_implemented"
 
         # Results storage
@@ -54,8 +55,12 @@ class ExpectationsSanityChecker:
         self._discover_test_files()
         print(f"   Found {len(self.test_files)} test files")
 
-        # Step 4: Validate consistency
-        print("\n✅ Step 4: Validating consistency...")
+        # Step 4: Validate stub file
+        print("\n📝 Step 4: Validating stub file...")
+        self._validate_stub_file()
+
+        # Step 5: Validate consistency
+        print("\n✅ Step 5: Validating consistency...")
         self._validate_registry_to_suite_mapping()
         self._validate_registry_to_tests_mapping()
         self._validate_orphaned_suite_methods()
@@ -108,22 +113,18 @@ class ExpectationsSanityChecker:
         return None
 
     def _discover_suite_methods(self):
-        """Find all expect_* methods in DataFrameExpectationsSuite."""
-        if not self.suite_file.exists():
-            self.issues.append(f"❌ Suite file not found: {self.suite_file}")
-            return
-
+        """Find all expect_* methods available via the registry."""
         try:
-            with open(self.suite_file, "r") as f:
-                content = f.read()
+            from dataframe_expectations.expectations.expectation_registry import (
+                DataFrameExpectationRegistry,
+            )
 
-            # Use regex to find expect_* method definitions
-            method_pattern = r"def\s+(expect_[a-z_]+)\s*\("
-            matches = re.findall(method_pattern, content)
-            self.suite_methods = set(matches)
+            # Get the mapping of suite methods from the registry
+            mapping = DataFrameExpectationRegistry.get_suite_method_mapping()
+            self.suite_methods = set(mapping.keys())
 
         except Exception as e:
-            self.issues.append(f"❌ Could not parse suite file {self.suite_file}: {e}")
+            self.issues.append(f"❌ Could not load suite methods from registry: {e}")
 
     def _discover_test_files(self):
         """Find all test files and map them to expectation names."""
@@ -146,6 +147,35 @@ class ExpectationsSanityChecker:
                 expectation_part = filename[12:]  # Remove "test_expect_"
                 expectation_name = "Expectation" + self._snake_to_pascal_case(expectation_part)
                 self.test_files[expectation_name] = str(test_file)
+
+    def _validate_stub_file(self):
+        """Check if the stub file is up-to-date with registered expectations."""
+        print("   📝 Checking if stub file is up-to-date...")
+
+        if not self.stub_file.exists():
+            self.issues.append(
+                f"❌ Stub file not found: {self.stub_file}\n"
+                "     Run: python scripts/generate_suite_stubs.py"
+            )
+            return
+
+        try:
+            from generate_suite_stubs import generate_pyi_file
+
+            # Generate what the content should be
+            expected_content = generate_pyi_file()
+
+            # Read the current stub file
+            with open(self.stub_file, "r") as f:
+                actual_content = f.read()
+
+            if expected_content != actual_content:
+                self.issues.append(
+                    "❌ Stub file is out of date\n"
+                    "     Run: python scripts/generate_suite_stubs.py"
+                )
+        except Exception as e:
+            self.issues.append(f"❌ Could not validate stub file: {e}")
 
     def _snake_to_pascal_case(self, snake_str: str) -> str:
         """Convert snake_case to PascalCase."""
@@ -366,8 +396,13 @@ class ExpectationsSanityChecker:
 if __name__ == "__main__":
     # Use relative path from the script location
     script_dir = Path(__file__).parent
-    # Go up one level: sanity_checks.py is in dataframe_expectations/, project root is parent
+    # Go up one level: sanity_checks.py is in scripts/, project root is parent
     project_root = script_dir.parent
+
+    # Add project root to sys.path to enable imports
+    # This must be done before creating the checker since imports happen during initialization
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
 
     # Validate directory structure
     expected_dirs = ["dataframe_expectations", "tests", "pyproject.toml"]

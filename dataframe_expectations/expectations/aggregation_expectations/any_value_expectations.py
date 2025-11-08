@@ -9,6 +9,8 @@ from dataframe_expectations.expectations.aggregation_expectation import (
     DataFrameAggregationExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
+    ExpectationCategory,
+    ExpectationSubcategory,
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
@@ -36,8 +38,7 @@ class ExpectationMinRows(DataFrameAggregationExpectation):
         """
         Initialize the minimum rows expectation.
 
-        Args:
-            min_rows (int): Minimum number of rows required (inclusive).
+        :param min_rows: Minimum number of rows required (inclusive).
         """
         if min_rows < 0:
             raise ValueError(f"min_rows must be non-negative, got {min_rows}")
@@ -122,8 +123,7 @@ class ExpectationMaxRows(DataFrameAggregationExpectation):
         """
         Initialize the maximum rows expectation.
 
-        Args:
-            max_rows (int): Maximum number of rows allowed (inclusive).
+        :param max_rows: Maximum number of rows allowed (inclusive).
         """
         if max_rows < 0:
             raise ValueError(f"max_rows must be non-negative, got {max_rows}")
@@ -212,9 +212,8 @@ class ExpectationMaxNullPercentage(DataFrameAggregationExpectation):
         """
         Initialize the maximum null percentage expectation.
 
-        Args:
-            column_name (str): Name of the column to check for null percentage.
-            max_percentage (float): Maximum percentage of null values allowed (0.0-100.0).
+        :param column_name: Name of the column to check for null percentage.
+        :param max_percentage: Maximum percentage of null values allowed (0.0-100.0).
         """
         if not 0 <= max_percentage <= 100:
             raise ValueError(f"max_percentage must be between 0.0 and 100.0, got {max_percentage}")
@@ -330,9 +329,8 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
         """
         Initialize the maximum null count expectation.
 
-        Args:
-            column_name (str): Name of the column to check for null count.
-            max_count (int): Maximum number of null values allowed.
+        :param column_name: Name of the column to check for null count.
+        :param max_count: Maximum number of null values allowed.
         """
         if max_count < 0:
             raise ValueError(f"max_count must be non-negative, got {max_count}")
@@ -414,77 +412,101 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
 
 
 # Factory functions for the registry
-@register_expectation("ExpectationMinRows")
+@register_expectation(
+    "ExpectationMinRows",
+    pydoc="Check if the DataFrame has at least a minimum number of rows",
+    category=ExpectationCategory.DATAFRAME_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
+    params_doc={
+        "min_rows": "The minimum number of rows expected",
+    },
+)
 @requires_params("min_rows", types={"min_rows": int})
-def create_expectation_min_rows(**kwargs) -> ExpectationMinRows:
+def create_expectation_min_rows(min_rows: int) -> ExpectationMinRows:
     """
     Create an ExpectMinRows instance.
 
-    Args:
-        min_rows (int): Minimum number of rows required.
-
-    Returns:
-        ExpectationMinRows: A configured expectation instance.
+    :param min_rows: Minimum number of rows required.
+    :return: A configured expectation instance.
     """
-    return ExpectationMinRows(min_rows=kwargs["min_rows"])
+    return ExpectationMinRows(min_rows=min_rows)
 
 
-@register_expectation("ExpectationMaxRows")
+@register_expectation(
+    "ExpectationMaxRows",
+    pydoc="Check if the DataFrame has at most a maximum number of rows",
+    category=ExpectationCategory.DATAFRAME_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
+    params_doc={
+        "max_rows": "The maximum number of rows expected",
+    },
+)
 @requires_params("max_rows", types={"max_rows": int})
-def create_expectation_max_rows(**kwargs) -> ExpectationMaxRows:
+def create_expectation_max_rows(max_rows: int) -> ExpectationMaxRows:
     """
     Create an ExpectationMaxRows instance.
 
-    Args:
-        max_rows (int): Maximum number of rows allowed.
-
-    Returns:
-        ExpectationMaxRows: A configured expectation instance.
+    :param max_rows: Maximum number of rows allowed.
+    :return: A configured expectation instance.
     """
-    return ExpectationMaxRows(max_rows=kwargs["max_rows"])
+    return ExpectationMaxRows(max_rows=max_rows)
 
 
-@register_expectation("ExpectationMaxNullPercentage")
+@register_expectation(
+    "ExpectationMaxNullPercentage",
+    pydoc="Check if the percentage of null/NaN values in a specific column is below a threshold",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
+    params_doc={
+        "column_name": "The name of the column to check for null percentage",
+        "max_percentage": "The maximum allowed percentage of null/NaN values (0.0 to 100.0)",
+    },
+)
 @requires_params(
     "column_name",
     "max_percentage",
     types={"column_name": str, "max_percentage": (int, float)},
 )
-def create_expectation_max_null_percentage(**kwargs) -> ExpectationMaxNullPercentage:
+def create_expectation_max_null_percentage(
+    column_name: str, max_percentage: float
+) -> ExpectationMaxNullPercentage:
     """
     Create an ExpectationMaxNullPercentage instance.
 
-    Args:
-        column_name (str): Name of the column to check for null percentage.
-        max_percentage (float): Maximum percentage of null values allowed (0.0-100.0).
-
-    Returns:
-        ExpectationMaxNullPercentage: A configured expectation instance.
+    :param column_name: Name of the column to check for null percentage.
+    :param max_percentage: Maximum percentage of null values allowed (0.0-100.0).
+    :return: A configured expectation instance.
     """
     return ExpectationMaxNullPercentage(
-        column_name=kwargs["column_name"],
-        max_percentage=kwargs["max_percentage"],
+        column_name=column_name,
+        max_percentage=max_percentage,
     )
 
 
-@register_expectation("ExpectationMaxNullCount")
+@register_expectation(
+    "ExpectationMaxNullCount",
+    pydoc="Check if the count of null/NaN values in a specific column is below a threshold",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
+    params_doc={
+        "column_name": "The name of the column to check for null count",
+        "max_count": "The maximum allowed count of null/NaN values",
+    },
+)
 @requires_params(
     "column_name",
     "max_count",
     types={"column_name": str, "max_count": int},
 )
-def create_expectation_max_null_count(**kwargs) -> ExpectationMaxNullCount:
+def create_expectation_max_null_count(column_name: str, max_count: int) -> ExpectationMaxNullCount:
     """
     Create an ExpectationMaxNullCount instance.
 
-    Args:
-        column_name (str): Name of the column to check for null count.
-        max_count (int): Maximum number of null values allowed.
-
-    Returns:
-        ExpectationMaxNullCount: A configured expectation instance.
+    :param column_name: Name of the column to check for null count.
+    :param max_count: Maximum number of null values allowed.
+    :return: A configured expectation instance.
     """
     return ExpectationMaxNullCount(
-        column_name=kwargs["column_name"],
-        max_count=kwargs["max_count"],
+        column_name=column_name,
+        max_count=max_count,
     )

@@ -10,6 +10,8 @@ from dataframe_expectations.expectations.aggregation_expectation import (
     DataFrameAggregationExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
+    ExpectationCategory,
+    ExpectationSubcategory,
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
@@ -51,14 +53,11 @@ class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
         """
         Initialize the column quantile between expectation.
 
-        Args:
-            column_name (str): Name of the column to check.
-            quantile (float): Quantile to compute (0.0 to 1.0, where 0.0=min, 0.5=median, 1.0=max).
-            min_value (Union[int, float]): Minimum allowed value for the column quantile (inclusive).
-            max_value (Union[int, float]): Maximum allowed value for the column quantile (inclusive).
-
-        Raises:
-            ValueError: If quantile is not between 0.0 and 1.0.
+        :param column_name: Name of the column to check.
+        :param quantile: Quantile to compute (0.0 to 1.0, where 0.0=min, 0.5=median, 1.0=max).
+        :param min_value: Minimum allowed value for the column quantile (inclusive).
+        :param max_value: Maximum allowed value for the column quantile (inclusive).
+        :raises ValueError: If quantile is not between 0.0 and 1.0.
         """
         if not (0.0 <= quantile <= 1.0):
             raise ValueError(f"Quantile must be between 0.0 and 1.0, got {quantile}")
@@ -224,10 +223,9 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
         """
         Initialize the column mean between expectation.
 
-        Args:
-            column_name (str): Name of the column to check.
-            min_value (Union[int, float]): Minimum allowed value for the column mean (inclusive).
-            max_value (Union[int, float]): Maximum allowed value for the column mean (inclusive).
+        :param column_name: Name of the column to check.
+        :param min_value: Minimum allowed value for the column mean (inclusive).
+        :param max_value: Maximum allowed value for the column mean (inclusive).
         """
         description = f"column '{column_name}' mean value between {min_value} and {max_value}"
 
@@ -318,7 +316,18 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
 
 
 # Register the main expectation
-@register_expectation("ExpectationColumnQuantileBetween")
+@register_expectation(
+    "ExpectationColumnQuantileBetween",
+    pydoc="Check if a specific quantile of a numeric column falls within a specified range",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "quantile": "The quantile to calculate (0.0 to 1.0, e.g., 0.5 for median)",
+        "min_value": "The minimum allowed value for the quantile",
+        "max_value": "The maximum allowed value for the quantile",
+    },
+)
 @requires_params(
     "column_name",
     "quantile",
@@ -326,36 +335,46 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
     "max_value",
     types={
         "column_name": str,
-        "quantile": float,
+        "quantile": (int, float),
         "min_value": (int, float),
         "max_value": (int, float),
     },
 )
-def create_expectation_column_quantile_to_be_between(
-    **kwargs,
+def create_expectation_column_quantile_between(
+    column_name: str,
+    quantile: float,
+    min_value: Union[int, float],
+    max_value: Union[int, float],
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance.
 
-    Args:
-        column_name (str): Name of the column to check.
-        quantile (float): Quantile to compute (0.0 to 1.0).
-        min_value (Union[int, float]): Minimum allowed value for the column quantile.
-        max_value (Union[int, float]): Maximum allowed value for the column quantile.
-
-    Returns:
-        ExpectationColumnQuantileBetween: A configured expectation instance.
+    :param column_name: Name of the column to check.
+    :param quantile: Quantile to compute (0.0 to 1.0).
+    :param min_value: Minimum allowed value for the column quantile.
+    :param max_value: Maximum allowed value for the column quantile.
+    :return: A configured expectation instance.
     """
     return ExpectationColumnQuantileBetween(
-        column_name=kwargs["column_name"],
-        quantile=kwargs["quantile"],
-        min_value=kwargs["min_value"],
-        max_value=kwargs["max_value"],
+        column_name=column_name,
+        quantile=quantile,
+        min_value=min_value,
+        max_value=max_value,
     )
 
 
 # Convenience functions for common quantiles
-@register_expectation("ExpectationColumnMaxBetween")
+@register_expectation(
+    "ExpectationColumnMaxBetween",
+    pydoc="Check if the maximum value of a numeric column falls within a specified range",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed maximum value",
+        "max_value": "The maximum allowed maximum value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -363,28 +382,37 @@ def create_expectation_column_quantile_to_be_between(
     types={"column_name": str, "min_value": (int, float), "max_value": (int, float)},
 )
 def create_expectation_column_max_to_be_between(
-    **kwargs,
+    column_name: str,
+    min_value: Union[int, float],
+    max_value: Union[int, float],
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance for maximum values (quantile=1.0).
 
-    Args:
-        column_name (str): Name of the column to check.
-        min_value (Union[int, float]): Minimum allowed value for the column maximum.
-        max_value (Union[int, float]): Maximum allowed value for the column maximum.
-
-    Returns:
-        ExpectationColumnQuantileBetween: A configured expectation instance for maximum values.
+    :param column_name: Name of the column to check.
+    :param min_value: Minimum allowed value for the column maximum.
+    :param max_value: Maximum allowed value for the column maximum.
+    :return: A configured expectation instance for maximum values.
     """
     return ExpectationColumnQuantileBetween(
-        column_name=kwargs["column_name"],
+        column_name=column_name,
         quantile=1.0,
-        min_value=kwargs["min_value"],
-        max_value=kwargs["max_value"],
+        min_value=min_value,
+        max_value=max_value,
     )
 
 
-@register_expectation("ExpectationColumnMinBetween")
+@register_expectation(
+    "ExpectationColumnMinBetween",
+    pydoc="Check if the minimum value of a numeric column falls within a specified range",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed minimum value",
+        "max_value": "The maximum allowed minimum value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -392,28 +420,37 @@ def create_expectation_column_max_to_be_between(
     types={"column_name": str, "min_value": (int, float), "max_value": (int, float)},
 )
 def create_expectation_column_min_to_be_between(
-    **kwargs,
+    column_name: str,
+    min_value: Union[int, float],
+    max_value: Union[int, float],
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance for minimum values (quantile=0.0).
 
-    Args:
-        column_name (str): Name of the column to check.
-        min_value (Union[int, float]): Minimum allowed value for the column minimum.
-        max_value (Union[int, float]): Maximum allowed value for the column minimum.
-
-    Returns:
-        ExpectationColumnQuantileBetween: A configured expectation instance for minimum values.
+    :param column_name: Name of the column to check.
+    :param min_value: Minimum allowed value for the column minimum.
+    :param max_value: Maximum allowed value for the column minimum.
+    :return: A configured expectation instance for minimum values.
     """
     return ExpectationColumnQuantileBetween(
-        column_name=kwargs["column_name"],
+        column_name=column_name,
         quantile=0.0,
-        min_value=kwargs["min_value"],
-        max_value=kwargs["max_value"],
+        min_value=min_value,
+        max_value=max_value,
     )
 
 
-@register_expectation("ExpectationColumnMeanBetween")
+@register_expectation(
+    "ExpectationColumnMeanBetween",
+    pydoc="Check if the mean (average) of a numeric column falls within a specified range",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed mean value",
+        "max_value": "The maximum allowed mean value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -421,29 +458,38 @@ def create_expectation_column_min_to_be_between(
     types={"column_name": str, "min_value": (int, float), "max_value": (int, float)},
 )
 def create_expectation_column_mean_to_be_between(
-    **kwargs,
+    column_name: str,
+    min_value: Union[int, float],
+    max_value: Union[int, float],
 ) -> ExpectationColumnMeanBetween:
     """
     Create a custom ExpectationColumnMeanBetween instance for mean values.
     Note: This uses a separate implementation since mean is not a quantile.
 
-    Args:
-        column_name (str): Name of the column to check.
-        min_value (Union[int, float]): Minimum allowed value for the column mean.
-        max_value (Union[int, float]): Maximum allowed value for the column mean.
-
-    Returns:
-        ExpectationColumnMeanBetween: A configured expectation instance for mean values.
+    :param column_name: Name of the column to check.
+    :param min_value: Minimum allowed value for the column mean.
+    :param max_value: Maximum allowed value for the column mean.
+    :return: A configured expectation instance for mean values.
     """
     # For mean, we need a separate class since it's not a quantile
     return ExpectationColumnMeanBetween(
-        column_name=kwargs["column_name"],
-        min_value=kwargs["min_value"],
-        max_value=kwargs["max_value"],
+        column_name=column_name,
+        min_value=min_value,
+        max_value=max_value,
     )
 
 
-@register_expectation("ExpectationColumnMedianBetween")
+@register_expectation(
+    "ExpectationColumnMedianBetween",
+    pydoc="Check if the median of a numeric column falls within a specified range",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
+    params_doc={
+        "column_name": "The name of the numeric column to check",
+        "min_value": "The minimum allowed median value",
+        "max_value": "The maximum allowed median value",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -451,22 +497,21 @@ def create_expectation_column_mean_to_be_between(
     types={"column_name": str, "min_value": (int, float), "max_value": (int, float)},
 )
 def create_expectation_column_median_to_be_between(
-    **kwargs,
+    column_name: str,
+    min_value: Union[int, float],
+    max_value: Union[int, float],
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance for median values (quantile=0.5).
 
-    Args:
-        column_name (str): Name of the column to check.
-        min_value (Union[int, float]): Minimum allowed value for the column median.
-        max_value (Union[int, float]): Maximum allowed value for the column median.
-
-    Returns:
-        ExpectationColumnQuantileBetween: A configured expectation instance for median values.
+    :param column_name: Name of the column to check.
+    :param min_value: Minimum allowed value for the column median.
+    :param max_value: Maximum allowed value for the column median.
+    :return: A configured expectation instance for median values.
     """
     return ExpectationColumnQuantileBetween(
-        column_name=kwargs["column_name"],
+        column_name=column_name,
         quantile=0.5,
-        min_value=kwargs["min_value"],
-        max_value=kwargs["max_value"],
+        min_value=min_value,
+        max_value=max_value,
     )

@@ -10,6 +10,8 @@ from dataframe_expectations.expectations.aggregation_expectation import (
     DataFrameAggregationExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
+    ExpectationCategory,
+    ExpectationSubcategory,
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
@@ -102,11 +104,20 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
         sort_columns = ["#duplicates"] + check_columns
         duplicates_with_counts = duplicate_counts.sort_values(sort_columns)
 
-        # Replace NaN with None
-        duplicates_with_counts = duplicates_with_counts.map(lambda x: None if pd.isna(x) else x)
+        # Replace NaN with None (use map for pandas >= 2.1.0, applymap for older versions)
+        if hasattr(duplicates_with_counts, "map") and callable(
+            getattr(duplicates_with_counts, "map")
+        ):
+            # pandas >= 2.1.0 uses .map() for element-wise operations on DataFrames
+            duplicates_with_counts = duplicates_with_counts.map(lambda x: None if pd.isna(x) else x)
+        else:
+            # pandas < 2.1.0 uses .applymap() (deprecated in 2.1.0, removed in 3.0.0)
+            duplicates_with_counts = duplicates_with_counts.applymap(  # type: ignore[operator]
+                lambda x: None if pd.isna(x) else x
+            )
 
         # Calculate total number of duplicate rows (not groups)
-        total_duplicate_rows = duplicates_with_counts["#duplicates"].sum()
+        total_duplicate_rows = duplicates_with_counts["#duplicates"].sum()  # type: ignore[misc]
 
         # Generate dynamic error message
         error_msg = (
@@ -185,9 +196,8 @@ class ExpectationDistinctColumnValuesEquals(DataFrameAggregationExpectation):
         """
         Initialize the distinct values equals expectation.
 
-        Args:
-            column_name (str): Name of the column to check.
-            expected_value (int): Expected number of distinct values (exact match).
+        :param column_name: Name of the column to check.
+        :param expected_value: Expected number of distinct values (exact match).
         """
         if expected_value < 0:
             raise ValueError(f"expected_value must be non-negative, got {expected_value}")
@@ -279,9 +289,8 @@ class ExpectationDistinctColumnValuesLessThan(DataFrameAggregationExpectation):
         """
         Initialize the distinct values less than expectation.
 
-        Args:
-            column_name (str): Name of the column to check.
-            threshold (int): Threshold for distinct values count (exclusive upper bound).
+        :param column_name: Name of the column to check.
+        :param threshold: Threshold for distinct values count (exclusive upper bound).
         """
         if threshold < 0:
             raise ValueError(f"threshold must be non-negative, got {threshold}")
@@ -373,9 +382,8 @@ class ExpectationDistinctColumnValuesGreaterThan(DataFrameAggregationExpectation
         """
         Initialize the distinct values greater than expectation.
 
-        Args:
-            column_name (str): Name of the column to check.
-            threshold (int): Threshold for distinct values count (exclusive lower bound).
+        :param column_name: Name of the column to check.
+        :param threshold: Threshold for distinct values count (exclusive lower bound).
         """
         if threshold < 0:
             raise ValueError(f"threshold must be non-negative, got {threshold}")
@@ -467,10 +475,9 @@ class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
         """
         Initialize the distinct values between expectation.
 
-        Args:
-            column_name (str): Name of the column to check.
-            min_value (int): Minimum number of distinct values (inclusive lower bound).
-            max_value (int): Maximum number of distinct values (inclusive upper bound).
+        :param column_name: Name of the column to check.
+        :param min_value: Minimum number of distinct values (inclusive lower bound).
+        :param max_value: Maximum number of distinct values (inclusive upper bound).
         """
         if min_value < 0:
             raise ValueError(f"min_value must be non-negative, got {min_value}")
@@ -551,95 +558,136 @@ class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
 
 
 # Register the expectations
-@register_expectation("ExpectationUniqueRows")
+@register_expectation(
+    "ExpectationUniqueRows",
+    pydoc="Check if all rows in the DataFrame are unique based on specified columns",
+    category=ExpectationCategory.DATAFRAME_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.UNIQUE,
+    params_doc={
+        "column_names": "List of column names to check for uniqueness. Empty list checks all columns",
+    },
+)
 @requires_params("column_names", types={"column_names": list})
-def create_expectation_unique(**kwargs) -> ExpectationUniqueRows:
+def create_expectation_unique(
+    column_names: List[str],
+) -> ExpectationUniqueRows:
     """
     Create an ExpectationUniqueRows instance.
 
     :param column_names: List of column names to check for uniqueness. If empty, checks all columns.
     :return: ExpectationUniqueRows instance
     """
-    column_names = kwargs["column_names"]
+    column_names = column_names
     return ExpectationUniqueRows(column_names=column_names)
 
 
-@register_expectation("ExpectationDistinctColumnValuesEquals")
+@register_expectation(
+    "ExpectationDistinctColumnValuesEquals",
+    pydoc="Check if a column has exactly a specified number of distinct values",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.UNIQUE,
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "expected_value": "The expected number of distinct values",
+    },
+)
 @requires_params(
     "column_name",
     "expected_value",
     types={"column_name": str, "expected_value": int},
 )
 def create_expectation_distinct_column_values_equals(
-    **kwargs,
+    column_name: str,
+    expected_value: int,
 ) -> ExpectationDistinctColumnValuesEquals:
     """
     Create an ExpectationDistinctColumnValuesEquals instance.
 
-    Args:
-        column_name (str): Name of the column to check.
-        expected_value (int): Expected number of distinct values.
-
-    Returns:
-        ExpectationDistinctColumnValuesEquals: A configured expectation instance.
+    :param column_name: Name of the column to check.
+    :param expected_value: Expected number of distinct values.
+    :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesEquals(
-        column_name=kwargs["column_name"],
-        expected_value=kwargs["expected_value"],
+        column_name=column_name,
+        expected_value=expected_value,
     )
 
 
-@register_expectation("ExpectationDistinctColumnValuesLessThan")
+@register_expectation(
+    "ExpectationDistinctColumnValuesLessThan",
+    pydoc="Check if a column has at most a specified number of distinct values",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.UNIQUE,
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "threshold": "The maximum number of distinct values (exclusive)",
+    },
+)
 @requires_params(
     "column_name",
     "threshold",
     types={"column_name": str, "threshold": int},
 )
 def create_expectation_distinct_column_values_less_than(
-    **kwargs,
+    column_name: str,
+    threshold: int,
 ) -> ExpectationDistinctColumnValuesLessThan:
     """
     Create an ExpectationDistinctColumnValuesLessThan instance.
 
-    Args:
-        column_name (str): Name of the column to check.
-        threshold (int): Threshold for distinct values count (exclusive upper bound).
-
-    Returns:
-        ExpectationDistinctColumnValuesLessThan: A configured expectation instance.
+    :param column_name: Name of the column to check.
+    :param threshold: Threshold for distinct values count (exclusive upper bound).
+    :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesLessThan(
-        column_name=kwargs["column_name"],
-        threshold=kwargs["threshold"],
+        column_name=column_name,
+        threshold=threshold,
     )
 
 
-@register_expectation("ExpectationDistinctColumnValuesGreaterThan")
+@register_expectation(
+    "ExpectationDistinctColumnValuesGreaterThan",
+    pydoc="Check if a column has at least a specified number of distinct values",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.UNIQUE,
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "threshold": "The minimum number of distinct values (exclusive)",
+    },
+)
 @requires_params(
     "column_name",
     "threshold",
     types={"column_name": str, "threshold": int},
 )
 def create_expectation_distinct_column_values_greater_than(
-    **kwargs,
+    column_name: str,
+    threshold: int,
 ) -> ExpectationDistinctColumnValuesGreaterThan:
     """
     Create an ExpectationDistinctColumnValuesGreaterThan instance.
 
-    Args:
-        column_name (str): Name of the column to check.
-        threshold (int): Threshold for distinct values count (exclusive lower bound).
-
-    Returns:
-        ExpectationDistinctColumnValuesGreaterThan: A configured expectation instance.
+    :param column_name: Name of the column to check.
+    :param threshold: Threshold for distinct values count (exclusive lower bound).
+    :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesGreaterThan(
-        column_name=kwargs["column_name"],
-        threshold=kwargs["threshold"],
+        column_name=column_name,
+        threshold=threshold,
     )
 
 
-@register_expectation("ExpectationDistinctColumnValuesBetween")
+@register_expectation(
+    "ExpectationDistinctColumnValuesBetween",
+    pydoc="Check if a column has a number of distinct values within a specified range",
+    category=ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.UNIQUE,
+    params_doc={
+        "column_name": "The name of the column to check for distinct values",
+        "min_value": "The minimum number of distinct values (inclusive)",
+        "max_value": "The maximum number of distinct values (inclusive)",
+    },
+)
 @requires_params(
     "column_name",
     "min_value",
@@ -647,21 +695,20 @@ def create_expectation_distinct_column_values_greater_than(
     types={"column_name": str, "min_value": int, "max_value": int},
 )
 def create_expectation_distinct_column_values_between(
-    **kwargs,
+    column_name: str,
+    min_value: int,
+    max_value: int,
 ) -> ExpectationDistinctColumnValuesBetween:
     """
     Create an ExpectationDistinctColumnValuesBetween instance.
 
-    Args:
-        column_name (str): Name of the column to check.
-        min_value (int): Minimum number of distinct values (inclusive lower bound).
-        max_value (int): Maximum number of distinct values (inclusive upper bound).
-
-    Returns:
-        ExpectationDistinctColumnValuesBetween: A configured expectation instance.
+    :param column_name: Name of the column to check.
+    :param min_value: Minimum number of distinct values (inclusive lower bound).
+    :param max_value: Maximum number of distinct values (inclusive upper bound).
+    :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesBetween(
-        column_name=kwargs["column_name"],
-        min_value=kwargs["min_value"],
-        max_value=kwargs["max_value"],
+        column_name=column_name,
+        min_value=min_value,
+        max_value=max_value,
     )
