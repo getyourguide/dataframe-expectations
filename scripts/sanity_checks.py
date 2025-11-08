@@ -115,8 +115,6 @@ class ExpectationsSanityChecker:
     def _discover_suite_methods(self):
         """Find all expect_* methods available via the registry."""
         try:
-            # Import the registry to get suite method mapping
-            sys.path.insert(0, str(self.project_root))
             from dataframe_expectations.expectations.expectation_registry import (
                 DataFrameExpectationRegistry,
             )
@@ -400,6 +398,11 @@ if __name__ == "__main__":
     script_dir = Path(__file__).parent
     # Go up one level: sanity_checks.py is in scripts/, project root is parent
     project_root = script_dir.parent
+
+    # Add project root to sys.path to enable imports
+    # This must be done before creating the checker since imports happen during initialization
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
 
     # Validate directory structure
     expected_dirs = ["dataframe_expectations", "tests", "pyproject.toml"]
