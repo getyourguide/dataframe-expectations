@@ -4,6 +4,7 @@
       "release-type": "python",
       "package-name": "dataframe-expectations",
       "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
       "extra-files": [
         {
           "type": "toml",
