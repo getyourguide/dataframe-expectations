@@ -28,8 +28,7 @@ jobs:
           uv sync --group dev
       - name: Run sanity check
         run: |
-          uv run python sanity_checks.py
-        working-directory: dataframe_expectations
+          uv run python scripts/sanity_checks.py
       - name: Run tests
         run: |
           uv run pytest tests/ --cov=dataframe_expectations
