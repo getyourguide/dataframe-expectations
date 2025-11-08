@@ -102,11 +102,18 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
         sort_columns = ["#duplicates"] + check_columns
         duplicates_with_counts = duplicate_counts.sort_values(sort_columns)
 
-        # Replace NaN with None
-        duplicates_with_counts = duplicates_with_counts.map(lambda x: None if pd.isna(x) else x)
+        # Replace NaN with None (use applymap for compatibility with older pandas versions)
+        try:
+            # pandas >= 2.1.0
+            duplicates_with_counts = duplicates_with_counts.map(lambda x: None if pd.isna(x) else x)
+        except AttributeError:
+            # pandas < 2.1.0
+            duplicates_with_counts = duplicates_with_counts.applymap(  # type: ignore[operator]
+                lambda x: None if pd.isna(x) else x
+            )
 
         # Calculate total number of duplicate rows (not groups)
-        total_duplicate_rows = duplicates_with_counts["#duplicates"].sum()
+        total_duplicate_rows = duplicates_with_counts["#duplicates"].sum()  # type: ignore[misc]
 
         # Generate dynamic error message
         error_msg = (
