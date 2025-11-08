@@ -4,10 +4,28 @@ Adding Your Expectations
 This guide will walk you through the process of creating custom expectations for DataFrame validation.
 There are three main approaches depending on your use case.
 
+Understanding Expectation Categories
+-------------------------------------
+
+All expectations must be registered with a category and subcategory to organize them properly. The available options are:
+
+**Categories:**
+
+- ``ExpectationCategory.COLUMN``: For expectations that validate individual column values row-by-row
+- ``ExpectationCategory.AGGREGATION``: For expectations that require aggregation operations (counts, means, etc.)
+
+**Subcategories:**
+
+- ``ExpectationSubcategory.NUMERICAL``: For expectations dealing with numeric data
+- ``ExpectationSubcategory.STRING``: For expectations dealing with string/text data
+- ``ExpectationSubcategory.ANY_VALUE``: For expectations that work with any data type
+
+Choose the category and subcategory that best describes your expectation's purpose.
+
 Defining Your Expectations
 --------------------------
 
-Most use cases that involve validating a single column in the dataframe can be covered by the initialising the
+Most use cases that involve validating a single column in the dataframe can be covered by initialising the
 ``DataFrameColumnExpectation`` class with the correct parameters. Expectations implemented by initialising
 ``DataFrameColumnExpectation`` can be found in the ``column_expectations`` module, categorised based on the data-type of
 the column value.
@@ -19,15 +37,30 @@ Once you have decided where the expectation needs to be added, you can define it
 
 .. code-block:: python
 
+    from dataframe_expectations.expectations.column_expectation import DataFrameColumnExpectation
     from dataframe_expectations.expectations.expectation_registry import (
+        ExpectationCategory,
+        ExpectationSubcategory,
         register_expectation,
     )
     from dataframe_expectations.expectations.utils import requires_params
+    from pyspark.sql import functions as F
 
 
-    @register_expectation("ExpectIsDivisible")
+    @register_expectation(
+        expectation_name="ExpectIsDivisible",
+        category=ExpectationCategory.COLUMN,
+        subcategory=ExpectationSubcategory.NUMERICAL,
+        pydoc="Expect values in column to be divisible by a specified value.",
+        params=["column_name", "value"],
+        params_doc={
+            "column_name": "The name of the column to validate",
+            "value": "The divisor value to check against"
+        },
+        param_types={"column_name": str, "value": int}
+    )
     @requires_params("column_name", "value", types={"column_name": str, "value": int})
-    def create_expectation_do_something_unexpected(**kwargs) -> DataFrameColumnExpectation:
+    def create_expectation_is_divisible(**kwargs) -> DataFrameColumnExpectation:
         column_name = kwargs["column_name"]
         value = kwargs["value"]
 
@@ -41,10 +74,20 @@ Once you have decided where the expectation needs to be added, you can define it
         )
 
 For additional guidance, you can refer to the implementation of ``ExpectationValueGreaterThan`` and
-``ExpectationValueLessThan`` in ``column_expectation_factory.py``. These examples demonstrate how to initialise the
+``ExpectationValueLessThan`` in the ``column_expectations`` module. These examples demonstrate how to initialise the
 ``DataFrameColumnExpectation`` class with the right parameters and define filtering logic for different dataframes.
-The ``@register_expectation`` decorator is needed to add your expectation to the library. ``@requires_params`` decorator
-is a utility that helps you validate the input parameters.
+
+The ``@register_expectation`` decorator is required and has the following mandatory parameters:
+
+- ``expectation_name``: The class name of your expectation (e.g., "ExpectationIsDivisible")
+- ``category``: Use ``ExpectationCategory.COLUMN`` or ``ExpectationCategory.AGGREGATION``
+- ``subcategory``: Choose from ``ExpectationSubcategory.NUMERICAL``, ``ExpectationSubcategory.STRING``, or ``ExpectationSubcategory.ANY_VALUE``
+- ``pydoc``: A brief description of what the expectation does
+- ``params``: List of parameter names (e.g., ["column_name", "value"])
+- ``params_doc``: Dictionary mapping parameter names to their descriptions
+- ``param_types``: Dictionary mapping parameter names to their Python types
+
+The ``@requires_params`` decorator is a utility that helps you validate the input parameters at runtime.
 
 Adding Aggregation-Based Expectations
 --------------------------------------
@@ -68,7 +111,11 @@ Here's an example of how to implement an aggregation-based expectation:
     from dataframe_expectations.expectations.aggregation_expectation import (
         DataFrameAggregationExpectation,
     )
-    from dataframe_expectations.expectations.expectation_registry import register_expectation
+    from dataframe_expectations.expectations.expectation_registry import (
+        ExpectationCategory,
+        ExpectationSubcategory,
+        register_expectation,
+    )
     from dataframe_expectations.expectations.utils import requires_params
     from dataframe_expectations.result_message import (
         DataFrameExpectationFailureMessage,
@@ -145,7 +192,15 @@ Here's an example of how to implement an aggregation-based expectation:
                 )
 
 
-    @register_expectation("ExpectationMinRows")
+    @register_expectation(
+        expectation_name="ExpectationMinRows",
+        category=ExpectationCategory.AGGREGATION,
+        subcategory=ExpectationSubcategory.ANY_VALUE,
+        pydoc="Expect DataFrame to have at least a minimum number of rows.",
+        params=["min_count"],
+        params_doc={"min_count": "Minimum required number of rows"},
+        param_types={"min_count": int}
+    )
     @requires_params("min_count", types={"min_count": int})
     def create_expectation_min_rows(**kwargs) -> ExpectationMinRows:
         """
@@ -340,44 +395,36 @@ To help you get started, here's a template you can customize to fit your specifi
             """
             <Add your validation logic here for PySpark DataFrame. Return either DataFrameExpectationSuccessMessage or DataFrameExpectationFailureMessage>
 
-Adding to DataFrameExpectationsSuite
--------------------------------------
+Automatic Integration with DataFrameExpectationsSuite
+-----------------------------------------------------
 
-The ``DataFrameExpectationsSuite`` encapsulates all the expectations that are provided by this library.
-After defining and testing your expectation, integrate it into the ``DataFrameExpectationsSuite`` by creating a new
-method with a descriptive name starting with the prefix ``expect_`` (this is needed to generate documentation later).
-Here's an example:
+The ``DataFrameExpectationsSuite`` provides access to all registered expectations through dynamically generated methods.
+When you register an expectation using the ``@register_expectation`` decorator, the suite automatically creates a
+corresponding ``expect_*`` method. For example:
 
-.. code-block:: python
+- ``ExpectationIsDivisible`` → ``suite.expect_is_divisible(column_name="...", value=...)``
+- ``ExpectationMinRows`` → ``suite.expect_min_rows(min_count=...)``
+- ``ExpectationValueGreaterThan`` → ``suite.expect_value_greater_than(column_name="...", value=...)``
 
-    class DataFrameExpectationsSuite:
-        """
-        A suite of expectations for validating DataFrames.
-        """
-        ...
+The method names are automatically derived by:
 
-        def expect_is_divisible(
-            self,
-            column_name: str,
-            value: float,
-            # You can add more parmeters here
-        ):
-            """
-            Define what the expectation does
-            :param column_name: The name of the column to check.
-            :param value: The value to compare against.
-            :return: An instance of DataFrameExpectationsSuite.
-            """
+1. Removing the "Expectation" prefix from your expectation name
+2. Converting from PascalCase to snake_case
+3. Adding the "expect\_" prefix
 
-            expectation = DataFrameExpectationRegistry.get_expectation(
-                expectation_name="ExpectIsDivisible",
-                column_name=column_name,
-                value=value,
-            )
+No manual integration is required! Simply register your expectation and it will be available in the suite.
 
-            logger.info(f"Adding expectation: {expectation}")
-            self.__expectations.append(expectation)
-            return self
+Generating Type Stubs for IDE Support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To provide IDE autocomplete and type hints for all expect methods, run the stub generator:
+
+.. code-block:: bash
+
+    un run python scripts/generate_suite_stubs.py
+
+This creates ``expectations_suite.pyi`` with type hints for all registered expectations. The stub file is automatically
+validated by the sanity check script and pre-commit hooks.
 
 Adding Unit Tests
 -----------------
@@ -471,23 +518,62 @@ To ensure your expectations work as expected (pun intended), make sure to add un
 For concrete examples of unit tests, check for tests in the ``expectations_implemented`` folder. You can also
 find the unit test template here.
 
-Updating the Documentation
---------------------------
+Updating the Documentation and Stubs
+------------------------------------
 
-After the expectation is ready for use, the last thing remaining is adding your expectation to the documentation. The documentation is automatically generated using a CI pipeline with the ``uv`` package manager and is available at ``docs/build/html/expectations.html``.
+After implementing your expectation, you need to generate the type stubs and documentation:
 
-Make sure to add the docstring for the function you added to ``DataFrameExpectationsSuite`` before submitting your changes. The CI pipeline will automatically update the documentation using the make targets in the ``docs`` folder when your changes are merged.
+**1. Generate Type Stubs**
 
-If you need to build the documentation locally for testing, you can use the make targets available in the ``docs`` folder.
+Run the stub generator to create IDE autocomplete support:
+
+.. code-block:: bash
+
+    un run python scripts/generate_suite_stubs.py
+
+This updates ``dataframe_expectations/expectations_suite.pyi`` with type hints for your new expectation method.
+
+**2. Build Documentation**
+
+The documentation is automatically generated using the ``pydoc`` parameter you provided in ``@register_expectation``.
+To build the documentation locally for testing:
 
 .. code-block:: bash
 
     cd docs
     uv run sphinx-build source build/html
 
-or use the make command
+or use the make command:
 
 .. code-block:: bash
 
     cd docs
     make html
+
+The documentation will be available at ``docs/build/html/expectations.html``.
+
+**3. Run Sanity Checks**
+
+Before committing, run the sanity check to ensure everything is properly registered:
+
+.. code-block:: bash
+
+    un run python scripts/sanity_checks.py
+
+This validates that:
+
+- Your expectation is registered in the registry
+- The stub file is up-to-date
+- Test files exist for your expectation
+- Everything is consistent across the framework
+
+**4. Pre-commit Hooks**
+
+The pre-commit hooks will automatically check:
+
+- Code formatting (black, isort)
+- Type checking (mypy)
+- Stub file is up-to-date
+- Linting (ruff)
+
+When your changes are merged, the CI pipeline will automatically build and deploy the updated documentation to GitHub Pages.

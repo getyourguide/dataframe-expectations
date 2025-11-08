@@ -13,6 +13,7 @@ from docutils.parsers.rst import directives
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
+from dataframe_expectations.expectations.expectation_registry import DataFrameExpectationRegistry
 from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
 
 
@@ -101,35 +102,50 @@ class ExpectationsDirective(SphinxDirective):
 
     def run(self) -> List[Node]:
         """Generate the expectations documentation."""
-        # Import the class
-        class_path = self.options.get('class', 'dataframe_expectations.expectations_suite.DataFrameExpectationsSuite')
-        module_name, class_name = class_path.rsplit('.', 1)
-
-        try:
-            module = __import__(module_name, fromlist=[class_name])
-            cls = getattr(module, class_name)
-        except (ImportError, AttributeError) as e:
-            error = f"Could not import {class_path}: {e}"
-            return [nodes.error("", nodes.paragraph("", error))]
-
-        # Collect expectations by category
+        # Get all registered expectations from the registry
         expectations_by_category = defaultdict(lambda: defaultdict(list))
         method_details = {}
 
-        for name, method in inspect.getmembers(cls, predicate=inspect.isfunction):
-            if name.startswith("_") or not name.startswith("expect_"):
-                continue
+        # Get the suite method mapping from the registry (method_name -> expectation_name)
+        suite_method_mapping = DataFrameExpectationRegistry.get_suite_method_mapping()
 
-            docstring = inspect.getdoc(method) or "No description provided."
-            category, subcategory = parse_metadata_from_docstring(docstring)
-            if not category:
-                category, subcategory = infer_category_from_method_name(name)
+        # Get all metadata from the registry
+        for suite_method_name, expectation_name in suite_method_mapping.items():
+            metadata = DataFrameExpectationRegistry.get_metadata(expectation_name)
 
-            expectations_by_category[category][subcategory].append(name)
-            method_details[name] = {
-                "method": method,
+            # Get category and subcategory from metadata
+            category = metadata.category.value if hasattr(metadata.category, 'value') else str(metadata.category)
+            subcategory = metadata.subcategory.value if hasattr(metadata.subcategory, 'value') else str(metadata.subcategory)
+
+            expectations_by_category[category][subcategory].append(suite_method_name)
+
+            # Build docstring from metadata
+            docstring_lines = [metadata.pydoc, "", "Categories:", f"  category: {category}", f"  subcategory: {subcategory}", ""]
+
+            # Add parameters documentation
+            if metadata.params:
+                for param in metadata.params:
+                    param_doc = metadata.params_doc.get(param, "")
+                    param_type = metadata.param_types.get(param, object)
+                    type_name = param_type.__name__ if hasattr(param_type, '__name__') else str(param_type)
+                    docstring_lines.append(f":param {param}: {param_doc}")
+                    docstring_lines.append(f":type {param}: {type_name}")
+
+            docstring_lines.append(":return: An instance of DataFrameExpectationsSuite")
+            docstring = "\n".join(docstring_lines)
+
+            # Build method signature
+            param_strs = []
+            for param in metadata.params:
+                param_type = metadata.param_types.get(param, object)
+                type_name = param_type.__name__ if hasattr(param_type, '__name__') else str(param_type)
+                param_strs.append(f"{param}: {type_name}")
+
+            method_details[suite_method_name] = {
+                "method": None,  # No actual method object since it's dynamic
                 "docstring": docstring,
-                "signature": inspect.signature(method),
+                "signature_str": f"({', '.join(param_strs)})" if param_strs else "()",
+                "params": metadata.params,
                 "category": category,
                 "subcategory": subcategory,
             }
@@ -315,7 +331,7 @@ class ExpectationsDirective(SphinxDirective):
         card_body += tags_container
 
         # Parameters preview
-        params = [p for p in details["signature"].parameters.keys() if p != "self"]
+        params = details.get("params", [])
         if params:
             params_container = nodes.container()
             params_container['classes'] = ['params-preview']
@@ -336,20 +352,6 @@ class ExpectationsDirective(SphinxDirective):
             card_body += params_container
 
         card += card_body
-
-        # Card footer with actions - link to API reference
-        card_footer = nodes.container()
-        card_footer['classes'] = ['card-footer']
-
-        # Create link to API reference using raw HTML
-        api_link = nodes.raw(
-            f'<a href="api_reference.html#dataframe_expectations.expectations_suite.DataFrameExpectationsSuite.{method_name}" class="btn btn-details">View API Reference</a>',
-            f'<a href="api_reference.html#dataframe_expectations.expectations_suite.DataFrameExpectationsSuite.{method_name}" class="btn btn-details">View API Reference</a>',
-            format='html'
-        )
-        card_footer += api_link
-
-        card += card_footer
 
         return card
 
