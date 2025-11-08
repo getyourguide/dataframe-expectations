@@ -559,7 +559,7 @@ Before committing, run the sanity check to ensure everything is properly registe
 
 .. code-block:: bash
 
-    un run python scripts/sanity_checks.py
+    uv run python scripts/sanity_checks.py
 
 This validates that:
 

@@ -22,9 +22,11 @@ from dataframe_expectations.expectations.utils import requires_params
     },
 )
 @requires_params("column_name", "substring", types={"column_name": str, "substring": str})
-def create_expectation_string_contains(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    substring = kwargs["substring"]
+def create_expectation_string_contains(
+    column_name: str, substring: str
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    substring = substring
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringContains",
         column_name=column_name,
@@ -46,9 +48,11 @@ def create_expectation_string_contains(**kwargs) -> DataFrameColumnExpectation:
     },
 )
 @requires_params("column_name", "substring", types={"column_name": str, "substring": str})
-def create_expectation_string_not_contains(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    substring = kwargs["substring"]
+def create_expectation_string_not_contains(
+    column_name: str, substring: str
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    substring = substring
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringNotContains",
         column_name=column_name,
@@ -70,9 +74,11 @@ def create_expectation_string_not_contains(**kwargs) -> DataFrameColumnExpectati
     },
 )
 @requires_params("column_name", "prefix", types={"column_name": str, "prefix": str})
-def create_expectation_string_starts_with(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    prefix = kwargs["prefix"]
+def create_expectation_string_starts_with(
+    column_name: str, prefix: str
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    prefix = prefix
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringStartsWith",
         column_name=column_name,
@@ -94,9 +100,11 @@ def create_expectation_string_starts_with(**kwargs) -> DataFrameColumnExpectatio
     },
 )
 @requires_params("column_name", "suffix", types={"column_name": str, "suffix": str})
-def create_expectation_string_ends_with(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    suffix = kwargs["suffix"]
+def create_expectation_string_ends_with(
+    column_name: str, suffix: str
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    suffix = suffix
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringEndsWith",
         column_name=column_name,
@@ -118,9 +126,11 @@ def create_expectation_string_ends_with(**kwargs) -> DataFrameColumnExpectation:
     },
 )
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
-def create_expectation_string_length_less_than(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    length = kwargs["length"]
+def create_expectation_string_length_less_than(
+    column_name: str, length: int
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    length = length
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringLengthLessThan",
         column_name=column_name,
@@ -143,10 +153,10 @@ def create_expectation_string_length_less_than(**kwargs) -> DataFrameColumnExpec
 )
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
 def create_expectation_string_length_greater_than(
-    **kwargs,
+    column_name: str, length: int
 ) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    length = kwargs["length"]
+    column_name = column_name
+    length = length
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringLengthGreaterThan",
         column_name=column_name,
@@ -174,10 +184,12 @@ def create_expectation_string_length_greater_than(
     "max_length",
     types={"column_name": str, "min_length": int, "max_length": int},
 )
-def create_expectation_string_length_between(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    min_length = kwargs["min_length"]
-    max_length = kwargs["max_length"]
+def create_expectation_string_length_between(
+    column_name: str, min_length: int, max_length: int
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    min_length = min_length
+    max_length = max_length
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringLengthBetween",
         column_name=column_name,
@@ -204,9 +216,11 @@ def create_expectation_string_length_between(**kwargs) -> DataFrameColumnExpecta
     },
 )
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
-def create_expectation_string_length_equals(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    length = kwargs["length"]
+def create_expectation_string_length_equals(
+    column_name: str, length: int
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    length = length
     return DataFrameColumnExpectation(
         expectation_name="ExpectationStringLengthEquals",
         column_name=column_name,

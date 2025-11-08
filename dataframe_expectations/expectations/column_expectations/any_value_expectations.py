@@ -22,9 +22,9 @@ from dataframe_expectations.expectations.utils import requires_params
     },
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
-def create_expectation_value_equals(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    value = kwargs["value"]
+def create_expectation_value_equals(column_name: str, value: object) -> DataFrameColumnExpectation:
+    column_name = column_name
+    value = value
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueEquals",
         column_name=column_name,
@@ -46,9 +46,11 @@ def create_expectation_value_equals(**kwargs) -> DataFrameColumnExpectation:
     },
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
-def create_expectation_value_not_equals(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    value = kwargs["value"]
+def create_expectation_value_not_equals(
+    column_name: str, value: object
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    value = value
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNotEquals",
         column_name=column_name,
@@ -69,8 +71,8 @@ def create_expectation_value_not_equals(**kwargs) -> DataFrameColumnExpectation:
     },
 )
 @requires_params("column_name", types={"column_name": str})
-def create_expectation_value_null(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
+def create_expectation_value_null(column_name: str) -> DataFrameColumnExpectation:
+    column_name = column_name
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNull",
         column_name=column_name,
@@ -91,8 +93,8 @@ def create_expectation_value_null(**kwargs) -> DataFrameColumnExpectation:
     },
 )
 @requires_params("column_name", types={"column_name": str})
-def create_expectation_value_not_null(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
+def create_expectation_value_not_null(column_name: str) -> DataFrameColumnExpectation:
+    column_name = column_name
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNotNull",
         column_name=column_name,
@@ -114,9 +116,9 @@ def create_expectation_value_not_null(**kwargs) -> DataFrameColumnExpectation:
     },
 )
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
-def create_expectation_value_in(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    values = kwargs["values"]
+def create_expectation_value_in(column_name: str, values: list) -> DataFrameColumnExpectation:
+    column_name = column_name
+    values = values
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueIn",
         column_name=column_name,
@@ -138,9 +140,9 @@ def create_expectation_value_in(**kwargs) -> DataFrameColumnExpectation:
     },
 )
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
-def create_expectation_value_not_in(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    values = kwargs["values"]
+def create_expectation_value_not_in(column_name: str, values: list) -> DataFrameColumnExpectation:
+    column_name = column_name
+    values = values
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNotIn",
         column_name=column_name,

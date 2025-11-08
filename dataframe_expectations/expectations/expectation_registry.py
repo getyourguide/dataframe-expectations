@@ -46,7 +46,7 @@ class ExpectationMetadata(BaseModel):
     factory_func_name: str = Field(..., description="Name of the factory function")
     expectation_name: str = Field(..., description="Name of the expectation class")
 
-    model_config = ConfigDict(frozen=True)  # Make immutable after creation
+    model_config = ConfigDict(frozen=True)  # Make model immutable
 
 
 class DataFrameExpectationRegistry:
@@ -148,29 +148,31 @@ class DataFrameExpectationRegistry:
     def _load_all_expectations(cls):
         """Load all expectation modules to ensure their decorators are executed."""
         import importlib
+        import pkgutil
+        from pathlib import Path
 
-        # Automatically discover all Python modules in expectations subdirectories
-        # Explicitly import expectation modules
-        modules_to_import = [
-            "dataframe_expectations.expectations.column_expectations.null_expectation",
-            "dataframe_expectations.expectations.column_expectations.type_expectation",
-            "dataframe_expectations.expectations.column_expectations.any_value_expectations",
-            "dataframe_expectations.expectations.column_expectations.numerical_expectations",
-            "dataframe_expectations.expectations.column_expectations.string_expectations",
-            "dataframe_expectations.expectations.aggregation_expectations.count_expectation",
-            "dataframe_expectations.expectations.aggregation_expectations.sum_expectation",
-            "dataframe_expectations.expectations.aggregation_expectations.any_value_expectations",
-            "dataframe_expectations.expectations.aggregation_expectations.numerical_expectations",
-            "dataframe_expectations.expectations.aggregation_expectations.unique",
-            # Add more modules as needed
-        ]
+        import dataframe_expectations.expectations as expectations_pkg
 
-        for module_name in modules_to_import:
+        for importer, modname, ispkg in pkgutil.walk_packages(
+            path=expectations_pkg.__path__,
+            prefix=expectations_pkg.__name__ + ".",
+            onerror=lambda x: None,
+        ):
+            # Skip if it's a package (directory with __init__.py)
+            if ispkg:
+                continue
+
+            # Get the module file path to check if it contains the decorator
             try:
-                importlib.import_module(module_name)
-                logger.debug(f"Loaded expectation module: {module_name}")
-            except ImportError as e:
-                logger.warning(f"Failed to import expectation module {module_name}: {e}")
+                spec = importlib.util.find_spec(modname)
+                if spec and spec.origin:
+                    module_file = Path(spec.origin)
+                    # Quick check: does the file contain @register_expectation?
+                    if "@register_expectation" in module_file.read_text():
+                        importlib.import_module(modname)
+                        logger.debug(f"Loaded expectation module: {modname}")
+            except Exception as e:
+                logger.warning(f"Failed to import module {modname}: {e}")
 
     @classmethod
     def get_expectation(cls, expectation_name: str, **kwargs) -> DataFrameExpectation:

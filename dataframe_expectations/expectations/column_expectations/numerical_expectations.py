@@ -22,9 +22,11 @@ from dataframe_expectations.expectations.utils import requires_params
     },
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
-def create_expectation_value_greater_than(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    value = kwargs["value"]
+def create_expectation_value_greater_than(
+    column_name: str, value: float
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    value = value
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueGreaterThan",
         column_name=column_name,
@@ -46,9 +48,11 @@ def create_expectation_value_greater_than(**kwargs) -> DataFrameColumnExpectatio
     },
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
-def create_expectation_value_less_than(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    value = kwargs["value"]
+def create_expectation_value_less_than(
+    column_name: str, value: float
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    value = value
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueLessThan",
         column_name=column_name,
@@ -80,10 +84,12 @@ def create_expectation_value_less_than(**kwargs) -> DataFrameColumnExpectation:
         "max_value": (int, float),
     },
 )
-def create_expectation_value_between(**kwargs) -> DataFrameColumnExpectation:
-    column_name = kwargs["column_name"]
-    min_value = kwargs["min_value"]
-    max_value = kwargs["max_value"]
+def create_expectation_value_between(
+    column_name: str, min_value: float, max_value: float
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    min_value = min_value
+    max_value = max_value
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueBetween",
         column_name=column_name,
