@@ -29,8 +29,8 @@ class DataFrameExpectationsSuite:
         Check if the maximum value of a numeric column falls within a specified range
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Aggregation Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed maximum value
@@ -49,8 +49,8 @@ class DataFrameExpectationsSuite:
         Check if the mean (average) of a numeric column falls within a specified range
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Aggregation Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed mean value
@@ -69,8 +69,8 @@ class DataFrameExpectationsSuite:
         Check if the median of a numeric column falls within a specified range
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Aggregation Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed median value
@@ -89,8 +89,8 @@ class DataFrameExpectationsSuite:
         Check if the minimum value of a numeric column falls within a specified range
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Aggregation Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed minimum value
@@ -110,8 +110,8 @@ class DataFrameExpectationsSuite:
         Check if a specific quantile of a numeric column falls within a specified range
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Aggregation Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the numeric column to check
         :param quantile: The quantile to calculate (0.0 to 1.0, e.g., 0.5 for median)
@@ -131,8 +131,8 @@ class DataFrameExpectationsSuite:
         Check if a column has a number of distinct values within a specified range
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.UNIQUE
+          category: Column Aggregation Expectations
+          subcategory: Unique
 
         :param column_name: The name of the column to check for distinct values
         :param min_value: The minimum number of distinct values (inclusive)
@@ -150,8 +150,8 @@ class DataFrameExpectationsSuite:
         Check if a column has exactly a specified number of distinct values
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.UNIQUE
+          category: Column Aggregation Expectations
+          subcategory: Unique
 
         :param column_name: The name of the column to check for distinct values
         :param expected_value: The expected number of distinct values
@@ -168,8 +168,8 @@ class DataFrameExpectationsSuite:
         Check if a column has at least a specified number of distinct values
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.UNIQUE
+          category: Column Aggregation Expectations
+          subcategory: Unique
 
         :param column_name: The name of the column to check for distinct values
         :param threshold: The minimum number of distinct values (exclusive)
@@ -186,8 +186,8 @@ class DataFrameExpectationsSuite:
         Check if a column has at most a specified number of distinct values
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.UNIQUE
+          category: Column Aggregation Expectations
+          subcategory: Unique
 
         :param column_name: The name of the column to check for distinct values
         :param threshold: The maximum number of distinct values (exclusive)
@@ -204,8 +204,8 @@ class DataFrameExpectationsSuite:
         Check if the count of null/NaN values in a specific column is below a threshold
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Aggregation Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check for null count
         :param max_count: The maximum allowed count of null/NaN values
@@ -222,8 +222,8 @@ class DataFrameExpectationsSuite:
         Check if the percentage of null/NaN values in a specific column is below a threshold
 
         Categories:
-          category: ExpectationCategory.COLUMN_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Aggregation Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check for null percentage
         :param max_percentage: The maximum allowed percentage of null/NaN values (0.0 to 100.0)
@@ -239,8 +239,8 @@ class DataFrameExpectationsSuite:
         Check if the DataFrame has at most a maximum number of rows
 
         Categories:
-          category: ExpectationCategory.DATAFRAME_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: DataFrame Aggregation Expectations
+          subcategory: Any Value
 
         :param max_rows: The maximum number of rows expected
         :return: an instance of DataFrameExpectationsSuite.
@@ -255,8 +255,8 @@ class DataFrameExpectationsSuite:
         Check if the DataFrame has at least a minimum number of rows
 
         Categories:
-          category: ExpectationCategory.DATAFRAME_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: DataFrame Aggregation Expectations
+          subcategory: Any Value
 
         :param min_rows: The minimum number of rows expected
         :return: an instance of DataFrameExpectationsSuite.
@@ -272,8 +272,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a string column contain a specified substring
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param substring: The substring to search for
@@ -290,8 +290,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a string column end with a specified suffix
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param suffix: The suffix to search for
@@ -309,8 +309,8 @@ class DataFrameExpectationsSuite:
         Check if the length of the values in a string column is between two specified lengths
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param min_length: The minimum length that the values should be
@@ -328,8 +328,8 @@ class DataFrameExpectationsSuite:
         Check if the length of the values in a string column equals a specified length
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param length: The length that the values should equal
@@ -346,8 +346,8 @@ class DataFrameExpectationsSuite:
         Check if the length of the values in a string column is greater than a specified length
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param length: The length that the values should be greater than
@@ -364,8 +364,8 @@ class DataFrameExpectationsSuite:
         Check if the length of the values in a string column is less than a specified length
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param length: The length that the values should be less than
@@ -382,8 +382,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a string column do not contain a specified substring
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param substring: The substring to search for
@@ -400,8 +400,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a string column start with a specified prefix
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.STRING
+          category: Column Expectations
+          subcategory: String
 
         :param column_name: The name of the column to check
         :param prefix: The prefix to search for
@@ -417,8 +417,8 @@ class DataFrameExpectationsSuite:
         Check if all rows in the DataFrame are unique based on specified columns
 
         Categories:
-          category: ExpectationCategory.DATAFRAME_AGGREGATION_EXPECTATIONS
-          subcategory: ExpectationSubcategory.UNIQUE
+          category: DataFrame Aggregation Expectations
+          subcategory: Unique
 
         :param column_names: List of column names to check for uniqueness. Empty list checks all columns
         :return: an instance of DataFrameExpectationsSuite.
@@ -435,8 +435,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column are between two specified values
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the column to check
         :param min_value: The minimum value for the range
@@ -454,8 +454,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column equal a specified value
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
@@ -472,8 +472,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column are greater than a specified value
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
@@ -490,8 +490,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column are in a specified list of values
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check
         :param values: The list of values to compare against
@@ -508,8 +508,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column are less than a specified value
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.NUMERICAL
+          category: Column Expectations
+          subcategory: Numerical
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
@@ -526,8 +526,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column do not equal a specified value
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
@@ -544,8 +544,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column are not in a specified list of values
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check
         :param values: The list of values to compare against
@@ -561,8 +561,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column are not null
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check
         :return: an instance of DataFrameExpectationsSuite.
@@ -577,8 +577,8 @@ class DataFrameExpectationsSuite:
         Check if the values in a column are null
 
         Categories:
-          category: ExpectationCategory.COLUMN_EXPECTATIONS
-          subcategory: ExpectationSubcategory.ANY_VALUE
+          category: Column Expectations
+          subcategory: Any Value
 
         :param column_name: The name of the column to check
         :return: an instance of DataFrameExpectationsSuite.

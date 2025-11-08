@@ -87,13 +87,17 @@ def generate_stub_method(
     params_signature = ",\n        ".join(param_list)
 
     # Build docstring
+    # Use .value for enums to ensure consistent output across Python versions
+    category_str = category.value if hasattr(category, 'value') else str(category)
+    subcategory_str = subcategory.value if hasattr(subcategory, 'value') else str(subcategory)
+
     docstring_lines = [
         '        """',
         f'        {description}',
         '',
         '        Categories:',
-        f'          category: {category}',
-        f'          subcategory: {subcategory}',
+        f'          category: {category_str}',
+        f'          subcategory: {subcategory_str}',
         ''
     ]
 
