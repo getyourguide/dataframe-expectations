@@ -57,7 +57,7 @@ def format_type_hint(type_hint: Any) -> str:
 def generate_stub_method(
     suite_method_name: str,
     expectation_name: str,
-    metadata: Dict[str, Any]
+    metadata
 ) -> str:
     """
     Generate a stub method for a single expectation.
@@ -65,17 +65,17 @@ def generate_stub_method(
     Args:
         suite_method_name: The name of the suite method (e.g., 'expect_value_equals')
         expectation_name: The name of the expectation class (e.g., 'ExpectationValueEquals')
-        metadata: The metadata dictionary for the expectation
+        metadata: The metadata (ExpectationMetadata) for the expectation
 
     Returns:
         The generated method code as a string
     """
-    description = metadata.get('description', '')
-    category = metadata.get('category', '')
-    subcategory = metadata.get('subcategory', '')
-    params = metadata.get('params', [])
-    params_doc = metadata.get('params_doc', {})
-    param_types = metadata.get('param_types', {})
+    description = metadata.pydoc
+    category = metadata.category
+    subcategory = metadata.subcategory
+    params = metadata.params
+    params_doc = metadata.params_doc
+    param_types = metadata.param_types
 
     # Build parameter list with type hints
     param_list = []

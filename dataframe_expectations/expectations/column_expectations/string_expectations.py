@@ -4,6 +4,8 @@ from dataframe_expectations.expectations.column_expectation import (
     DataFrameColumnExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
+    ExpectationCategory,
+    ExpectationSubcategory,
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
@@ -11,9 +13,9 @@ from dataframe_expectations.expectations.utils import requires_params
 
 @register_expectation(
     "ExpectationStringContains",
-    description="Check if the values in a string column contain a specified substring",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the values in a string column contain a specified substring",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "substring": "The substring to search for",
@@ -35,9 +37,9 @@ def create_expectation_string_contains(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationStringNotContains",
-    description="Check if the values in a string column do not contain a specified substring",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the values in a string column do not contain a specified substring",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "substring": "The substring to search for",
@@ -59,9 +61,9 @@ def create_expectation_string_not_contains(**kwargs) -> DataFrameColumnExpectati
 
 @register_expectation(
     "ExpectationStringStartsWith",
-    description="Check if the values in a string column start with a specified prefix",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the values in a string column start with a specified prefix",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "prefix": "The prefix to search for",
@@ -83,9 +85,9 @@ def create_expectation_string_starts_with(**kwargs) -> DataFrameColumnExpectatio
 
 @register_expectation(
     "ExpectationStringEndsWith",
-    description="Check if the values in a string column end with a specified suffix",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the values in a string column end with a specified suffix",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "suffix": "The suffix to search for",
@@ -107,9 +109,9 @@ def create_expectation_string_ends_with(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationStringLengthLessThan",
-    description="Check if the length of the values in a string column is less than a specified length",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the length of the values in a string column is less than a specified length",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "length": "The length that the values should be less than",
@@ -131,9 +133,9 @@ def create_expectation_string_length_less_than(**kwargs) -> DataFrameColumnExpec
 
 @register_expectation(
     "ExpectationStringLengthGreaterThan",
-    description="Check if the length of the values in a string column is greater than a specified length",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the length of the values in a string column is greater than a specified length",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "length": "The length that the values should be greater than",
@@ -157,9 +159,9 @@ def create_expectation_string_length_greater_than(
 
 @register_expectation(
     "ExpectationStringLengthBetween",
-    description="Check if the length of the values in a string column is between two specified lengths",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the length of the values in a string column is between two specified lengths",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "min_length": "The minimum length that the values should be",
@@ -193,9 +195,9 @@ def create_expectation_string_length_between(**kwargs) -> DataFrameColumnExpecta
 
 @register_expectation(
     "ExpectationStringLengthEquals",
-    description="Check if the length of the values in a string column equals a specified length",
-    category="Column Expectations",
-    subcategory="String",
+    pydoc="Check if the length of the values in a string column equals a specified length",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.STRING,
     params_doc={
         "column_name": "The name of the column to check",
         "length": "The length that the values should equal",

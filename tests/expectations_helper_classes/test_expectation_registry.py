@@ -2,6 +2,8 @@ import pytest
 
 from dataframe_expectations.expectations.expectation_registry import (
     DataFrameExpectationRegistry,
+    ExpectationCategory,
+    ExpectationSubcategory,
 )
 
 
@@ -28,7 +30,13 @@ def test_register_and_get_expectation():
     Test registering and retrieving an expectation.
     """
 
-    @DataFrameExpectationRegistry.register("DummyExpectation")
+    @DataFrameExpectationRegistry.register(
+        "DummyExpectation",
+        pydoc="Test expectation",
+        category=ExpectationCategory.COLUMN_EXPECTATIONS,
+        subcategory=ExpectationSubcategory.ANY_VALUE,
+        params_doc={"foo": "Test parameter"},
+    )
     def dummy_expectation_factory(foo=None):
         return DummyExpectation(foo=foo)
 
@@ -44,13 +52,25 @@ def test_duplicate_registration_raises():
     Test that registering an expectation with the same name raises a ValueError.
     """
 
-    @DataFrameExpectationRegistry.register("DuplicateExpectation")
+    @DataFrameExpectationRegistry.register(
+        "DuplicateExpectation",
+        pydoc="Test expectation",
+        category=ExpectationCategory.COLUMN_EXPECTATIONS,
+        subcategory=ExpectationSubcategory.ANY_VALUE,
+        params_doc={"foo": "Test parameter"},
+    )
     def dummy1(foo=None):
         return DummyExpectation(foo=foo)
 
     with pytest.raises(ValueError) as context:
 
-        @DataFrameExpectationRegistry.register("DuplicateExpectation")
+        @DataFrameExpectationRegistry.register(
+            "DuplicateExpectation",
+            pydoc="Test expectation",
+            category=ExpectationCategory.COLUMN_EXPECTATIONS,
+            subcategory=ExpectationSubcategory.ANY_VALUE,
+            params_doc={"foo": "Test parameter"},
+        )
         def dummy2(foo=None):
             return DummyExpectation(foo=foo)
 
@@ -75,11 +95,23 @@ def test_list_expectations():
     Test listing all registered expectations.
     """
 
-    @DataFrameExpectationRegistry.register("First")
+    @DataFrameExpectationRegistry.register(
+        "First",
+        pydoc="Test expectation",
+        category=ExpectationCategory.COLUMN_EXPECTATIONS,
+        subcategory=ExpectationSubcategory.ANY_VALUE,
+        params_doc={"foo": "Test parameter"},
+    )
     def dummy1(foo=None):
         return DummyExpectation(foo=foo)
 
-    @DataFrameExpectationRegistry.register("Second")
+    @DataFrameExpectationRegistry.register(
+        "Second",
+        pydoc="Test expectation",
+        category=ExpectationCategory.COLUMN_EXPECTATIONS,
+        subcategory=ExpectationSubcategory.ANY_VALUE,
+        params_doc={"foo": "Test parameter"},
+    )
     def dummy2(foo=None):
         return DummyExpectation(foo=foo)
 
@@ -93,7 +125,13 @@ def test_remove_expectation():
     Test removing an expectation from the registry.
     """
 
-    @DataFrameExpectationRegistry.register("ToRemove")
+    @DataFrameExpectationRegistry.register(
+        "ToRemove",
+        pydoc="Test expectation",
+        category=ExpectationCategory.COLUMN_EXPECTATIONS,
+        subcategory=ExpectationSubcategory.ANY_VALUE,
+        params_doc={"foo": "Test parameter"},
+    )
     def dummy(foo=None):
         return DummyExpectation(foo=foo)
 

@@ -1,5 +1,8 @@
 import re
+from enum import Enum
 from typing import Any, Callable, Dict, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from dataframe_expectations.expectations import DataFrameExpectation
 from dataframe_expectations.logging_utils import setup_logger
@@ -7,41 +10,76 @@ from dataframe_expectations.logging_utils import setup_logger
 logger = setup_logger(__name__)
 
 
+class ExpectationCategory(str, Enum):
+    """Categories for expectations."""
+
+    COLUMN_EXPECTATIONS = "Column Expectations"
+    COLUMN_AGGREGATION_EXPECTATIONS = "Column Aggregation Expectations"
+    DATAFRAME_AGGREGATION_EXPECTATIONS = "DataFrame Aggregation Expectations"
+
+
+class ExpectationSubcategory(str, Enum):
+    """Subcategory of expectations."""
+
+    ANY_VALUE = "Any Value"
+    NUMERICAL = "Numerical"
+    STRING = "String"
+    UNIQUE = "Unique"
+
+
+class ExpectationMetadata(BaseModel):
+    """Metadata for a registered expectation."""
+
+    suite_method_name: str = Field(
+        ..., description="Method name in ExpectationsSuite (e.g., 'expect_value_greater_than')"
+    )
+    pydoc: str = Field(..., description="Human-readable description of the expectation")
+    category: ExpectationCategory = Field(..., description="Category (e.g., 'Column Expectations')")
+    subcategory: ExpectationSubcategory = Field(
+        ..., description="Subcategory (e.g., 'Numerical', 'String')"
+    )
+    params_doc: Dict[str, str] = Field(..., description="Documentation for each parameter")
+    params: list = Field(default_factory=list, description="List of required parameter names")
+    param_types: Dict[str, Any] = Field(
+        default_factory=dict, description="Type hints for parameters"
+    )
+    factory_func_name: str = Field(..., description="Name of the factory function")
+    expectation_name: str = Field(..., description="Name of the expectation class")
+
+    model_config = ConfigDict(frozen=True)  # Make immutable after creation
+
+
 class DataFrameExpectationRegistry:
     """Registry for dataframe expectations."""
 
     _expectations: Dict[str, Callable[..., DataFrameExpectation]] = {}
-    _metadata: Dict[str, Dict[str, Any]] = {}
+    _metadata: Dict[str, ExpectationMetadata] = {}
     _loaded: bool = False
 
     @classmethod
     def register(
         cls,
-        name: Optional[str] = None,
+        name: str,
+        pydoc: str,
+        category: ExpectationCategory,
+        subcategory: ExpectationSubcategory,
+        params_doc: Dict[str, str],
         suite_method_name: Optional[str] = None,
-        description: Optional[str] = None,
-        category: Optional[str] = None,
-        subcategory: Optional[str] = None,
-        params_doc: Optional[Dict[str, str]] = None,
     ):
         """Decorator to register an expectation factory function with metadata.
 
-        :param name: Expectation name (e.g., 'ExpectationValueGreaterThan').
-                     If not provided, auto-derived from function name.
+        :param name: Expectation name (e.g., 'ExpectationValueGreaterThan'). Required.
+        :param pydoc: Human-readable description of the expectation. Required.
+        :param category: Category from ExpectationCategory enum. Required.
+        :param subcategory: Subcategory from ExpectationSubcategory enum. Required.
+        :param params_doc: Documentation for each parameter. Required.
         :param suite_method_name: Override for suite method name.
                                   If not provided, auto-generated from expectation name.
-        :param description: Human-readable description of the expectation.
-        :param category: Category (e.g., 'Column Expectations', 'Aggregation Expectations').
-        :param subcategory: Subcategory (e.g., 'Numerical', 'String', 'Any Value').
-        :param params_doc: Documentation for each parameter.
         :return: Decorator function.
         """
 
         def decorator(func: Callable[..., DataFrameExpectation]):
-            # Auto-derive expectation name from function if not provided
-            expectation_name = (
-                name if name is not None else cls._derive_expectation_name(func.__name__)
-            )
+            expectation_name = name
 
             logger.debug(
                 f"Registering expectation '{expectation_name}' with function {func.__name__}"
@@ -64,40 +102,22 @@ class DataFrameExpectationRegistry:
                 extracted_types = getattr(func, "_param_types", {})
 
             # Store metadata
-            cls._metadata[expectation_name] = {
-                "suite_method_name": suite_method_name
+            cls._metadata[expectation_name] = ExpectationMetadata(
+                suite_method_name=suite_method_name
                 or cls._convert_to_suite_method(expectation_name),
-                "description": description or "",
-                "category": category or "Uncategorized",
-                "subcategory": subcategory or "General",
-                "params_doc": params_doc or {},
-                "params": extracted_params,
-                "param_types": extracted_types,
-                "factory_func_name": func.__name__,
-                "expectation_name": expectation_name,
-            }
+                pydoc=pydoc,
+                category=category,
+                subcategory=subcategory,
+                params_doc=params_doc,
+                params=extracted_params,
+                param_types=extracted_types,
+                factory_func_name=func.__name__,
+                expectation_name=expectation_name,
+            )
 
             return func
 
         return decorator
-
-    @classmethod
-    def _derive_expectation_name(cls, func_name: str) -> str:
-        """Derive expectation name from factory function name.
-
-        :param func_name: Factory function name (e.g., 'create_expectation_value_greater_than').
-        :return: Expectation name (e.g., 'ExpectationValueGreaterThan').
-
-        Examples:
-            create_expectation_value_greater_than -> ExpectationValueGreaterThan
-            create_expectation_min_rows -> ExpectationMinRows
-        """
-        # Remove 'create_expectation_' prefix
-        name = re.sub(r"^create_expectation_", "", func_name)
-        # Convert snake_case to CamelCase
-        parts = name.split("_")
-        camel_case = "".join(word.capitalize() for word in parts)
-        return f"Expectation{camel_case}"
 
     @classmethod
     def _convert_to_suite_method(cls, expectation_name: str) -> str:
@@ -173,20 +193,20 @@ class DataFrameExpectationRegistry:
         return cls._expectations[expectation_name](**kwargs)
 
     @classmethod
-    def get_metadata(cls, expectation_name: str) -> Dict[str, Any]:
+    def get_metadata(cls, expectation_name: str) -> ExpectationMetadata:
         """Get metadata for a registered expectation.
 
         :param expectation_name: The name of the expectation.
-        :return: Dictionary containing metadata for the expectation.
+        :return: Metadata for the expectation.
         :raises ValueError: If expectation not found.
         """
         cls._ensure_loaded()
         if expectation_name not in cls._metadata:
             raise ValueError(f"No metadata found for expectation '{expectation_name}'")
-        return cls._metadata[expectation_name].copy()
+        return cls._metadata[expectation_name]
 
     @classmethod
-    def get_all_metadata(cls) -> Dict[str, Dict[str, Any]]:
+    def get_all_metadata(cls) -> Dict[str, ExpectationMetadata]:
         """Get metadata for all registered expectations.
 
         :return: Dictionary mapping expectation names to their metadata.
@@ -202,7 +222,7 @@ class DataFrameExpectationRegistry:
                  to expectation names (e.g., 'ExpectationValueGreaterThan').
         """
         cls._ensure_loaded()
-        return {meta["suite_method_name"]: exp_name for exp_name, meta in cls._metadata.items()}
+        return {meta.suite_method_name: exp_name for exp_name, meta in cls._metadata.items()}
 
     @classmethod
     def list_expectations(cls) -> list:

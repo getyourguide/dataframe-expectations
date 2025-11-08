@@ -4,6 +4,8 @@ from dataframe_expectations.expectations.column_expectation import (
     DataFrameColumnExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
+    ExpectationCategory,
+    ExpectationSubcategory,
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
@@ -11,9 +13,9 @@ from dataframe_expectations.expectations.utils import requires_params
 
 @register_expectation(
     "ExpectationValueGreaterThan",
-    description="Check if the values in a column are greater than a specified value",
-    category="Column Expectations",
-    subcategory="Numerical",
+    pydoc="Check if the values in a column are greater than a specified value",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
     params_doc={
         "column_name": "The name of the column to check",
         "value": "The value to compare against",
@@ -35,9 +37,9 @@ def create_expectation_value_greater_than(**kwargs) -> DataFrameColumnExpectatio
 
 @register_expectation(
     "ExpectationValueLessThan",
-    description="Check if the values in a column are less than a specified value",
-    category="Column Expectations",
-    subcategory="Numerical",
+    pydoc="Check if the values in a column are less than a specified value",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
     params_doc={
         "column_name": "The name of the column to check",
         "value": "The value to compare against",
@@ -59,9 +61,9 @@ def create_expectation_value_less_than(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationValueBetween",
-    description="Check if the values in a column are between two specified values",
-    category="Column Expectations",
-    subcategory="Numerical",
+    pydoc="Check if the values in a column are between two specified values",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
     params_doc={
         "column_name": "The name of the column to check",
         "min_value": "The minimum value for the range",

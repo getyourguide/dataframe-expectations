@@ -4,6 +4,8 @@ from dataframe_expectations.expectations.column_expectation import (
     DataFrameColumnExpectation,
 )
 from dataframe_expectations.expectations.expectation_registry import (
+    ExpectationCategory,
+    ExpectationSubcategory,
     register_expectation,
 )
 from dataframe_expectations.expectations.utils import requires_params
@@ -11,9 +13,9 @@ from dataframe_expectations.expectations.utils import requires_params
 
 @register_expectation(
     "ExpectationValueEquals",
-    description="Check if the values in a column equal a specified value",
-    category="Column Expectations",
-    subcategory="Any Value",
+    pydoc="Check if the values in a column equal a specified value",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
     params_doc={
         "column_name": "The name of the column to check",
         "value": "The value to compare against",
@@ -35,9 +37,9 @@ def create_expectation_value_equals(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationValueNotEquals",
-    description="Check if the values in a column do not equal a specified value",
-    category="Column Expectations",
-    subcategory="Any Value",
+    pydoc="Check if the values in a column do not equal a specified value",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
     params_doc={
         "column_name": "The name of the column to check",
         "value": "The value to compare against",
@@ -59,9 +61,9 @@ def create_expectation_value_not_equals(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationValueNull",
-    description="Check if the values in a column are null",
-    category="Column Expectations",
-    subcategory="Any Value",
+    pydoc="Check if the values in a column are null",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
     params_doc={
         "column_name": "The name of the column to check",
     },
@@ -81,9 +83,9 @@ def create_expectation_value_null(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationValueNotNull",
-    description="Check if the values in a column are not null",
-    category="Column Expectations",
-    subcategory="Any Value",
+    pydoc="Check if the values in a column are not null",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
     params_doc={
         "column_name": "The name of the column to check",
     },
@@ -103,9 +105,9 @@ def create_expectation_value_not_null(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationValueIn",
-    description="Check if the values in a column are in a specified list of values",
-    category="Column Expectations",
-    subcategory="Any Value",
+    pydoc="Check if the values in a column are in a specified list of values",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
     params_doc={
         "column_name": "The name of the column to check",
         "values": "The list of values to compare against",
@@ -127,9 +129,9 @@ def create_expectation_value_in(**kwargs) -> DataFrameColumnExpectation:
 
 @register_expectation(
     "ExpectationValueNotIn",
-    description="Check if the values in a column are not in a specified list of values",
-    category="Column Expectations",
-    subcategory="Any Value",
+    pydoc="Check if the values in a column are not in a specified list of values",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.ANY_VALUE,
     params_doc={
         "column_name": "The name of the column to check",
         "values": "The list of values to compare against",
