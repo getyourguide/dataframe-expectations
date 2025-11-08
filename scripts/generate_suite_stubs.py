@@ -98,14 +98,18 @@ def generate_stub_method(
         '        Categories:',
         f'          category: {category_str}',
         f'          subcategory: {subcategory_str}',
-        ''
+        '',
     ]
 
-    for param in params:
-        param_doc = params_doc.get(param, '')
-        docstring_lines.append(f'        :param {param}: {param_doc}')
+    # Add parameter documentation
+    if params:
+        for param in params:
+            param_doc = params_doc.get(param, '')
+            docstring_lines.append(f'        :param {param}: {param_doc}')
+        docstring_lines.append('')
 
-    docstring_lines.append('        :return: an instance of DataFrameExpectationsSuite.')
+    # Add return documentation
+    docstring_lines.append('        :return: An instance of DataFrameExpectationsSuite.')
     docstring_lines.append('        """')
 
     # Generate the method signature for .pyi file (no implementation)

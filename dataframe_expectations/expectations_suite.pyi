@@ -35,7 +35,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed maximum value
         :param max_value: The maximum allowed maximum value
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -55,7 +56,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed mean value
         :param max_value: The maximum allowed mean value
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -75,7 +77,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed median value
         :param max_value: The maximum allowed median value
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -95,7 +98,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the numeric column to check
         :param min_value: The minimum allowed minimum value
         :param max_value: The maximum allowed minimum value
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -117,7 +121,8 @@ class DataFrameExpectationsSuite:
         :param quantile: The quantile to calculate (0.0 to 1.0, e.g., 0.5 for median)
         :param min_value: The minimum allowed value for the quantile
         :param max_value: The maximum allowed value for the quantile
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -137,7 +142,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check for distinct values
         :param min_value: The minimum number of distinct values (inclusive)
         :param max_value: The maximum number of distinct values (inclusive)
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -155,7 +161,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check for distinct values
         :param expected_value: The expected number of distinct values
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -173,7 +180,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check for distinct values
         :param threshold: The minimum number of distinct values (exclusive)
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -191,7 +199,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check for distinct values
         :param threshold: The maximum number of distinct values (exclusive)
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -209,7 +218,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check for null count
         :param max_count: The maximum allowed count of null/NaN values
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -227,7 +237,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check for null percentage
         :param max_percentage: The maximum allowed percentage of null/NaN values (0.0 to 100.0)
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -243,7 +254,8 @@ class DataFrameExpectationsSuite:
           subcategory: Any Value
 
         :param max_rows: The maximum number of rows expected
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -259,7 +271,8 @@ class DataFrameExpectationsSuite:
           subcategory: Any Value
 
         :param min_rows: The minimum number of rows expected
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -277,7 +290,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param substring: The substring to search for
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -295,7 +309,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param suffix: The suffix to search for
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -315,7 +330,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param min_length: The minimum length that the values should be
         :param max_length: The maximum length that the values should be
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -333,7 +349,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param length: The length that the values should equal
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -351,7 +368,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param length: The length that the values should be greater than
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -369,7 +387,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param length: The length that the values should be less than
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -387,7 +406,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param substring: The substring to search for
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -405,7 +425,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param prefix: The prefix to search for
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -421,7 +442,8 @@ class DataFrameExpectationsSuite:
           subcategory: Unique
 
         :param column_names: List of column names to check for uniqueness. Empty list checks all columns
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -441,7 +463,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param min_value: The minimum value for the range
         :param max_value: The maximum value for the range
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -459,7 +482,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -477,7 +501,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -495,7 +520,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param values: The list of values to compare against
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -513,7 +539,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -531,7 +558,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param value: The value to compare against
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -549,7 +577,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
         :param values: The list of values to compare against
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -565,7 +594,8 @@ class DataFrameExpectationsSuite:
           subcategory: Any Value
 
         :param column_name: The name of the column to check
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 
@@ -581,7 +611,8 @@ class DataFrameExpectationsSuite:
           subcategory: Any Value
 
         :param column_name: The name of the column to check
-        :return: an instance of DataFrameExpectationsSuite.
+
+        :return: An instance of DataFrameExpectationsSuite.
         """
         ...
 

@@ -120,16 +120,21 @@ class ExpectationsDirective(SphinxDirective):
             expectations_by_category[category][subcategory].append(suite_method_name)
 
             # Build docstring from metadata
-            docstring_lines = [metadata.pydoc, "", "Categories:", f"  category: {category}", f"  subcategory: {subcategory}", ""]
+            docstring_lines = [
+                metadata.pydoc,
+                "",
+                "Categories:",
+                f"  category: {category}",
+                f"  subcategory: {subcategory}",
+                ""
+            ]
 
             # Add parameters documentation
             if metadata.params:
                 for param in metadata.params:
                     param_doc = metadata.params_doc.get(param, "")
-                    param_type = metadata.param_types.get(param, object)
-                    type_name = param_type.__name__ if hasattr(param_type, '__name__') else str(param_type)
                     docstring_lines.append(f":param {param}: {param_doc}")
-                    docstring_lines.append(f":type {param}: {type_name}")
+                docstring_lines.append("")
 
             docstring_lines.append(":return: An instance of DataFrameExpectationsSuite")
             docstring = "\n".join(docstring_lines)

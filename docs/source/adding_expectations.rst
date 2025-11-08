@@ -19,6 +19,7 @@ All expectations must be registered with a category and subcategory to organize 
 - ``ExpectationSubcategory.NUMERICAL``: For expectations dealing with numeric data
 - ``ExpectationSubcategory.STRING``: For expectations dealing with string/text data
 - ``ExpectationSubcategory.ANY_VALUE``: For expectations that work with any data type
+- ``ExpectationSubcategory.UNIQUE``: For expectations related to uniqueness constraints
 
 Choose the category and subcategory that best describes your expectation's purpose.
 
@@ -421,7 +422,7 @@ To provide IDE autocomplete and type hints for all expect methods, run the stub 
 
 .. code-block:: bash
 
-    un run python scripts/generate_suite_stubs.py
+    uv run python scripts/generate_suite_stubs.py
 
 This creates ``expectations_suite.pyi`` with type hints for all registered expectations. The stub file is automatically
 validated by the sanity check script and pre-commit hooks.
@@ -529,7 +530,7 @@ Run the stub generator to create IDE autocomplete support:
 
 .. code-block:: bash
 
-    un run python scripts/generate_suite_stubs.py
+    uv run python scripts/generate_suite_stubs.py
 
 This updates ``dataframe_expectations/expectations_suite.pyi`` with type hints for your new expectation method.
 

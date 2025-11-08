@@ -66,7 +66,6 @@ class DataFrameExpectationsSuite:
         if not name.startswith("expect_"):
             raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
-        # Get the mapping of suite methods to expectation names
         mapping = DataFrameExpectationRegistry.get_suite_method_mapping()
 
         # Check if this method exists in the registry
@@ -77,7 +76,6 @@ class DataFrameExpectationsSuite:
                 f"Available methods: {', '.join(available[:5])}..."
             )
 
-        # Get the expectation name
         expectation_name = mapping[name]
 
         # Create and return the dynamic method
@@ -92,18 +90,14 @@ class DataFrameExpectationsSuite:
 
         def dynamic_method(**kwargs):
             """Dynamically generated expectation method."""
-            # Get expectation instance from registry
             expectation = DataFrameExpectationRegistry.get_expectation(
                 expectation_name=expectation_name, **kwargs
             )
 
-            # Log the addition
             logger.info(f"Adding expectation: {expectation}")
 
             # Add to internal list
             self.__expectations.append(expectation)
-
-            # Return self for chaining
             return self
 
         # Set helpful name for debugging
@@ -139,13 +133,9 @@ class DataFrameExpectationsSuite:
         was_already_cached = False
 
         if data_frame_type == DataFrameType.PYSPARK:
-            # Import PySpark DataFrame for type casting
             from pyspark.sql import DataFrame as PySparkDataFrame
 
-            # Cast to PySpark DataFrame since we know it's PySpark at this point
             pyspark_df = cast(PySparkDataFrame, data_frame)
-
-            # Check if DataFrame is already cached
             was_already_cached = pyspark_df.is_cached
 
             # Cache the DataFrame if it wasn't already cached
