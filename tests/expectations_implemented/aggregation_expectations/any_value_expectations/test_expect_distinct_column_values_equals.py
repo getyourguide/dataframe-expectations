@@ -493,7 +493,7 @@ def test_suite_pandas_success():
         column_name="col1", expected_value=3
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 2, 1]})  # exactly 3 distinct values
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -506,7 +506,7 @@ def test_suite_pandas_violations():
     )
     data_frame = pd.DataFrame({"col1": [1, 2, 1, 2, 1]})  # 2 distinct values, expected 5
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_success(spark):
@@ -519,7 +519,7 @@ def test_suite_pyspark_success(spark):
     data_frame = spark.createDataFrame(
         [(1,), (2,), (3,), (2,), (1,)], ["col1"]
     )  # exactly 3 distinct values
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -534,7 +534,7 @@ def test_suite_pyspark_violations(spark):
         [(1,), (2,), (1,), (2,), (1,)], ["col1"]
     )  # 2 distinct values, expected 5
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_column_missing_error(spark):
@@ -546,7 +546,7 @@ def test_suite_pyspark_column_missing_error(spark):
     )
     data_frame = spark.createDataFrame([(1,), (2,), (3,), (4,), (5,)], ["col2"])
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_categorical_data():
