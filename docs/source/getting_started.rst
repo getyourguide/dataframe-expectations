@@ -17,6 +17,7 @@ Requirements
 
 * Python 3.10+
 * pandas >= 1.5.0
+* pydantic >= 2.12.4
 * pyspark >= 3.3.0
 * tabulate >= 0.8.9
 
@@ -25,33 +26,34 @@ Basic Usage
 
 DataFrame Expectations provides a fluent API for building validation suites. Here's how to get started:
 
-Pandas Example
-~~~~~~~~~~~~~~
+Basic Usage with Pandas
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
     import pandas as pd
     from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
 
-    # Create a sample DataFrame
+    # Build a suite with expectations
+    suite = (
+         DataFrameExpectationsSuite()
+         .expect_min_rows(min_rows=3)
+         .expect_max_rows(max_rows=10)
+         .expect_value_greater_than(column_name="age", value=18)
+         .expect_value_less_than(column_name="salary", value=100000)
+         .expect_value_not_null(column_name="name")
+    )
+
+    # Create a runner
+    runner = suite.build()
+
+    # Validate a DataFrame
     df = pd.DataFrame({
          "age": [25, 15, 45, 22],
          "name": ["Alice", "Bob", "Charlie", "Diana"],
          "salary": [50000, 60000, 80000, 45000]
     })
-
-    # Build a validation suite
-    suite = (
-         DataFrameExpectationsSuite()
-         .expect_min_rows(3)  # At least 3 rows
-         .expect_max_rows(10)  # At most 10 rows
-         .expect_value_greater_than("age", 18)  # All ages > 18
-         .expect_value_less_than("salary", 100000)  # All salaries < 100k
-         .expect_value_not_null("name")  # No null names
-    )
-
-    # Run validation
-     suite.run(df)
+    runner.run(df)
 
 
 PySpark Example
@@ -59,13 +61,26 @@ PySpark Example
 
 .. code-block:: python
 
-    from pyspark.sql import SparkSession
     from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+    from pyspark.sql import SparkSession
 
-    # Initialize Spark
-    spark = SparkSession.builder.appName("DataFrameExpectations").getOrCreate()
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("example").getOrCreate()
 
-    # Create a sample DataFrame
+    # Build a validation suite (same API as Pandas!)
+    suite = (
+         DataFrameExpectationsSuite()
+         .expect_min_rows(min_rows=3)
+         .expect_max_rows(max_rows=10)
+         .expect_value_greater_than(column_name="age", value=18)
+         .expect_value_less_than(column_name="salary", value=100000)
+         .expect_value_not_null(column_name="name")
+    )
+
+    # Build the runner
+    runner = suite.build()
+
+    # Create a PySpark DataFrame
     data = [
          {"age": 25, "name": "Alice", "salary": 50000},
          {"age": 15, "name": "Bob", "salary": 60000},
@@ -74,18 +89,55 @@ PySpark Example
     ]
     df = spark.createDataFrame(data)
 
-    # Build a validation suite (same API as Pandas!)
+    # Validate
+    runner.run(df)
+
+Decorator Pattern for Automatic Validation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+    from pyspark.sql import SparkSession
+
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("example").getOrCreate()
+
     suite = (
          DataFrameExpectationsSuite()
-         .expect_min_rows(3)
-         .expect_max_rows(10)
-         .expect_value_greater_than("age", 18)
-         .expect_value_less_than("salary", 100000)
-         .expect_value_not_null("name")
+         .expect_min_rows(min_rows=3)
+         .expect_max_rows(max_rows=10)
+         .expect_value_greater_than(column_name="age", value=18)
+         .expect_value_less_than(column_name="salary", value=100000)
+         .expect_value_not_null(column_name="name")
     )
 
-    # Run validation
-    suite.run(df)
+    # Build the runner
+    runner = suite.build()
+
+    # Apply decorator to automatically validate function output
+    @runner.validate
+    def load_employee_data():
+         """Load and return employee data - automatically validated."""
+         return spark.createDataFrame(
+              [
+                   {"age": 25, "name": "Alice", "salary": 50000},
+                   {"age": 15, "name": "Bob", "salary": 60000},
+                   {"age": 45, "name": "Charlie", "salary": 80000},
+                   {"age": 22, "name": "Diana", "salary": 45000}
+              ]
+         )
+
+    # Function execution automatically validates the returned DataFrame
+    df = load_employee_data()  # Raises DataFrameExpectationsSuiteFailure if validation fails
+
+    # Allow functions that may return None
+    @runner.validate(allow_none=True)
+    def conditional_load(should_load: bool):
+         """Conditionally load data - validation only runs when DataFrame is returned."""
+         if should_load:
+              return spark.createDataFrame([{"age": 25, "name": "Alice", "salary": 50000}])
+         return None  # No validation when None is returned
 
 Example Output
 ~~~~~~~~~~~~~~
