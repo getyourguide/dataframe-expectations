@@ -5,7 +5,28 @@
 
 ### ⚠ BREAKING CHANGES
 
-* The DataFrameExpectationsSuite API has changed. Users must now call .build() before .run().
+* ‼️ BREAKING CHANGE: The DataFrameExpectationsSuite API has changed. Users must now call .build() before .run().
+
+**Migration guide:**
+```python
+# Before
+suite.run(df)
+
+# After
+runner = suite.build()
+runner.run(df)
+```
+
+**New decorator feature:**
+ ```python
+@runner.validate
+def load_data():
+    return pd.read_csv(\"data.csv\")
+
+@runner.validate(allow_none=True)
+def optional_load():
+    return None  # Skip validation when None
+```
 
 ### Features
 
