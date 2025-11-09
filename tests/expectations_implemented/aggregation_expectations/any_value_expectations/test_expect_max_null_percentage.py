@@ -434,7 +434,7 @@ def test_suite_pandas_success():
     )
     # 4 values in col1, 1 nulls = 25% null (should pass)
     data_frame = pd.DataFrame({"col1": [1, 2, None, 4], "col2": ["a", "b", "c", "d"]})
-    expectations_suite.run(data_frame=data_frame)
+    expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pandas_violations():
@@ -445,7 +445,7 @@ def test_suite_pandas_violations():
     # 2 values in col1, 1 null = 50% null (exceeds 10%)
     data_frame = pd.DataFrame({"col1": [1, None], "col2": ["a", "b"]})
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_success(spark):
@@ -455,7 +455,7 @@ def test_suite_pyspark_success(spark):
     )
     # 2 values in col1, 1 null = 50% null (equals 50%)
     data_frame = spark.createDataFrame([(1, "a"), (None, "b")], ["col1", "col2"])
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -467,7 +467,7 @@ def test_suite_pyspark_violations(spark):
     # 2 values in col1, 1 null = 50% null (exceeds 20%)
     data_frame = spark.createDataFrame([(None, "a"), (2, None)], ["col1", "col2"])
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_expectation_parameter_validation():

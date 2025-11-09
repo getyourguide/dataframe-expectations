@@ -86,7 +86,7 @@ def test_pandas_success_registry_and_suite():
         suite = DataFrameExpectationsSuite().expect_column_median_between(
             column_name="col1", min_value=min_val, max_value=max_val
         )
-        suite_result = suite.run(data_frame=data_frame)
+        suite_result = suite.build().run(data_frame=data_frame)
         assert suite_result is None, (
             f"Suite test failed for {description}: expected None but got {suite_result}"
         )
@@ -135,7 +135,7 @@ def test_pandas_failure_registry_and_suite():
             column_name="col1", min_value=min_val, max_value=max_val
         )
         with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.run(data_frame=data_frame)
+            suite.build().run(data_frame=data_frame)
 
 
 def test_pandas_missing_column_registry_and_suite():
@@ -163,7 +163,7 @@ def test_pandas_missing_column_registry_and_suite():
         column_name="nonexistent_col", min_value=25, max_value=30
     )
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        suite.run(data_frame=data_frame)
+        suite.build().run(data_frame=data_frame)
 
 
 def test_pyspark_success_registry_and_suite(spark):
@@ -198,7 +198,7 @@ def test_pyspark_success_registry_and_suite(spark):
         suite = DataFrameExpectationsSuite().expect_column_median_between(
             column_name="col1", min_value=min_val, max_value=max_val
         )
-        suite_result = suite.run(data_frame=data_frame)
+        suite_result = suite.build().run(data_frame=data_frame)
         assert suite_result is None, (
             f"Suite test failed for {description}: expected None but got {suite_result}"
         )
@@ -245,7 +245,7 @@ def test_pyspark_failure_registry_and_suite(spark):
             column_name="col1", min_value=min_val, max_value=max_val
         )
         with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.run(data_frame=data_frame)
+            suite.build().run(data_frame=data_frame)
 
 
 def test_pyspark_null_scenarios_registry_and_suite(spark):
@@ -297,7 +297,7 @@ def test_pyspark_null_scenarios_registry_and_suite(spark):
             column_name="col1", min_value=25, max_value=30
         )
         with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.run(data_frame=data_frame)
+            suite.build().run(data_frame=data_frame)
 
 
 def test_pyspark_missing_column_registry_and_suite(spark):
@@ -325,7 +325,7 @@ def test_pyspark_missing_column_registry_and_suite(spark):
         column_name="nonexistent_col", min_value=25, max_value=30
     )
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        suite.run(data_frame=data_frame)
+        suite.build().run(data_frame=data_frame)
 
 
 def test_boundary_values_both_dataframes(spark):

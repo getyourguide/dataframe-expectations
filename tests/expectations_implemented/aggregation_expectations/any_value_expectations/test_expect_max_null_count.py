@@ -437,7 +437,7 @@ def test_suite_pandas_success():
     data_frame = pd.DataFrame(
         {"col1": [1, None, 3], "col2": ["a", "b", "c"]}
     )  # 1 null value, which is less than max_count of 2
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -450,7 +450,7 @@ def test_suite_pandas_violations():
         {"col1": [1, None, None], "col2": ["a", "b", "c"]}
     )  # 2 null values, which exceeds max_count of 1
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_success(spark):
@@ -461,7 +461,7 @@ def test_suite_pyspark_success(spark):
     data_frame = spark.createDataFrame(
         [(1, "a"), (None, "b"), (3, "c")], ["col1", "col2"]
     )  # 1 null value, which is less than max_count of 2
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -474,7 +474,7 @@ def test_suite_pyspark_violations(spark):
         [(1, "a"), (None, "b"), (None, "c")], ["col1", "col2"]
     )  # 2 null values, which exceeds max_count of 1
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_column_missing_error(spark):
@@ -484,7 +484,7 @@ def test_suite_pyspark_column_missing_error(spark):
     )
     data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col2", "col3"])
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_expectation_parameter_validation():
