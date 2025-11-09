@@ -4,6 +4,10 @@ version = "0.2.0"
 description = "Python library designed to validate Pandas and PySpark DataFrames using customizable, reusable expectations"
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [
+    {name = "Data Products GYG", email = "engineering.data-products@getyourguide.com"}
+]
+
 dependencies = [
     "pandas>=1.5.0",
     "pydantic>=2.12.4",
@@ -26,6 +30,7 @@ docs = [
     "pyspark>=3.3.0",
     "pandas>=1.5.0",
     "tabulate>=0.8.9",
+    "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 

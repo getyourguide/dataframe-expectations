@@ -1,15 +1,24 @@
 import os
 import sys
 
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
+
 # Add the project root and extension directories to the path
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('_ext'))
 
+# Read version from pyproject.toml
+with open(os.path.abspath('../../pyproject.toml'), 'rb') as f:
+    pyproject = tomllib.load(f)
+    release = pyproject['project']['version']
+
 # Project information
 project = 'DataFrame Expectations'
-copyright = '2024, Your Name'
-author = 'Your Name'
-release = '0.1.0'
+copyright = '2025, Data Products GYG'
+author = 'Data Products GYG'
 
 # Extensions
 extensions = [

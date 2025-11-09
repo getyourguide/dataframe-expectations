@@ -123,7 +123,7 @@ def test_suite_pandas_success():
         column_name="col1", min_length=3, max_length=6
     )
     data_frame = pd.DataFrame({"col1": ["foo", "bazz", "hello", "foobar"]})
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -133,7 +133,7 @@ def test_suite_pandas_violations():
     )
     data_frame = pd.DataFrame({"col1": ["fo", "bazz", "hellothere", "foobar"]})
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_success(spark):
@@ -141,7 +141,7 @@ def test_suite_pyspark_success(spark):
         column_name="col1", min_length=3, max_length=6
     )
     data_frame = spark.createDataFrame([("foo",), ("bazz",), ("hello",), ("foobar",)], ["col1"])
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -151,7 +151,7 @@ def test_suite_pyspark_violations(spark):
     )
     data_frame = spark.createDataFrame([("fo",), ("bazz",), ("hellothere",), ("foobar",)], ["col1"])
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_column_missing_error(spark):
@@ -160,4 +160,4 @@ def test_suite_pyspark_column_missing_error(spark):
     )
     data_frame = spark.createDataFrame([("foo",), ("bazz",), ("hello",)], ["col2"])
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
