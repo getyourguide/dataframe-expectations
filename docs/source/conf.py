@@ -17,8 +17,8 @@ with open(os.path.abspath('../../pyproject.toml'), 'rb') as f:
 
 # Project information
 project = 'DataFrame Expectations'
-copyright = '2025, Data Products GYG'
-author = 'Data Products GYG'
+copyright = '2025, GetYourGuide'
+author = 'Data Products GetYourGuide'
 
 # Extensions
 extensions = [

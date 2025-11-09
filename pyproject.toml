@@ -5,7 +5,7 @@ description = "Python library designed to validate Pandas and PySpark DataFrames
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-    {name = "Data Products GYG", email = "engineering.data-products@getyourguide.com"}
+    {name = "Data Products GetYourGuide", email = "engineering.data-products@getyourguide.com"}
 ]
 
 dependencies = [

@@ -61,6 +61,20 @@ class DataFrameExpectationsSuiteRunner:
         """
         self.__expectations = tuple(expectations)  # Immutable tuple
 
+    @property
+    def expectation_count(self) -> int:
+        """Return the number of expectations in this runner."""
+        return len(self.__expectations)
+
+    def list_expectations(self) -> List[str]:
+        """
+        Return a list of expectation descriptions in this runner.
+
+        :return: List of expectation descriptions as strings in the format:
+                 "ExpectationName (description)"
+        """
+        return [f"{exp}" for exp in self.__expectations]
+
     def run(
         self,
         data_frame: DataFrameLike,

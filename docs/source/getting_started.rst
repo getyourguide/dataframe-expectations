@@ -62,6 +62,10 @@ PySpark Example
 .. code-block:: python
 
     from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+    from pyspark.sql import SparkSession
+
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("example").getOrCreate()
 
     # Build a validation suite (same API as Pandas!)
     suite = (
@@ -93,8 +97,11 @@ Decorator Pattern for Automatic Validation
 
 .. code-block:: python
 
-    import pandas as pd
     from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+    from pyspark.sql import SparkSession
+
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("example").getOrCreate()
 
     suite = (
          DataFrameExpectationsSuite()
