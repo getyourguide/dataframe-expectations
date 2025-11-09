@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.2.0...v1.0.0) (2025-11-09)
+## [0.3.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.2.0...v0.3.0) (2025-11-09)
 
 
 ### ⚠ BREAKING CHANGES

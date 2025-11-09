@@ -1,6 +1,6 @@
 [project]
 name = "dataframe-expectations"
-version = "1.0.0"
+version = "0.3.0"
 description = "Python library designed to validate Pandas and PySpark DataFrames using customizable, reusable expectations"
 readme = "README.md"
 requires-python = ">=3.10"
