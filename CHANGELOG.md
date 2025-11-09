@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.3.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.2.0...v0.3.0) (2025-11-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* ‼️ BREAKING CHANGE: The DataFrameExpectationsSuite API has changed. Users must now call .build() before .run().
+
+**Migration guide:**
+```python
+# Before
+suite.run(df)
+
+# After
+runner = suite.build()
+runner.run(df)
+```
+
+**New decorator feature:**
+ ```python
+@runner.validate
+def load_data():
+    return pd.read_csv(\"data.csv\")
+
+@runner.validate(allow_none=True)
+def optional_load():
+    return None  # Skip validation when None
+```
+
+### Features
+
+* implement builder pattern for expectation suite runner ([66cf5a4](https://github.com/getyourguide/dataframe-expectations/commit/66cf5a4f77bb42cf784946df4250f1d8420c6b4d))
+
+
+### Bug Fixes
+
+* update release please config to generate simple tags ([185a308](https://github.com/getyourguide/dataframe-expectations/commit/185a308bb8e3582c0d5988e96dd4994beff0a5da))
+* update release please config to generate simple tags ([fe767c7](https://github.com/getyourguide/dataframe-expectations/commit/fe767c758d1b02042e8dc449ca924b349e9d5916))
+
+
+### Documentation
+
+* add Spark session initialization to PySpark examples and update author info ([2b0cf25](https://github.com/getyourguide/dataframe-expectations/commit/2b0cf25363ddf245b9f1c42e01c11fc1e8a5909e))
+
 ## [0.2.0](https://github.com/getyourguide/dataframe-expectations/compare/dataframe-expectations-v0.1.1...dataframe-expectations-v0.2.0) (2025-11-08)
 
 
