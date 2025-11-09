@@ -312,7 +312,7 @@ def test_suite_pandas_success():
     """Test integration with expectations suite for pandas success case."""
     expectations_suite = DataFrameExpectationsSuite().expect_max_rows(max_rows=5)
     data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -321,14 +321,14 @@ def test_suite_pandas_violations():
     expectations_suite = DataFrameExpectationsSuite().expect_max_rows(max_rows=2)
     data_frame = pd.DataFrame({"col1": [1, 2, 3, 4], "col2": ["a", "b", "c", "d"]})
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_suite_pyspark_success(spark):
     """Test integration with expectations suite for PySpark success case."""
     expectations_suite = DataFrameExpectationsSuite().expect_max_rows(max_rows=5)
     data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-    result = expectations_suite.run(data_frame=data_frame)
+    result = expectations_suite.build().run(data_frame=data_frame)
     assert result is None, "Expected no exceptions to be raised"
 
 
@@ -337,7 +337,7 @@ def test_suite_pyspark_violations(spark):
     expectations_suite = DataFrameExpectationsSuite().expect_max_rows(max_rows=2)
     data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c"), (4, "d")], ["col1", "col2"])
     with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.run(data_frame=data_frame)
+        expectations_suite.build().run(data_frame=data_frame)
 
 
 def test_expectation_parameter_validation():
