@@ -5,13 +5,14 @@ from pandas import DataFrame as PandasDataFrame
 from pyspark.sql import DataFrame as PySparkDataFrame
 from pyspark.sql import functions as F
 
-from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 from dataframe_expectations.core.aggregation_expectation import (
     DataFrameAggregationExpectation,
 )
 from dataframe_expectations.core.types import (
     ExpectationCategory,
     ExpectationSubcategory,
+    DataFrameLike,
+    DataFrameType,
 )
 from dataframe_expectations.registry import register_expectation
 from dataframe_expectations.core.utils import requires_params
