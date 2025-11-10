@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Callable, List, Optional, cast
 
-from dataframe_expectations.expectations import DataFrameLike
+from dataframe_expectations.core.types import DataFrameLike
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
