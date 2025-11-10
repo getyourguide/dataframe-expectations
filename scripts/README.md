@@ -17,7 +17,7 @@ uv run python scripts/generate_suite_stubs.py
 This will:
 1. Read all expectation metadata from the registry
 2. Generate method signatures with full docstrings and type hints
-3. Create/update `dataframe_expectations/expectations_suite.pyi`
+3. Create/update `dataframe_expectations/suite.pyi`
 
 The `.pyi` file is automatically discovered by IDEs (VS Code, PyCharm, etc.) and type checkers (mypy, pyright).
 
@@ -51,7 +51,7 @@ Run the script whenever you:
 The `.pyi` file contains type stubs that IDEs use for autocomplete:
 
 ```python
-# expectations_suite.pyi
+# suite.pyi
 class DataFrameExpectationsSuite:
     def expect_value_equals(
         self,
@@ -127,6 +127,6 @@ The script is self-contained and requires no maintenance. When adding new expect
 
 1. Register with metadata in your expectation file
 2. Run `python scripts/generate_suite_stubs.py`
-3. Commit the updated `expectations_suite.py`
+3. Commit the updated `suite.py`
 
 That's it! 🎉

@@ -23,8 +23,8 @@ class ExpectationsSanityChecker:
     def __init__(self, project_root: Path):
         self.project_root = project_root
         self.expectations_dir = project_root / "dataframe_expectations" / "expectations"
-        self.suite_file = project_root / "dataframe_expectations" / "expectations_suite.py"
-        self.stub_file = project_root / "dataframe_expectations" / "expectations_suite.pyi"
+        self.suite_file = project_root / "dataframe_expectations" / "suite.py"
+        self.stub_file = project_root / "dataframe_expectations" / "suite.pyi"
         self.tests_dir = project_root / "tests" / "expectations_implemented"
 
         # Results storage

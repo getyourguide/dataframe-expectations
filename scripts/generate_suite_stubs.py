@@ -6,7 +6,7 @@ This script reads the expectation metadata from the registry and generates
 a .pyi stub file that provides IDE autocomplete for all expect_* methods.
 
 Usage:
-    python scripts/generate_suite_stubs.py          # Generate expectations_suite.pyi
+    python scripts/generate_suite_stubs.py          # Generate suite.pyi
     python scripts/generate_suite_stubs.py --check  # Only check if stub file is up-to-date
     python scripts/generate_suite_stubs.py --print  # Print generated stubs to stdout
 """
@@ -180,7 +180,7 @@ def generate_pyi_file() -> str:
 
 def update_pyi_file(dry_run: bool = False) -> bool:
     """
-    Update the expectations_suite.pyi stub file.
+    Update the suite.pyi stub file.
 
     Args:
         dry_run: If True, only check if update is needed without writing
@@ -188,7 +188,7 @@ def update_pyi_file(dry_run: bool = False) -> bool:
     Returns:
         True if file was updated (or would be updated in dry_run mode), False otherwise
     """
-    pyi_file = Path(__file__).parent.parent / 'dataframe_expectations' / 'expectations_suite.pyi'
+    pyi_file = Path(__file__).parent.parent / 'dataframe_expectations' / 'suite.pyi'
 
     # Generate the new .pyi content
     new_content = generate_pyi_file()
@@ -228,7 +228,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Generate expectations_suite.pyi
+  # Generate suite.pyi
   python scripts/generate_suite_stubs.py
 
   # Check if stub file is up-to-date (useful for CI)

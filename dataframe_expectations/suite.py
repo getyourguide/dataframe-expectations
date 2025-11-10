@@ -108,7 +108,6 @@ class DataFrameExpectationsSuiteRunner:
             pyspark_df = cast(PySparkDataFrame, data_frame)
             was_already_cached = pyspark_df.is_cached
 
-            # Cache the DataFrame if it wasn't already cached
             if not was_already_cached:
                 logger.debug("Caching PySpark DataFrame for expectations suite execution")
                 pyspark_df.cache()
@@ -206,7 +205,6 @@ class DataFrameExpectationsSuiteRunner:
                 logger.info(f"Validating DataFrame returned from '{f.__name__}'")
                 self.run(data_frame=result)
 
-                # Return the original DataFrame if validation passes
                 return result
 
             return wrapper
@@ -254,42 +252,32 @@ class DataFrameExpectationsSuite:
         if not name.startswith("expect_"):
             raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
-        mapping = DataFrameExpectationRegistry.get_suite_method_mapping()
+        # Create and return the dynamic method - validation happens in _create_expectation_method
+        return self._create_expectation_method(name)
 
-        # Check if this method exists in the registry
-        if name not in mapping:
-            available = list(mapping.keys())
-            raise AttributeError(
-                f"Unknown expectation method '{name}'. "
-                f"Available methods: {', '.join(available[:5])}..."
-            )
-
-        expectation_name = mapping[name]
-
-        # Create and return the dynamic method
-        return self._create_expectation_method(expectation_name, name)
-
-    def _create_expectation_method(self, expectation_name: str, method_name: str):
+    def _create_expectation_method(self, suite_method_name: str):
         """
         Create a dynamic expectation method.
 
-        Returns a closure that captures the expectation_name and self.
+        Returns a closure that captures the suite_method_name and self.
         """
 
         def dynamic_method(**kwargs):
             """Dynamically generated expectation method."""
-            expectation = DataFrameExpectationRegistry.get_expectation(
-                expectation_name=expectation_name, **kwargs
-            )
+            try:
+                expectation = DataFrameExpectationRegistry.get_expectation_by_suite_method(
+                    suite_method_name=suite_method_name, **kwargs
+                )
+            except ValueError as e:
+                raise AttributeError(str(e)) from e
 
             logger.info(f"Adding expectation: {expectation}")
 
-            # Add to internal list
             self.__expectations.append(expectation)
             return self
 
         # Set helpful name for debugging
-        dynamic_method.__name__ = method_name
+        dynamic_method.__name__ = suite_method_name
 
         return dynamic_method
 

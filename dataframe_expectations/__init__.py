@@ -1,5 +1,7 @@
 """DataFrame Expectations - A validation library for pandas and PySpark DataFrames."""
 
-__version__ = "0.3.0"
+from importlib.metadata import version
+
+__version__ = version("dataframe-expectations")
 
 __all__ = []

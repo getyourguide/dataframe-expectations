@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from dataframe_expectations.core.expectation import DataFrameExpectation
 from dataframe_expectations.core.types import (
@@ -11,12 +11,20 @@ from dataframe_expectations.logging_utils import setup_logger
 
 logger = setup_logger(__name__)
 
+# Type alias for registry entry (factory function + metadata)
+FactoryFunction = Callable[..., DataFrameExpectation]
+RegistryEntry = Tuple[FactoryFunction, ExpectationMetadata]
+
 
 class DataFrameExpectationRegistry:
     """Registry for dataframe expectations."""
 
-    _expectations: Dict[str, Callable[..., DataFrameExpectation]] = {}
-    _metadata: Dict[str, ExpectationMetadata] = {}
+    # Primary registry: keyed by suite_method_name for O(1) suite access
+    _registry: Dict[str, RegistryEntry] = {}
+
+    # Secondary index: maps expectation_name -> suite_method_name for O(1) lookups
+    _by_name: Dict[str, str] = {}
+
     _loaded: bool = False
 
     @classmethod
@@ -41,21 +49,31 @@ class DataFrameExpectationRegistry:
         :return: Decorator function.
         """
 
-        def decorator(func: Callable[..., DataFrameExpectation]):
+        def decorator(func: FactoryFunction) -> FactoryFunction:
             expectation_name = name
 
             logger.debug(
                 f"Registering expectation '{expectation_name}' with function {func.__name__}"
             )
 
-            # Check if the name is already registered
-            if expectation_name in cls._expectations:
-                error_message = f"Expectation '{expectation_name}' is already registered."
+            suite_method = suite_method_name or cls._convert_to_suite_method(expectation_name)
+
+            # Check for duplicate suite method name
+            if suite_method in cls._registry:
+                existing_metadata = cls._registry[suite_method][1]
+                error_message = (
+                    f"Suite method '{suite_method}' is already registered by expectation '{existing_metadata.expectation_name}'. "
+                    f"Cannot register '{expectation_name}'."
+                )
                 logger.error(error_message)
                 raise ValueError(error_message)
 
-            # Register factory function
-            cls._expectations[expectation_name] = func
+            # Check for duplicate expectation name
+            if expectation_name in cls._by_name:
+                existing_suite_method = cls._by_name[expectation_name]
+                error_message = f"Expectation '{expectation_name}' is already registered with suite method '{existing_suite_method}'."
+                logger.error(error_message)
+                raise ValueError(error_message)
 
             # Extract params from @requires_params if present
             extracted_params = []
@@ -64,10 +82,8 @@ class DataFrameExpectationRegistry:
                 extracted_params = list(func._required_params)
                 extracted_types = getattr(func, "_param_types", {})
 
-            # Store metadata
-            cls._metadata[expectation_name] = ExpectationMetadata(
-                suite_method_name=suite_method_name
-                or cls._convert_to_suite_method(expectation_name),
+            metadata = ExpectationMetadata(
+                suite_method_name=suite_method,
                 pydoc=pydoc,
                 category=category,
                 subcategory=subcategory,
@@ -77,6 +93,12 @@ class DataFrameExpectationRegistry:
                 factory_func_name=func.__name__,
                 expectation_name=expectation_name,
             )
+
+            # Store in primary registry
+            cls._registry[suite_method] = (func, metadata)
+
+            # Store in secondary index
+            cls._by_name[expectation_name] = suite_method
 
             return func
 
@@ -93,8 +115,9 @@ class DataFrameExpectationRegistry:
             ExpectationValueGreaterThan -> expect_value_greater_than
             ExpectationMinRows -> expect_min_rows
         """
-        # Remove 'Expectation' prefix
+
         name = re.sub(r"^Expectation", "", expectation_name)
+
         # Convert CamelCase to snake_case
         snake = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", name)
         snake = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", snake)
@@ -141,13 +164,17 @@ class DataFrameExpectationRegistry:
     def get_expectation(cls, expectation_name: str, **kwargs) -> DataFrameExpectation:
         """Get an expectation instance by name.
 
+        Note: This method is kept for backward compatibility with tests.
+        The suite uses get_expectation_by_suite_method() for better performance.
+
         :param expectation_name: The name of the expectation.
         :param kwargs: Parameters to pass to the expectation factory function.
         :return: An instance of DataFrameExpectation.
         """
-        cls._ensure_loaded()  # Lazy load expectations
+        cls._ensure_loaded()
         logger.debug(f"Retrieving expectation '{expectation_name}' with arguments: {kwargs}")
-        if expectation_name not in cls._expectations:
+
+        if expectation_name not in cls._by_name:
             available = cls.list_expectations()
             error_message = (
                 f"Unknown expectation '{expectation_name}'. "
@@ -155,7 +182,10 @@ class DataFrameExpectationRegistry:
             )
             logger.error(error_message)
             raise ValueError(error_message)
-        return cls._expectations[expectation_name](**kwargs)
+
+        suite_method = cls._by_name[expectation_name]
+        factory, metadata = cls._registry[suite_method]
+        return factory(**kwargs)
 
     @classmethod
     def get_metadata(cls, expectation_name: str) -> ExpectationMetadata:
@@ -166,9 +196,13 @@ class DataFrameExpectationRegistry:
         :raises ValueError: If expectation not found.
         """
         cls._ensure_loaded()
-        if expectation_name not in cls._metadata:
+
+        if expectation_name not in cls._by_name:
             raise ValueError(f"No metadata found for expectation '{expectation_name}'")
-        return cls._metadata[expectation_name]
+
+        suite_method = cls._by_name[expectation_name]
+        factory, metadata = cls._registry[suite_method]
+        return metadata
 
     @classmethod
     def get_all_metadata(cls) -> Dict[str, ExpectationMetadata]:
@@ -177,7 +211,35 @@ class DataFrameExpectationRegistry:
         :return: Dictionary mapping expectation names to their metadata.
         """
         cls._ensure_loaded()
-        return cls._metadata.copy()
+        return {metadata.expectation_name: metadata for _, (_, metadata) in cls._registry.items()}
+
+    @classmethod
+    def get_expectation_by_suite_method(
+        cls, suite_method_name: str, **kwargs
+    ) -> DataFrameExpectation:
+        """Get an expectation instance by suite method name.
+
+        :param suite_method_name: The suite method name (e.g., 'expect_value_greater_than').
+        :param kwargs: Parameters to pass to the expectation factory function.
+        :return: An instance of DataFrameExpectation.
+        :raises ValueError: If suite method not found.
+        """
+        cls._ensure_loaded()
+        logger.debug(
+            f"Retrieving expectation for suite method '{suite_method_name}' with arguments: {kwargs}"
+        )
+
+        if suite_method_name not in cls._registry:
+            available = list(cls._registry.keys())
+            error_message = (
+                f"Unknown suite method '{suite_method_name}'. "
+                f"Available methods: {', '.join(available[:10])}..."
+            )
+            logger.error(error_message)
+            raise ValueError(error_message)
+
+        factory, metadata = cls._registry[suite_method_name]
+        return factory(**kwargs)
 
     @classmethod
     def get_suite_method_mapping(cls) -> Dict[str, str]:
@@ -187,7 +249,10 @@ class DataFrameExpectationRegistry:
                  to expectation names (e.g., 'ExpectationValueGreaterThan').
         """
         cls._ensure_loaded()
-        return {meta.suite_method_name: exp_name for exp_name, meta in cls._metadata.items()}
+        return {
+            suite_method: metadata.expectation_name
+            for suite_method, (_, metadata) in cls._registry.items()
+        }
 
     @classmethod
     def list_expectations(cls) -> list:
@@ -195,8 +260,8 @@ class DataFrameExpectationRegistry:
 
         :return: List of registered expectation names.
         """
-        cls._ensure_loaded()  # Lazy load expectations
-        return list(cls._expectations.keys())
+        cls._ensure_loaded()
+        return [metadata.expectation_name for _, (_, metadata) in cls._registry.items()]
 
     @classmethod
     def remove_expectation(cls, expectation_name: str):
@@ -205,23 +270,25 @@ class DataFrameExpectationRegistry:
         :param expectation_name: The name of the expectation to remove.
         :raises ValueError: If expectation not found.
         """
-        cls._ensure_loaded()  # Lazy load expectations
+        cls._ensure_loaded()
         logger.debug(f"Removing expectation '{expectation_name}'")
-        if expectation_name in cls._expectations:
-            del cls._expectations[expectation_name]
-            if expectation_name in cls._metadata:
-                del cls._metadata[expectation_name]
-        else:
+
+        if expectation_name not in cls._by_name:
             error_message = f"Expectation '{expectation_name}' not found."
             logger.error(error_message)
             raise ValueError(error_message)
 
+        # Remove from both dictionaries
+        suite_method = cls._by_name[expectation_name]
+        del cls._registry[suite_method]
+        del cls._by_name[expectation_name]
+
     @classmethod
     def clear_expectations(cls):
         """Clear all registered expectations."""
-        logger.debug(f"Clearing {len(cls._expectations)} expectations from the registry")
-        cls._expectations.clear()
-        cls._metadata.clear()
+        logger.debug(f"Clearing {len(cls._registry)} expectations from the registry")
+        cls._registry.clear()
+        cls._by_name.clear()
         cls._loaded = False  # Allow reloading
 
 
