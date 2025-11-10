@@ -3,6 +3,25 @@
 ## [0.4.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.3.0...v0.4.0) (2025-11-10)
 
 
+### ⚠ BREAKING CHANGES
+
+* ‼️ BREAKING CHANGE: Major codebase restructuring with new module organization. However, most changes are made to the internal modules.
+
+**What changed:**
+- All internal modules have been reorganized into a `core/` package
+- Expectation registry simplified from three-dictionary to two-dictionary structure with O(1) lookups
+- Main imports updated from `expectations_suite` to `suite`
+
+**Migration guide:**
+Update your imports to use the new module structure:
+```python
+# Before
+from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+
+# After
+from dataframe_expectations.suite import DataFrameExpectationsSuite
+```
+
 ### Features
 
 * restructure codebase with core/ module and explicit imports ([42a233a](https://github.com/getyourguide/dataframe-expectations/commit/42a233ade81fc2af3ce0462ab24f189d969756bd))
@@ -14,16 +33,13 @@
 
 * consolidate imports ([9a76467](https://github.com/getyourguide/dataframe-expectations/commit/9a76467cd63c9ba15bd4878e247aef2b631316df))
 * deleted duplicate dataclass and enums from registry ([82bec0c](https://github.com/getyourguide/dataframe-expectations/commit/82bec0ce13be1e2a1bc16fb77d0aaf91edb5692f))
-* deleted duplicate DataFrameExpectation codefrom expectations package ([d47eb8b](https://github.com/getyourguide/dataframe-expectations/commit/d47eb8be2eef84d820653f5ef07a35e44695c5a3))
+* deleted duplicate DataFrameExpectation code from expectations package ([d47eb8b](https://github.com/getyourguide/dataframe-expectations/commit/d47eb8be2eef84d820653f5ef07a35e44695c5a3))
 * import enums from types ([fa84764](https://github.com/getyourguide/dataframe-expectations/commit/fa847643a310a27e615290567d3e11fad4344977))
 * manually trigger CI for release-please PRs ([49419e6](https://github.com/getyourguide/dataframe-expectations/commit/49419e6531c9fec51a6f46f1dde20ab2e850c1db))
 * manually trigger CI for release-please PRs ([9585cf5](https://github.com/getyourguide/dataframe-expectations/commit/9585cf5d75b0e90b6f94cd14cae87922055a2212))
-* return corrent version when package is built ([82ff343](https://github.com/getyourguide/dataframe-expectations/commit/82ff3435c6b6ea904a1a58b71eb6a890d80991d6))
+* return correct version when package is built ([82ff343](https://github.com/getyourguide/dataframe-expectations/commit/82ff3435c6b6ea904a1a58b71eb6a890d80991d6))
 
 
-### Documentation
-
-* remove unused imports ([276589d](https://github.com/getyourguide/dataframe-expectations/commit/276589da8c5fec5537427c2d9ea622a33f40642d))
 
 ## [0.3.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.2.0...v0.3.0) (2025-11-09)
 
