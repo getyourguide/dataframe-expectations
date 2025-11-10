@@ -1,14 +1,14 @@
 from pyspark.sql import functions as F
 
-from dataframe_expectations.expectations.column_expectation import (
+from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
 )
-from dataframe_expectations.expectations.expectation_registry import (
+from dataframe_expectations.core.types import (
     ExpectationCategory,
     ExpectationSubcategory,
-    register_expectation,
 )
-from dataframe_expectations.expectations.utils import requires_params
+from dataframe_expectations.registry import register_expectation
+from dataframe_expectations.core.utils import requires_params
 
 
 @register_expectation(

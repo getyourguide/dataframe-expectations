@@ -9,7 +9,7 @@ Core Infrastructure
 Base Expectation Classes
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: dataframe_expectations.expectations
+.. automodule:: dataframe_expectations.core.expectation
    :members:
    :undoc-members:
    :show-inheritance:
@@ -17,7 +17,7 @@ Base Expectation Classes
 Column Expectations
 ~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: dataframe_expectations.expectations.column_expectation
+.. automodule:: dataframe_expectations.core.column_expectation
    :members:
    :undoc-members:
    :show-inheritance:
@@ -25,7 +25,7 @@ Column Expectations
 Aggregation Expectations
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: dataframe_expectations.expectations.aggregation_expectation
+.. automodule:: dataframe_expectations.core.aggregation_expectation
    :members:
    :undoc-members:
    :show-inheritance:
@@ -33,7 +33,7 @@ Aggregation Expectations
 Expectation Registry
 --------------------
 
-.. automodule:: dataframe_expectations.expectations.expectation_registry
+.. automodule:: dataframe_expectations.registry
    :members:
    :undoc-members:
    :show-inheritance:
@@ -49,7 +49,7 @@ Result Messages
 Utilities
 ---------
 
-.. automodule:: dataframe_expectations.expectations.utils
+.. automodule:: dataframe_expectations.core.utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -57,6 +57,6 @@ Utilities
 Exception Classes
 -----------------
 
-.. automodule:: dataframe_expectations.expectations_suite
+.. automodule:: dataframe_expectations.suite
    :members: DataFrameExpectationsSuiteFailure
    :show-inheritance:

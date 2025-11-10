@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import List, Union
 
-from dataframe_expectations import DataFrameLike, DataFrameType
-from dataframe_expectations.expectations import DataFrameExpectation
+from dataframe_expectations.core.types import DataFrameLike, DataFrameType
+from dataframe_expectations.core.expectation import DataFrameExpectation
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
     DataFrameExpectationResultMessage,

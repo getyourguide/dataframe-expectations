@@ -1,4 +1,4 @@
-from dataframe_expectations.expectations.expectation_registry import (
+from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
 

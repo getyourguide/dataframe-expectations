@@ -28,23 +28,23 @@ Defining Your Expectations
 
 Most use cases that involve validating a single column in the dataframe can be covered by initialising the
 ``DataFrameColumnExpectation`` class with the correct parameters. Expectations implemented by initialising
-``DataFrameColumnExpectation`` can be found in the ``column_expectations`` module, categorised based on the data-type of
+``DataFrameColumnExpectation`` can be found in the ``expectations/column`` module, categorised based on the data-type of
 the column value.
 
 If you want to go ahead with implementing ``DataFrameColumnExpectation``, you first need to identify the data-type of
 the column value. Existing expectations are already categorised into ``string``, ``numerical`` or ``any_value``
-expectations. Create a new category in column_expectations if you think existing categories don't fit your use case.
+expectations. Create a new category in ``expectations/column`` if you think existing categories don't fit your use case.
 Once you have decided where the expectation needs to be added, you can define it as follows:
 
 .. code-block:: python
 
-    from dataframe_expectations.expectations.column_expectation import DataFrameColumnExpectation
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.core.column_expectation import DataFrameColumnExpectation
+    from dataframe_expectations.registry import (
         ExpectationCategory,
         ExpectationSubcategory,
         register_expectation,
     )
-    from dataframe_expectations.expectations.utils import requires_params
+    from dataframe_expectations.core.utils import requires_params
     from pyspark.sql import functions as F
 
 
@@ -75,7 +75,7 @@ Once you have decided where the expectation needs to be added, you can define it
         )
 
 For additional guidance, you can refer to the implementation of ``ExpectationValueGreaterThan`` and
-``ExpectationValueLessThan`` in the ``column_expectations`` module. These examples demonstrate how to initialise the
+``ExpectationValueLessThan`` in the ``expectations/column`` module. These examples demonstrate how to initialise the
 ``DataFrameColumnExpectation`` class with the right parameters and define filtering logic for different dataframes.
 
 The ``@register_expectation`` decorator is required and has the following mandatory parameters:
@@ -93,7 +93,7 @@ The ``@requires_params`` decorator is a utility that helps you validate the inpu
 Adding Aggregation-Based Expectations
 --------------------------------------
 
-Just like the column expectations, you can find the aggregation-based expectations in the ``aggregation_expectations``
+Just like the column expectations, you can find the aggregation-based expectations in the ``expectations/aggregation``
 module. For expectations that require aggregation operations (such as row counts, distinct value counts, null
 percentages, etc.), you should implement custom expectation classes by inheriting from
 ``DataFrameAggregationExpectation``. These types of expectations cannot be easily covered
@@ -109,15 +109,15 @@ Here's an example of how to implement an aggregation-based expectation:
 .. code-block:: python
 
     from dataframe_expectations import DataFrameLike, DataFrameType
-    from dataframe_expectations.expectations.aggregation_expectation import (
+    from dataframe_expectations.core.aggregation_expectation import (
         DataFrameAggregationExpectation,
     )
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.registry import (
         ExpectationCategory,
         ExpectationSubcategory,
         register_expectation,
     )
-    from dataframe_expectations.expectations.utils import requires_params
+    from dataframe_expectations.core.utils import requires_params
     from dataframe_expectations.result_message import (
         DataFrameExpectationFailureMessage,
         DataFrameExpectationResultMessage,
@@ -337,7 +337,7 @@ Examples of aggregation-based expectations include:
 - ``ExpectationColumnMeanBetween``: Validate that column mean falls within a range
 - ``ExpectationColumnQuantileBetween``: Validate that column quantiles fall within ranges
 
-For more examples, check the aggregation_expectations module.
+For more examples, check the ``expectations/aggregation`` module.
 
 Custom Expectations with Full Control
 --------------------------------------
@@ -353,7 +353,7 @@ To help you get started, here's a template you can customize to fit your specifi
     from typing import Callable
 
     from dataframe_expectations import DataFrameLike, DataFrameType
-    from dataframe_expectations.expectations import DataFrameExpectation
+    from dataframe_expectations.core.expectation import DataFrameExpectation
     from dataframe_expectations.result_message import (
         DataFrameExpectationFailureMessage,
         DataFrameExpectationResultMessage,
@@ -424,7 +424,7 @@ To provide IDE autocomplete and type hints for all expect methods, run the stub 
 
     uv run python scripts/generate_suite_stubs.py
 
-This creates ``expectations_suite.pyi`` with type hints for all registered expectations. The stub file is automatically
+This creates ``suite.pyi`` with type hints for all registered expectations. The stub file is automatically
 validated by the sanity check script and pre-commit hooks.
 
 Adding Unit Tests
@@ -439,7 +439,7 @@ To ensure your expectations work as expected (pun intended), make sure to add un
     import pandas as pd
 
     from dataframe_expectations import DataFrameType
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.registry import (
         DataFrameExpectationRegistry,
     )
     from dataframe_expectations.result_message import (
@@ -532,7 +532,7 @@ Run the stub generator to create IDE autocomplete support:
 
     uv run python scripts/generate_suite_stubs.py
 
-This updates ``dataframe_expectations/expectations_suite.pyi`` with type hints for your new expectation method.
+This updates ``dataframe_expectations/suite.pyi`` with type hints for your new expectation method.
 
 **2. Build Documentation**
 

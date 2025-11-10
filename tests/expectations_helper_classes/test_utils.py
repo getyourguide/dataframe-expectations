@@ -1,7 +1,7 @@
 from typing import Union
 import pytest
 
-from dataframe_expectations.expectations.utils import requires_params
+from dataframe_expectations.core.utils import requires_params
 
 
 def test_requires_params_success():

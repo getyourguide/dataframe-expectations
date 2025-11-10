@@ -1,8 +1,8 @@
 import pytest
 import pandas as pd
 
-from dataframe_expectations import DataFrameType
-from dataframe_expectations.expectations_suite import (
+from dataframe_expectations.core.types import DataFrameType
+from dataframe_expectations.suite import (
     DataFrameExpectationsSuite,
     DataFrameExpectationsSuiteFailure,
 )
@@ -130,7 +130,7 @@ def test_suite_with_pyspark_connect_dataframe():
     runner = suite.build()
 
     with patch(
-        "dataframe_expectations.expectations.PySparkConnectDataFrame",
+        "dataframe_expectations.core.expectation.PySparkConnectDataFrame",
         MockConnectDataFrame,
     ):
         # Create mock expectation that can handle Connect DataFrame

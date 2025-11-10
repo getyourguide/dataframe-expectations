@@ -55,7 +55,7 @@ uv run pytest tests/ --cov=dataframe_expectations
 
 **Basic usage with Pandas:**
 ```python
-from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+from dataframe_expectations.suite import DataFrameExpectationsSuite
 import pandas as pd
 
 # Build a suite with expectations
@@ -82,7 +82,7 @@ runner.run(df)
 
 **PySpark example:**
 ```python
-from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+from dataframe_expectations.suite import DataFrameExpectationsSuite
 from pyspark.sql import SparkSession
 
 # Initialize Spark session
@@ -116,7 +116,7 @@ runner.run(df)
 
 **Decorator pattern for automatic validation:**
 ```python
-from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+from dataframe_expectations.suite import DataFrameExpectationsSuite
 from pyspark.sql import SparkSession
 
 # Initialize Spark session

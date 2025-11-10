@@ -1,16 +1,12 @@
-from enum import Enum
-from typing import Union
+"""DataFrame Expectations - A validation library for pandas and PySpark DataFrames."""
 
-from pandas import DataFrame as PandasDataFrame
-from pyspark.sql import DataFrame as PySparkDataFrame
+try:
+    from importlib.metadata import version
 
-DataFrameLike = Union[PySparkDataFrame, PandasDataFrame]
+    __version__ = version("dataframe-expectations")
+except Exception:
+    # Package is not installed (e.g., during development or linting)
+    # Catch all exceptions to handle various edge cases in different environments
+    __version__ = "0.0.0.dev0"
 
-
-class DataFrameType(str, Enum):
-    """
-    Enum for DataFrame types.
-    """
-
-    PANDAS = "pandas"
-    PYSPARK = "pyspark"
+__all__ = []

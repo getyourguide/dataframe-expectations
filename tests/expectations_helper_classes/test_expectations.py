@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from dataframe_expectations import DataFrameLike, DataFrameType
-from dataframe_expectations.expectations import DataFrameExpectation
+from dataframe_expectations.core.types import DataFrameLike, DataFrameType
+from dataframe_expectations.core.expectation import DataFrameExpectation
 
 
 class MyTestExpectation(DataFrameExpectation):
@@ -229,7 +229,7 @@ def test_infer_data_frame_type_with_connect_dataframe_available():
 
     # Patch the PySparkConnectDataFrame import to be our mock class
     with patch(
-        "dataframe_expectations.expectations.PySparkConnectDataFrame",
+        "dataframe_expectations.core.expectation.PySparkConnectDataFrame",
         MockConnectDataFrame,
     ):
         # Create an instance of our mock Connect DataFrame
@@ -242,7 +242,7 @@ def test_infer_data_frame_type_with_connect_dataframe_available():
         )
 
 
-@patch("dataframe_expectations.expectations.PySparkConnectDataFrame", None)
+@patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None)
 def test_infer_data_frame_type_without_connect_support(spark):
     """
     Test that the method works correctly when PySpark Connect is not available.
@@ -270,7 +270,7 @@ def test_infer_data_frame_type_connect_import_behavior(spark):
     expectation = MyTestExpectation()
 
     # Test case 1: When PySparkConnectDataFrame is None (import failed)
-    with patch("dataframe_expectations.expectations.PySparkConnectDataFrame", None):
+    with patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None):
         # Should still work with regular DataFrames
         pandas_df = pd.DataFrame({"col1": [1, 2, 3]})
         result_type = expectation.infer_data_frame_type(pandas_df)
@@ -282,7 +282,7 @@ def test_infer_data_frame_type_connect_import_behavior(spark):
 
     # Test case 2: When PySparkConnectDataFrame is available (mocked)
     with patch(
-        "dataframe_expectations.expectations.PySparkConnectDataFrame",
+        "dataframe_expectations.core.expectation.PySparkConnectDataFrame",
         MockConnectDataFrame,
     ):
         # Regular DataFrames should still work
