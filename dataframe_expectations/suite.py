@@ -2,7 +2,7 @@ from functools import wraps
 from typing import Callable, List, Optional, cast
 
 from dataframe_expectations.expectations import DataFrameLike
-from dataframe_expectations.expectations.expectation_registry import (
+from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
 from dataframe_expectations.logging_utils import setup_logger
@@ -84,8 +84,8 @@ class DataFrameExpectationsSuiteRunner:
 
         :param data_frame: The DataFrame to validate.
         """
-        from dataframe_expectations import DataFrameType
-        from dataframe_expectations.expectations import DataFrameExpectation
+        from dataframe_expectations.core.types import DataFrameType
+        from dataframe_expectations.core.expectation import DataFrameExpectation
 
         successes = []
         failures = []

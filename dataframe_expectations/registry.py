@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from dataframe_expectations.expectations import DataFrameExpectation
+from dataframe_expectations.core.expectation import DataFrameExpectation
 from dataframe_expectations.logging_utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -133,8 +133,8 @@ class DataFrameExpectationRegistry:
         # Remove 'Expectation' prefix
         name = re.sub(r"^Expectation", "", expectation_name)
         # Convert CamelCase to snake_case
-        snake = re.sub("([A-Z]+)([A-Z][a-z])", r"\1_\2", name)
-        snake = re.sub("([a-z\d])([A-Z])", r"\1_\2", snake)
+        snake = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", name)
+        snake = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", snake)
         return "expect_" + snake.lower()
 
     @classmethod

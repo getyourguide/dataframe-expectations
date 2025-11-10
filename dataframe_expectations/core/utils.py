@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union, get_args
 
-from dataframe_expectations.expectations import DataFrameExpectation
+from dataframe_expectations.core.expectation import DataFrameExpectation
 
 
 def requires_params(

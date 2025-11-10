@@ -132,7 +132,7 @@ def generate_pyi_file() -> str:
         The complete .pyi file content as a string
     """
     # Import here to avoid issues if not in the right directory
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.registry import (
         DataFrameExpectationRegistry,
     )
 
@@ -212,7 +212,7 @@ def update_pyi_file(dry_run: bool = False) -> bool:
         f.write(new_content)
 
     # Count the methods
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.registry import (
         DataFrameExpectationRegistry,
     )
     method_count = len(DataFrameExpectationRegistry.get_suite_method_mapping())

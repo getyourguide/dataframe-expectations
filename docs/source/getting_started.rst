@@ -32,7 +32,7 @@ Basic Usage with Pandas
 .. code-block:: python
 
     import pandas as pd
-    from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+    from dataframe_expectations.suite import DataFrameExpectationsSuite
 
     # Build a suite with expectations
     suite = (
@@ -61,7 +61,7 @@ PySpark Example
 
 .. code-block:: python
 
-    from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+    from dataframe_expectations.suite import DataFrameExpectationsSuite
     from pyspark.sql import SparkSession
 
     # Initialize Spark session
@@ -97,7 +97,7 @@ Decorator Pattern for Automatic Validation
 
 .. code-block:: python
 
-    from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+    from dataframe_expectations.suite import DataFrameExpectationsSuite
     from pyspark.sql import SparkSession
 
     # Initialize Spark session

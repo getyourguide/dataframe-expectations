@@ -38,13 +38,13 @@ Once you have decided where the expectation needs to be added, you can define it
 
 .. code-block:: python
 
-    from dataframe_expectations.expectations.column_expectation import DataFrameColumnExpectation
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.core.column_expectation import DataFrameColumnExpectation
+    from dataframe_expectations.registry import (
         ExpectationCategory,
         ExpectationSubcategory,
         register_expectation,
     )
-    from dataframe_expectations.expectations.utils import requires_params
+    from dataframe_expectations.core.utils import requires_params
     from pyspark.sql import functions as F
 
 
@@ -109,15 +109,15 @@ Here's an example of how to implement an aggregation-based expectation:
 .. code-block:: python
 
     from dataframe_expectations import DataFrameLike, DataFrameType
-    from dataframe_expectations.expectations.aggregation_expectation import (
+    from dataframe_expectations.core.aggregation_expectation import (
         DataFrameAggregationExpectation,
     )
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.registry import (
         ExpectationCategory,
         ExpectationSubcategory,
         register_expectation,
     )
-    from dataframe_expectations.expectations.utils import requires_params
+    from dataframe_expectations.core.utils import requires_params
     from dataframe_expectations.result_message import (
         DataFrameExpectationFailureMessage,
         DataFrameExpectationResultMessage,
@@ -353,7 +353,7 @@ To help you get started, here's a template you can customize to fit your specifi
     from typing import Callable
 
     from dataframe_expectations import DataFrameLike, DataFrameType
-    from dataframe_expectations.expectations import DataFrameExpectation
+    from dataframe_expectations.core.expectation import DataFrameExpectation
     from dataframe_expectations.result_message import (
         DataFrameExpectationFailureMessage,
         DataFrameExpectationResultMessage,
@@ -439,7 +439,7 @@ To ensure your expectations work as expected (pun intended), make sure to add un
     import pandas as pd
 
     from dataframe_expectations import DataFrameType
-    from dataframe_expectations.expectations.expectation_registry import (
+    from dataframe_expectations.registry import (
         DataFrameExpectationRegistry,
     )
     from dataframe_expectations.result_message import (

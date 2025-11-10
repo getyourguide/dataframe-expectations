@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 
-from dataframe_expectations import DataFrameType
-from dataframe_expectations.expectations.column_expectation import (
+from dataframe_expectations.core.types import DataFrameType
+from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
 )
 

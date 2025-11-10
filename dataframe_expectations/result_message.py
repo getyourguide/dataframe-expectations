@@ -3,7 +3,7 @@ from typing import Optional
 
 from tabulate import tabulate  # type: ignore
 
-from dataframe_expectations import DataFrameLike, DataFrameType
+from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 
 
 class DataFrameExpectationResultMessage(ABC):

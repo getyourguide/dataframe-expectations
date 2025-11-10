@@ -13,8 +13,8 @@ from docutils.parsers.rst import directives
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
-from dataframe_expectations.expectations.expectation_registry import DataFrameExpectationRegistry
-from dataframe_expectations.expectations_suite import DataFrameExpectationsSuite
+from dataframe_expectations.registry import DataFrameExpectationRegistry
+from dataframe_expectations.suite import DataFrameExpectationsSuite
 
 
 def parse_metadata_from_docstring(docstring: str) -> Tuple[str, str]:

@@ -115,7 +115,7 @@ class ExpectationsSanityChecker:
     def _discover_suite_methods(self):
         """Find all expect_* methods available via the registry."""
         try:
-            from dataframe_expectations.expectations.expectation_registry import (
+            from dataframe_expectations.registry import (
                 DataFrameExpectationRegistry,
             )
 

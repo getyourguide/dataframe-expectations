@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from tabulate import tabulate  # type: ignore
 
-from dataframe_expectations import DataFrameType
+from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
     DataFrameExpectationResultMessage,

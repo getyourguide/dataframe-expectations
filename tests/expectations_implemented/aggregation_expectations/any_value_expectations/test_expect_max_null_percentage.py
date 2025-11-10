@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from dataframe_expectations import DataFrameType
-from dataframe_expectations.expectations.expectation_registry import (
+from dataframe_expectations.core.types import DataFrameType
+from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
-from dataframe_expectations.expectations_suite import (
+from dataframe_expectations.suite import (
     DataFrameExpectationsSuite,
     DataFrameExpectationsSuiteFailure,
 )
