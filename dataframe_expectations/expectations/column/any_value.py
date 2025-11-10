@@ -3,11 +3,11 @@ from pyspark.sql import functions as F
 from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
 )
-from dataframe_expectations.registry import (
+from dataframe_expectations.core.types import (
     ExpectationCategory,
     ExpectationSubcategory,
-    register_expectation,
 )
+from dataframe_expectations.registry import register_expectation
 from dataframe_expectations.core.utils import requires_params
 
 

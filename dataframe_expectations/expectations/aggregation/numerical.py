@@ -9,11 +9,11 @@ from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 from dataframe_expectations.core.aggregation_expectation import (
     DataFrameAggregationExpectation,
 )
-from dataframe_expectations.registry import (
+from dataframe_expectations.core.types import (
     ExpectationCategory,
     ExpectationSubcategory,
-    register_expectation,
 )
+from dataframe_expectations.registry import register_expectation
 from dataframe_expectations.core.utils import requires_params
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
