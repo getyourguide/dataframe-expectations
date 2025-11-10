@@ -14,7 +14,6 @@ from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
 from dataframe_expectations.registry import DataFrameExpectationRegistry
-from dataframe_expectations.suite import DataFrameExpectationsSuite
 
 
 def parse_metadata_from_docstring(docstring: str) -> Tuple[str, str]:
@@ -86,7 +85,7 @@ class ExpectationsDirective(SphinxDirective):
 
     Usage:
     .. expectations::
-       :class: dataframe_expectations.expectations_suite.DataFrameExpectationsSuite
+       :class: dataframe_expectations.suite.DataFrameExpectationsSuite
        :show-summary: true
        :show-cards: true
     """
