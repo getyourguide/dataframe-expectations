@@ -1,7 +1,12 @@
 """DataFrame Expectations - A validation library for pandas and PySpark DataFrames."""
 
-from importlib.metadata import version
+try:
+    from importlib.metadata import version
 
-__version__ = version("dataframe-expectations")
+    __version__ = version("dataframe-expectations")
+except Exception:
+    # Package is not installed (e.g., during development or linting)
+    # Catch all exceptions to handle various edge cases in different environments
+    __version__ = "0.0.0.dev0"
 
 __all__ = []
