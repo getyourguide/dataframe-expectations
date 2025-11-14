@@ -167,14 +167,14 @@ def test_expectation_name():
             None,
             "timestamp",
         ),
-        # Datetime with timezone - 2 distinct values
+        # Datetime with timezone - 2 distinct values (use different actual timestamps)
         (
             "pandas",
             [
                 datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-                datetime(2023, 1, 1, 12, 0, 0),
+                datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
                 datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-                datetime(2023, 1, 1, 12, 0, 0),
+                datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
             ],
             2,
             "success",
@@ -185,9 +185,9 @@ def test_expectation_name():
             "pyspark",
             [
                 datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-                datetime(2023, 1, 1, 12, 0, 0),
+                datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
                 datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-                datetime(2023, 1, 1, 12, 0, 0),
+                datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
             ],
             2,
             "success",
