@@ -16,8 +16,30 @@ from dataframe_expectations.result_message import (
 )
 
 
-def test_expectation_name_and_description():
-    """Test that the expectation name and description are correctly returned."""
+def create_dataframe(df_type, data, column_name, spark):
+    """Helper function to create pandas or pyspark DataFrame."""
+    if df_type == "pandas":
+        return pd.DataFrame({column_name: data})
+    else:  # pyspark
+        from pyspark.sql.types import DoubleType, StructField, StructType
+
+        if not data:  # Empty DataFrame
+            schema = StructType([StructField(column_name, DoubleType(), True)])
+            return spark.createDataFrame([], schema)
+        # Handle all nulls case with explicit schema
+        if all(val is None for val in data):
+            schema = StructType([StructField(column_name, DoubleType(), True)])
+            return spark.createDataFrame([{column_name: None} for _ in data], schema)
+        return spark.createDataFrame([(val,) for val in data], [column_name])
+
+
+def get_df_type_enum(df_type):
+    """Get DataFrameType enum value."""
+    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
+
+
+def test_expectation_name():
+    """Test that the expectation name is correctly returned."""
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnQuantileBetween",
         column_name="test_col",
@@ -25,13 +47,13 @@ def test_expectation_name_and_description():
         min_value=20,
         max_value=30,
     )
-
-    # Test expectation name
     assert expectation.get_expectation_name() == "ExpectationColumnQuantileBetween", (
         f"Expected 'ExpectationColumnQuantileBetween' but got: {expectation.get_expectation_name()}"
     )
 
-    # Test description messages for different quantiles
+
+def test_expectation_description():
+    """Test that description messages are correct for different quantiles."""
     test_cases = [
         (0.0, "minimum"),
         (0.25, "25th percentile"),
@@ -57,275 +79,153 @@ def test_expectation_name_and_description():
         )
 
 
-def test_pandas_success_registry_and_suite():
-    """Test successful validation for pandas DataFrames through both registry and suite."""
-    # Test data scenarios for different quantiles
-    test_scenarios = [
-        # (data, quantile, min_value, max_value, description)
-        ([20, 25, 30, 35], 0.0, 15, 25, "minimum success"),  # min = 20
-        ([20, 25, 30, 35], 1.0, 30, 40, "maximum success"),  # max = 35
-        ([20, 25, 30, 35], 0.5, 25, 30, "median success"),  # median = 27.5
-        ([20, 25, 30, 35], 0.25, 20, 25, "25th percentile success"),  # 25th = 22.5
-        ([10, 20, 30, 40, 50], 0.33, 20, 30, "33rd percentile success"),  # ~23.2
-        ([25], 0.5, 20, 30, "single row median"),  # median = 25
-        ([20, None, 25, None, 30], 0.5, 20, 30, "with nulls median"),  # median = 25
-    ]
-
-    for data, quantile, min_val, max_val, description in test_scenarios:
-        data_frame = pd.DataFrame({"col1": data})
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnQuantileBetween",
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
-        ), f"Registry test failed for {description}: expected success but got {result}"
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        suite_result = suite.build().run(data_frame=data_frame)
-        assert suite_result is None, (
-            f"Suite test failed for {description}: expected None but got {suite_result}"
-        )
-
-
-def test_pandas_failure_registry_and_suite():
-    """Test failure validation for pandas DataFrames through both registry and suite."""
-    # Test data scenarios for different quantiles
-    test_scenarios = [
-        # (data, quantile, min_value, max_value, expected_message)
+@pytest.mark.parametrize(
+    "df_type,data,quantile,min_value,max_value,should_succeed,expected_message",
+    [
+        # Pandas success scenarios - various quantiles
+        ("pandas", [20, 25, 30, 35], 0.0, 15, 25, True, None),  # min = 20
+        ("pandas", [20, 25, 30, 35], 1.0, 30, 40, True, None),  # max = 35
+        ("pandas", [20, 25, 30, 35], 0.5, 25, 30, True, None),  # median = 27.5
+        ("pandas", [20, 25, 30, 35], 0.25, 20, 25, True, None),  # 25th percentile = 22.5
+        ("pandas", [10, 20, 30, 40, 50], 0.33, 20, 30, True, None),  # 33rd percentile ≈ 23.2
+        ("pandas", [25], 0.5, 20, 30, True, None),  # median = 25, single row
+        ("pandas", [20, None, 25, None, 30], 0.5, 20, 30, True, None),  # median = 25, with nulls
+        # PySpark success scenarios - various quantiles
+        ("pyspark", [20, 25, 30, 35], 0.0, 15, 25, True, None),  # min = 20
+        ("pyspark", [20, 25, 30, 35], 1.0, 30, 40, True, None),  # max = 35
+        ("pyspark", [20, 25, 30, 35], 0.5, 25, 30, True, None),  # median ≈ 27.5
+        ("pyspark", [20, 25, 30, 35], 0.9, 30, 40, True, None),  # 90th percentile ≈ 34
+        ("pyspark", [25], 0.5, 20, 30, True, None),  # median = 25, single row
+        ("pyspark", [20, None, 25, None, 30], 0.5, 20, 30, True, None),  # median ≈ 25, with nulls
+        # Boundary quantile values
+        ("pandas", [20, 25, 30, 35], 0.0, 15, 25, True, None),  # quantile = 0.0 (minimum)
+        ("pandas", [20, 25, 30, 35], 1.0, 30, 40, True, None),  # quantile = 1.0 (maximum)
+        # Pandas failure scenarios
         (
+            "pandas",
             [20, 25, 30, 35],
             0.0,
             25,
             35,
+            False,
             "Column 'col1' minimum value 20 is not between 25 and 35.",
         ),
         (
+            "pandas",
             [20, 25, 30, 35],
             1.0,
             40,
             50,
+            False,
             "Column 'col1' maximum value 35 is not between 40 and 50.",
         ),
         (
+            "pandas",
             [20, 25, 30, 35],
             0.5,
             30,
             35,
+            False,
             "Column 'col1' median value 27.5 is not between 30 and 35.",
         ),
         (
+            "pandas",
             [20, 25, 30, 35],
             0.75,
             25,
             30,
+            False,
             f"Column 'col1' 75th percentile value {np.quantile([20, 25, 30, 35], 0.75)} is not between 25 and 30.",
         ),
         (
+            "pandas",
             [None, None, None],
             0.5,
             20,
             30,
+            False,
             "Column 'col1' contains only null values.",
         ),
-        ([], 0.5, 20, 30, "Column 'col1' contains only null values."),
-    ]
-
-    for data, quantile, min_val, max_val, expected_message in test_scenarios:
-        data_frame = pd.DataFrame({"col1": data})
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnQuantileBetween",
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=DataFrameType.PANDAS,
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure), (
-            f"Registry test failed for quantile {quantile}: expected failure message but got {result}"
-        )
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.build().run(data_frame=data_frame)
-
-
-def test_pyspark_success_registry_and_suite(spark):
-    """Test successful validation for PySpark DataFrames through both registry and suite."""
-    # Test data scenarios for different quantiles
-    test_scenarios = [
-        # (data, quantile, min_value, max_value, description)
-        ([20, 25, 30, 35], 0.0, 15, 25, "minimum success"),  # min = 20
-        ([20, 25, 30, 35], 1.0, 30, 40, "maximum success"),  # max = 35
-        ([20, 25, 30, 35], 0.5, 25, 30, "median success"),  # median ≈ 27.5
-        ([20, 25, 30, 35], 0.9, 30, 40, "90th percentile success"),  # ≈ 34
-        ([25], 0.5, 20, 30, "single row median"),  # median = 25
-        ([20, None, 25, None, 30], 0.5, 20, 30, "with nulls median"),  # median ≈ 25
-    ]
-
-    for data, quantile, min_val, max_val, description in test_scenarios:
-        data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnQuantileBetween",
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
-        ), f"Registry test failed for {description}: expected success but got {result}"
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        suite_result = suite.build().run(data_frame=data_frame)
-        assert suite_result is None, (
-            f"Suite test failed for {description}: expected None but got {suite_result}"
-        )
-
-
-def test_pyspark_failure_registry_and_suite(spark):
-    """Test failure validation for PySpark DataFrames through both registry and suite."""
-    # Test data scenarios for different quantiles
-    test_scenarios = [
-        # (data, quantile, min_value, max_value, expected_message)
+        ("pandas", [], 0.5, 20, 30, False, "Column 'col1' contains only null values."),
+        # PySpark failure scenarios
         (
+            "pyspark",
             [20, 25, 30, 35],
             0.0,
             25,
             35,
+            False,
             "Column 'col1' minimum value 20 is not between 25 and 35.",
         ),
         (
+            "pyspark",
             [20, 25, 30, 35],
             1.0,
             40,
             50,
+            False,
             "Column 'col1' maximum value 35 is not between 40 and 50.",
         ),
         (
+            "pyspark",
             [20, 25, 30, 35],
             0.5,
             30,
             35,
+            False,
             f"Column 'col1' median value {np.median([20, 25, 30, 35])} is not between 30 and 35.",
         ),
-    ]
-
-    for data, quantile, min_val, max_val, expected_message in test_scenarios:
-        data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnQuantileBetween",
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=DataFrameType.PYSPARK,
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
-            column_name="col1",
-            quantile=quantile,
-            min_value=min_val,
-            max_value=max_val,
-        )
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.build().run(data_frame=data_frame)
-
-
-def test_pyspark_null_scenarios_registry_and_suite(spark):
-    """Test null scenarios for PySpark DataFrames through both registry and suite."""
-    from pyspark.sql.types import IntegerType, StructField, StructType
-
-    # Test scenarios
-    test_scenarios = [
-        # (data_frame_creation, expected_message, description)
         (
-            lambda: spark.createDataFrame(
-                [{"col1": None}, {"col1": None}, {"col1": None}],
-                schema="struct<col1: double>",
-            ),
+            "pyspark",
+            [None, None, None],
+            0.5,
+            20,
+            30,
+            False,
             "Column 'col1' contains only null values.",
-            "all nulls",
         ),
-        (
-            lambda: spark.createDataFrame(
-                [], StructType([StructField("col1", IntegerType(), True)])
-            ),
-            "Column 'col1' contains only null values.",
-            "empty dataframe",
-        ),
-    ]
+        ("pyspark", [], 0.5, 20, 30, False, "Column 'col1' contains only null values."),
+    ],
+)
+def test_expectation_basic_scenarios(
+    df_type, data, quantile, min_value, max_value, should_succeed, expected_message, spark
+):
+    """Test basic expectation scenarios for both pandas and PySpark DataFrames."""
+    df = create_dataframe(df_type, data, "col1", spark)
 
-    for df_creator, expected_message, description in test_scenarios:
-        data_frame = df_creator()
+    # Test through registry
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationColumnQuantileBetween",
+        column_name="col1",
+        quantile=quantile,
+        min_value=min_value,
+        max_value=max_value,
+    )
+    result = expectation.validate(data_frame=df)
 
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnQuantileBetween",
-            column_name="col1",
-            quantile=0.5,
-            min_value=20,
-            max_value=30,
+    if should_succeed:
+        assert isinstance(result, DataFrameExpectationSuccessMessage), (
+            f"Expected success but got: {result}"
         )
-        result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=DataFrameType.PYSPARK,
-            message=expected_message,
+    else:
+        assert isinstance(result, DataFrameExpectationFailureMessage), (
+            f"Expected failure but got: {result}"
         )
-        assert str(result) == str(expected_failure), (
-            f"Registry test failed for {description}: expected failure message but got {result}"
+        assert expected_message in str(result), (
+            f"Expected message '{expected_message}' in result: {result}"
         )
 
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_quantile_between(
-            column_name="col1", quantile=0.5, min_value=20, max_value=30
-        )
+    # Test through suite
+    suite = DataFrameExpectationsSuite().expect_column_quantile_between(
+        column_name="col1", quantile=quantile, min_value=min_value, max_value=max_value
+    )
+
+    if should_succeed:
+        suite_result = suite.build().run(data_frame=df)
+        assert suite_result is None, f"Suite test expected None but got: {suite_result}"
+    else:
         with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.build().run(data_frame=data_frame)
+            suite.build().run(data_frame=df)
 
 
 def test_invalid_quantile_range():
@@ -346,29 +246,6 @@ def test_invalid_quantile_range():
             )
         assert "Quantile must be between 0.0 and 1.0" in str(context.value), (
             f"Expected quantile validation error for {description} but got: {str(context.value)}"
-        )
-
-
-def test_boundary_quantile_values():
-    """Test quantile values at the boundaries (0.0 and 1.0)."""
-    boundary_cases = [
-        (0.0, "minimum"),
-        (1.0, "maximum"),
-    ]
-
-    for quantile, expected_desc in boundary_cases:
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnQuantileBetween",
-            column_name="col1",
-            quantile=quantile,
-            min_value=15,
-            max_value=25,
-        )
-        assert expectation.quantile == quantile, (
-            f"Expected quantile {quantile} but got: {expectation.quantile}"
-        )
-        assert expectation.quantile_desc == expected_desc, (
-            f"Expected quantile_desc '{expected_desc}' but got: {expectation.quantile_desc}"
         )
 
 

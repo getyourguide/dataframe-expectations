@@ -15,28 +15,56 @@ from dataframe_expectations.result_message import (
 )
 
 
-def test_expectation_name_and_description():
-    """Test that the expectation name and description are correctly returned."""
+def create_dataframe(df_type, data, column_name, spark):
+    """Helper function to create pandas or pyspark DataFrame."""
+    if df_type == "pandas":
+        return pd.DataFrame({column_name: data})
+    else:  # pyspark
+        from pyspark.sql.types import DoubleType, StructField, StructType
+
+        if not data:  # Empty DataFrame
+            schema = StructType([StructField(column_name, DoubleType(), True)])
+            return spark.createDataFrame([], schema)
+        # Handle all nulls case with explicit schema
+        if all(val is None for val in data):
+            schema = StructType([StructField(column_name, DoubleType(), True)])
+            return spark.createDataFrame([{column_name: None} for _ in data], schema)
+        return spark.createDataFrame([(val,) for val in data], [column_name])
+
+
+def get_df_type_enum(df_type):
+    """Get DataFrameType enum value."""
+    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
+
+
+def test_expectation_name():
+    """Test that the expectation name is correctly returned."""
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnMinBetween",
         column_name="test_col",
         min_value=10,
         max_value=20,
     )
-
-    # Test expectation name (should delegate to quantile expectation)
+    # Note: minimum expectation delegates to quantile expectation
     assert expectation.get_expectation_name() == "ExpectationColumnQuantileBetween", (
         f"Expected 'ExpectationColumnQuantileBetween' but got: {expectation.get_expectation_name()}"
     )
 
-    # Test description
+
+def test_expectation_description():
+    """Test that the expectation description is correctly returned."""
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationColumnMinBetween",
+        column_name="test_col",
+        min_value=10,
+        max_value=20,
+    )
     description = expectation.get_description()
     assert "minimum" in description, f"Expected 'minimum' in description: {description}"
     assert "test_col" in description, f"Expected 'test_col' in description: {description}"
     assert "10" in description, f"Expected '10' in description: {description}"
     assert "20" in description, f"Expected '20' in description: {description}"
-
-    # Test that quantile is correctly set to 0.0
+    # Verify quantile properties
     assert expectation.quantile == 0.0, (
         f"Expected quantile to be 0.0 but got: {expectation.quantile}"
     )
@@ -45,351 +73,206 @@ def test_expectation_name_and_description():
     )
 
 
-def test_pandas_success_registry_and_suite():
-    """Test successful validation for pandas DataFrames through both registry and suite."""
-    # Test data scenarios
-    test_scenarios = [
-        # (data, min_value, max_value, description)
-        ([20, 25, 30, 35], 15, 25, "basic success case"),  # min = 20
-        ([25], 20, 30, "single row"),  # min = 25
-        ([-20, -15, -10, -5], -25, -15, "negative values"),  # min = -20
-        ([1.1, 2.5, 3.7, 3.8], 1.0, 1.5, "float values"),  # min = 1.1
-        ([25, 25, 25, 25], 24, 26, "identical values"),  # min = 25
-        ([20, 25.5, 30, 37], 15, 25, "mixed data types"),  # min = 20
-        ([-5, 0, 0, 2], -10, -1, "with zeros"),  # min = -5
+@pytest.mark.parametrize(
+    "df_type,data,min_value,max_value,should_succeed,expected_message",
+    [
+        # Pandas success scenarios
+        ("pandas", [20, 25, 30, 35], 15, 25, True, None),  # min = 20, basic success
+        ("pandas", [25], 20, 30, True, None),  # min = 25, single row
+        ("pandas", [-20, -15, -10, -5], -25, -15, True, None),  # min = -20, negative values
+        ("pandas", [1.1, 2.5, 3.7, 3.8], 1.0, 1.5, True, None),  # min = 1.1, float values
+        ("pandas", [25, 25, 25, 25], 24, 26, True, None),  # min = 25, identical values
+        ("pandas", [20, 25.5, 30, 37], 15, 25, True, None),  # min = 20, mixed data types
+        ("pandas", [-5, 0, 0, 2], -10, -1, True, None),  # min = -5, with zeros
+        ("pandas", [20, None, 35, None, 25], 15, 25, True, None),  # min = 20, with nulls
+        # PySpark success scenarios
+        ("pyspark", [20, 25, 30, 35], 15, 25, True, None),  # min = 20, basic success
+        ("pyspark", [25], 20, 30, True, None),  # min = 25, single row
+        ("pyspark", [-20, -15, -10, -5], -25, -15, True, None),  # min = -20, negative values
+        ("pyspark", [20, None, 35, None, 25], 15, 25, True, None),  # min = 20, with nulls
+        # Boundary scenarios
+        ("pandas", [20, 25, 30, 35], 20, 25, True, None),  # min = 20, exact minimum
+        ("pandas", [20, 25, 30, 35], 15, 20, True, None),  # min = 20, exact maximum
+        ("pyspark", [20, 25, 30, 35], 20, 25, True, None),  # min = 20, exact minimum
+        ("pyspark", [20, 25, 30, 35], 15, 20, True, None),  # min = 20, exact maximum
+        # Minimum calculation specifics
+        ("pandas", [100, 50, 75, 25], 24, 26, True, None),  # min = 25, mixed order
+        ("pandas", [0, 1, 2, 3], -0.1, 0.1, True, None),  # min = 0, minimum is zero
+        ("pandas", [-10, -5, -1, -20], -20.1, -19.9, True, None),  # min = -20, with negatives
+        ("pandas", [1.001, 1.002, 1.003], 1.0, 1.002, True, None),  # min = 1.001, small differences
+        ("pandas", [1e6, 1e5, 1e4], 1e4 - 100, 1e4 + 100, True, None),  # min = 1e4, large numbers
+        ("pandas", [1e-6, 1e-5, 1e-4], 1e-7, 1e-5, True, None),  # min = 1e-6, very small numbers
+        ("pyspark", [100, 50, 75, 25], 24, 26, True, None),  # min = 25, mixed order
+        ("pyspark", [0, 1, 2, 3], -0.1, 0.1, True, None),  # min = 0, minimum is zero
+        ("pyspark", [-10, -5, -1, -20], -20.1, -19.9, True, None),  # min = -20, with negatives
         (
-            [20, None, 35, None, 25],
-            15,
+            "pyspark",
+            [1.001, 1.002, 1.003],
+            1.0,
+            1.002,
+            True,
+            None,
+        ),  # min = 1.001, small differences
+        ("pyspark", [1e6, 1e5, 1e4], 1e4 - 100, 1e4 + 100, True, None),  # min = 1e4, large numbers
+        ("pyspark", [1e-6, 1e-5, 1e-4], 1e-7, 1e-5, True, None),  # min = 1e-6, very small numbers
+        # Outlier impact scenarios (minimum is sensitive to outliers)
+        (
+            "pandas",
+            [1, 2, 3, -1000],
+            -1100,
+            -900,
+            True,
+            None,
+        ),  # extreme low outlier becomes minimum
+        (
+            "pandas",
+            [100, 200, 300, 50],
+            40,
+            60,
+            True,
+            None,
+        ),  # outlier changes minimum significantly
+        ("pandas", [1.5, 2.0, 2.5, 0.1], 0.05, 0.15, True, None),  # small outlier affects minimum
+        (
+            "pyspark",
+            [1, 2, 3, -1000],
+            -1100,
+            -900,
+            True,
+            None,
+        ),  # extreme low outlier becomes minimum
+        (
+            "pyspark",
+            [100, 200, 300, 50],
+            40,
+            60,
+            True,
+            None,
+        ),  # outlier changes minimum significantly
+        ("pyspark", [1.5, 2.0, 2.5, 0.1], 0.05, 0.15, True, None),  # small outlier affects minimum
+        # Identical value scenarios
+        ("pandas", [42, 42, 42, 42], 41.9, 42.1, True, None),  # integer repetition
+        ("pandas", [3.14, 3.14, 3.14], 3.13, 3.15, True, None),  # float repetition
+        ("pandas", [-7, -7, -7, -7, -7], -7.1, -6.9, True, None),  # negative repetition
+        ("pandas", [0, 0, 0], -0.1, 0.1, True, None),  # zero repetition
+        ("pyspark", [42, 42, 42, 42], 41.9, 42.1, True, None),  # integer repetition
+        ("pyspark", [3.14, 3.14, 3.14], 3.13, 3.15, True, None),  # float repetition
+        ("pyspark", [-7, -7, -7, -7, -7], -7.1, -6.9, True, None),  # negative repetition
+        ("pyspark", [0, 0, 0], -0.1, 0.1, True, None),  # zero repetition
+        # Pandas failure scenarios
+        (
+            "pandas",
+            [20, 25, 30, 35],
             25,
-            "with nulls",
-        ),  # min = 20 (nulls ignored)
-    ]
-
-    for data, min_val, max_val, description in test_scenarios:
-        data_frame = pd.DataFrame({"col1": data})
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
-        ), f"Registry test failed for {description}: expected success but got {result}"
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_min_between(
-            column_name="col1", min_value=min_val, max_value=max_val
-        )
-        suite_result = suite.build().run(data_frame=data_frame)
-        assert suite_result is None, (
-            f"Suite test failed for {description}: expected None but got {suite_result}"
-        )
-
-
-def test_pandas_failure_registry_and_suite():
-    """Test failure validation for pandas DataFrames through both registry and suite."""
-    # Test data scenarios
-    test_scenarios = [
-        # (data, min_value, max_value, expected_min, description)
-        ([20, 25, 30, 35], 25, 35, 20, "minimum too low"),
-        ([20, 25, 30, 35], 10, 15, 20, "minimum too high"),
-        ([None, None, None], 15, 25, None, "all nulls"),
-        ([], 15, 25, None, "empty dataframe"),
-    ]
-
-    for data, min_val, max_val, expected_min, description in test_scenarios:
-        data_frame = pd.DataFrame({"col1": data})
-
-        # Determine expected message
-        if expected_min is None:
-            expected_message = "Column 'col1' contains only null values."
-        else:
-            expected_message = f"Column 'col1' minimum value {expected_min} is not between {min_val} and {max_val}."
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=DataFrameType.PANDAS,
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure), (
-            f"Registry test failed for {description}: expected failure message but got {result}"
-        )
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_min_between(
-            column_name="col1", min_value=min_val, max_value=max_val
-        )
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.build().run(data_frame=data_frame)
-
-
-def test_pandas_missing_column_registry_and_suite():
-    """Test missing column error for pandas DataFrames through both registry and suite."""
-    data_frame = pd.DataFrame({"col1": [20, 25, 30, 35]})
-    expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
+            35,
+            False,
+            "Column 'col1' minimum value 20 is not between 25 and 35.",
+        ),
+        (
+            "pandas",
+            [20, 25, 30, 35],
+            10,
+            15,
+            False,
+            "Column 'col1' minimum value 20 is not between 10 and 15.",
+        ),
+        ("pandas", [None, None, None], 15, 25, False, "Column 'col1' contains only null values."),
+        ("pandas", [], 15, 25, False, "Column 'col1' contains only null values."),
+        # PySpark failure scenarios
+        (
+            "pyspark",
+            [20, 25, 30, 35],
+            25,
+            35,
+            False,
+            "Column 'col1' minimum value 20 is not between 25 and 35.",
+        ),
+        (
+            "pyspark",
+            [20, 25, 30, 35],
+            10,
+            15,
+            False,
+            "Column 'col1' minimum value 20 is not between 10 and 15.",
+        ),
+        ("pyspark", [None, None, None], 15, 25, False, "Column 'col1' contains only null values."),
+        ("pyspark", [], 15, 25, False, "Column 'col1' contains only null values."),
+    ],
+)
+def test_expectation_basic_scenarios(
+    df_type, data, min_value, max_value, should_succeed, expected_message, spark
+):
+    """Test basic expectation scenarios for both pandas and PySpark DataFrames."""
+    df = create_dataframe(df_type, data, "col1", spark)
 
     # Test through registry
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnMinBetween",
-        column_name="nonexistent_col",
-        min_value=15,
-        max_value=25,
+        column_name="col1",
+        min_value=min_value,
+        max_value=max_value,
     )
-    result = expectation.validate(data_frame=data_frame)
-    expected_failure = DataFrameExpectationFailureMessage(
-        expectation_str=str(expectation),
-        data_frame_type=DataFrameType.PANDAS,
-        message=expected_message,
-    )
-    assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
+    result = expectation.validate(data_frame=df)
 
-    # Test through suite
-    suite = DataFrameExpectationsSuite().expect_column_min_between(
-        column_name="nonexistent_col", min_value=15, max_value=25
-    )
-    with pytest.raises(DataFrameExpectationsSuiteFailure):
-        suite.build().run(data_frame=data_frame)
-
-
-def test_pyspark_success_registry_and_suite(spark):
-    """Test successful validation for PySpark DataFrames through both registry and suite."""
-    # Test data scenarios
-    test_scenarios = [
-        # (data, min_value, max_value, description)
-        ([20, 25, 30, 35], 15, 25, "basic success case"),  # min = 20
-        ([25], 20, 30, "single row"),  # min = 25
-        ([-20, -15, -10, -5], -25, -15, "negative values"),  # min = -20
-        ([20, None, 35, None, 25], 15, 25, "with nulls"),  # min = 20
-    ]
-
-    for data, min_val, max_val, description in test_scenarios:
-        data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnQuantileBetween")
-        ), f"Registry test failed for {description}: expected success but got {result}"
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_min_between(
-            column_name="col1", min_value=min_val, max_value=max_val
-        )
-        suite_result = suite.build().run(data_frame=data_frame)
-        assert suite_result is None, (
-            f"Suite test failed for {description}: expected None but got {suite_result}"
-        )
-
-
-def test_pyspark_failure_registry_and_suite(spark):
-    """Test failure validation for PySpark DataFrames through both registry and suite."""
-    # Test data scenarios
-    test_scenarios = [
-        # (data, min_value, max_value, expected_min, description)
-        ([20, 25, 30, 35], 25, 35, 20, "minimum too low"),
-        ([20, 25, 30, 35], 10, 15, 20, "minimum too high"),
-    ]
-
-    for data, min_val, max_val, expected_min, description in test_scenarios:
-        data_frame = spark.createDataFrame([(val,) for val in data], ["col1"])
-        expected_message = (
-            f"Column 'col1' minimum value {expected_min} is not between {min_val} and {max_val}."
-        )
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=DataFrameType.PYSPARK,
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_min_between(
-            column_name="col1", min_value=min_val, max_value=max_val
-        )
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.build().run(data_frame=data_frame)
-
-
-def test_pyspark_null_scenarios_registry_and_suite(spark):
-    """Test null scenarios for PySpark DataFrames through both registry and suite."""
-    from pyspark.sql.types import IntegerType, StructField, StructType
-
-    # Test scenarios
-    test_scenarios = [
-        # (data_frame_creation, expected_message, description)
-        (
-            lambda: spark.createDataFrame(
-                [{"col1": None}, {"col1": None}, {"col1": None}],
-                schema="struct<col1: double>",
-            ),
-            "Column 'col1' contains only null values.",
-            "all nulls",
-        ),
-        (
-            lambda: spark.createDataFrame(
-                [], StructType([StructField("col1", IntegerType(), True)])
-            ),
-            "Column 'col1' contains only null values.",
-            "empty dataframe",
-        ),
-    ]
-
-    for df_creator, expected_message, description in test_scenarios:
-        data_frame = df_creator()
-
-        # Test through registry
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=15,
-            max_value=25,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        expected_failure = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=DataFrameType.PYSPARK,
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure), (
-            f"Registry test failed for {description}: expected failure message but got {result}"
-        )
-
-        # Test through suite
-        suite = DataFrameExpectationsSuite().expect_column_min_between(
-            column_name="col1", min_value=15, max_value=25
-        )
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            suite.build().run(data_frame=data_frame)
-
-
-def test_pyspark_missing_column_registry_and_suite(spark):
-    """Test missing column error for PySpark DataFrames through both registry and suite."""
-    data_frame = spark.createDataFrame([(20,), (25,), (30,), (35,)], ["col1"])
-    expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
-
-    # Test through registry
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationColumnMinBetween",
-        column_name="nonexistent_col",
-        min_value=15,
-        max_value=25,
-    )
-    result = expectation.validate(data_frame=data_frame)
-    expected_failure = DataFrameExpectationFailureMessage(
-        expectation_str=str(expectation),
-        data_frame_type=DataFrameType.PYSPARK,
-        message=expected_message,
-    )
-    assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
-
-    # Test through suite
-    suite = DataFrameExpectationsSuite().expect_column_min_between(
-        column_name="nonexistent_col", min_value=15, max_value=25
-    )
-    with pytest.raises(DataFrameExpectationsSuiteFailure):
-        suite.build().run(data_frame=data_frame)
-
-
-def test_boundary_values_both_dataframes(spark):
-    """Test boundary values for both pandas and PySpark DataFrames."""
-    test_data = [20, 25, 30, 35]  # min = 20
-
-    # Test boundary scenarios
-    boundary_tests = [
-        (20, 25, "exact minimum boundary"),  # min exactly at min
-        (15, 20, "exact maximum boundary"),  # min exactly at max
-    ]
-
-    for min_val, max_val, boundary_desc in boundary_tests:
-        for df_type, data_frame in [
-            ("pandas", pd.DataFrame({"col1": test_data})),
-            (
-                "pyspark",
-                spark.createDataFrame([(val,) for val in test_data], ["col1"]),
-            ),
-        ]:
-            expectation = DataFrameExpectationRegistry.get_expectation(
-                expectation_name="ExpectationColumnMinBetween",
-                column_name="col1",
-                min_value=min_val,
-                max_value=max_val,
-            )
-            result = expectation.validate(data_frame=data_frame)
-            assert isinstance(result, DataFrameExpectationSuccessMessage), (
-                f"Boundary test failed for {df_type} with {boundary_desc}: expected success but got {type(result)}"
-            )
-
-
-def test_minimum_specific_scenarios(spark):
-    """Test minimum-specific scenarios including edge cases."""
-    min_scenarios = [
-        # (data, expected_min, description)
-        ([100, 50, 75, 25], 25, "minimum with mixed order"),
-        ([0, 1, 2, 3], 0, "minimum is zero"),
-        ([-10, -5, -1, -20], -20, "minimum with negatives"),
-        ([1.001, 1.002, 1.003], 1.001, "minimum with small differences"),
-        ([1e6, 1e5, 1e4], 1e4, "minimum with large numbers"),
-        ([1e-6, 1e-5, 1e-4], 1e-6, "minimum with very small numbers"),
-    ]
-
-    for data, expected_min, description in min_scenarios:
-        # Set bounds around expected minimum
-        min_val = expected_min - 0.1
-        max_val = expected_min + 0.1
-
-        # Test pandas
-        data_frame = pd.DataFrame({"col1": data})
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
+    if should_succeed:
         assert isinstance(result, DataFrameExpectationSuccessMessage), (
-            f"Pandas minimum test failed for {description}: expected success but got {type(result)}"
+            f"Expected success but got: {result}"
+        )
+    else:
+        assert isinstance(result, DataFrameExpectationFailureMessage), (
+            f"Expected failure but got: {result}"
+        )
+        assert expected_message in str(result), (
+            f"Expected message '{expected_message}' in result: {result}"
         )
 
-        # Test PySpark
-        pyspark_df = spark.createDataFrame([(val,) for val in data], ["col1"])
-        result_pyspark = expectation.validate(data_frame=pyspark_df)
-        assert isinstance(result_pyspark, DataFrameExpectationSuccessMessage), (
-            f"PySpark minimum test failed for {description}: expected success but got {type(result_pyspark)}"
-        )
+    # Test through suite
+    suite = DataFrameExpectationsSuite().expect_column_min_between(
+        column_name="col1", min_value=min_value, max_value=max_value
+    )
+
+    if should_succeed:
+        suite_result = suite.build().run(data_frame=df)
+        assert suite_result is None, f"Suite test expected None but got: {suite_result}"
+    else:
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
+            suite.build().run(data_frame=df)
 
 
-def test_suite_chaining():
-    """Test that the suite method returns self for method chaining."""
-    suite = DataFrameExpectationsSuite()
-    result = suite.expect_column_min_between(column_name="col1", min_value=15, max_value=25)
-    assert result is suite, f"Expected suite chaining to return same instance but got: {result}"
+@pytest.mark.parametrize(
+    "df_type",
+    ["pandas", "pyspark"],
+)
+def test_column_missing_error(df_type, spark):
+    """Test missing column error for both pandas and PySpark DataFrames."""
+    if df_type == "pandas":
+        df = pd.DataFrame({"col1": [20, 25, 30, 35]})
+    else:
+        df = spark.createDataFrame([(20,), (25,), (30,), (35,)], ["col1"])
+
+    expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
+
+    # Test through registry
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationColumnMinBetween",
+        column_name="nonexistent_col",
+        min_value=15,
+        max_value=25,
+    )
+    result = expectation.validate(data_frame=df)
+    expected_failure = DataFrameExpectationFailureMessage(
+        expectation_str=str(expectation),
+        data_frame_type=get_df_type_enum(df_type),
+        message=expected_message,
+    )
+    assert str(result) == str(expected_failure)
+
+    # Test through suite
+    suite = DataFrameExpectationsSuite().expect_column_min_between(
+        column_name="nonexistent_col", min_value=15, max_value=25
+    )
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
+        suite.build().run(data_frame=df)
 
 
 def test_large_dataset_performance():
@@ -410,71 +293,3 @@ def test_large_dataset_performance():
     result = expectation.validate(data_frame=data_frame)
     # Should succeed as the minimum of uniform(10, 60) should be around 10
     assert isinstance(result, DataFrameExpectationSuccessMessage)
-
-
-def test_outlier_impact_on_minimum(spark):
-    """Test how outliers affect minimum values (unlike median, minimum is sensitive to outliers)."""
-    # Test data where outliers affect the minimum
-    outlier_scenarios = [
-        # (data, min_val, max_val, description)
-        ([1, 2, 3, -1000], -1100, -900, "extreme low outlier becomes minimum"),
-        ([100, 200, 300, 50], 40, 60, "outlier changes minimum significantly"),
-        ([1.5, 2.0, 2.5, 0.1], 0.05, 0.15, "small outlier affects minimum"),
-    ]
-
-    for data, min_val, max_val, description in outlier_scenarios:
-        # Test with pandas
-        data_frame = pd.DataFrame({"col1": data})
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        assert isinstance(result, DataFrameExpectationSuccessMessage), (
-            f"Pandas outlier test failed for {description}: expected success but got {type(result)}"
-        )
-
-        # Test with PySpark
-        pyspark_df = spark.createDataFrame([(val,) for val in data], ["col1"])
-        result_pyspark = expectation.validate(data_frame=pyspark_df)
-        assert isinstance(result_pyspark, DataFrameExpectationSuccessMessage), (
-            f"PySpark outlier test failed for {description}: expected success but got {type(result_pyspark)}"
-        )
-
-
-def test_edge_case_single_unique_value(spark):
-    """Test minimum when all values are the same."""
-    # When all values are identical, min = max = that value
-    identical_scenarios = [
-        ([42, 42, 42, 42], "integer repetition"),
-        ([3.14, 3.14, 3.14], "float repetition"),
-        ([-7, -7, -7, -7, -7], "negative repetition"),
-        ([0, 0, 0], "zero repetition"),
-    ]
-
-    for data, description in identical_scenarios:
-        expected_value = data[0]  # All values are the same
-        min_val = expected_value - 0.1
-        max_val = expected_value + 0.1
-
-        # Test pandas
-        data_frame = pd.DataFrame({"col1": data})
-        expectation = DataFrameExpectationRegistry.get_expectation(
-            expectation_name="ExpectationColumnMinBetween",
-            column_name="col1",
-            min_value=min_val,
-            max_value=max_val,
-        )
-        result = expectation.validate(data_frame=data_frame)
-        assert isinstance(result, DataFrameExpectationSuccessMessage), (
-            f"Pandas identical values test failed for {description}: expected success but got {type(result)}"
-        )
-
-        # Test PySpark
-        pyspark_df = spark.createDataFrame([(val,) for val in data], ["col1"])
-        result_pyspark = expectation.validate(data_frame=pyspark_df)
-        assert isinstance(result_pyspark, DataFrameExpectationSuccessMessage), (
-            f"PySpark identical values test failed for {description}: expected success but got {type(result_pyspark)}"
-        )
