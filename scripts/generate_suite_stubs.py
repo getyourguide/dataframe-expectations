@@ -2,8 +2,10 @@
 """
 Script to generate .pyi stub file for DataFrameExpectationsSuite.
 
-This script reads the expectation metadata from the registry and generates
-a .pyi stub file that provides IDE autocomplete for all expect_* methods.
+This script copies suite.py and transforms it into a .pyi stub file by:
+1. Removing implementation details (function bodies replaced with ...)
+2. Keeping type hints, signatures, and docstrings
+3. Adding dynamically generated expectation methods from the registry
 
 Usage:
     python scripts/generate_suite_stubs.py          # Generate suite.pyi
@@ -12,6 +14,7 @@ Usage:
 """
 
 import argparse
+import ast
 import sys
 from pathlib import Path
 from typing import Any
@@ -21,16 +24,114 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
-def format_type_hint(type_hint: Any) -> str:
+def transform_suite_to_stub() -> str:
     """
-    Format a type hint for use in function signatures.
-
-    Args:
-        type_hint: The type or tuple of types to format
+    Transform suite.py into stub format using AST parsing.
 
     Returns:
-        A string representation of the type hint
+        The stub content as a string
     """
+    suite_file = Path(__file__).parent.parent / 'dataframe_expectations' / 'suite.py'
+
+    with open(suite_file, 'r') as f:
+        source = f.read()
+
+    # Parse the source code
+    tree = ast.parse(source)
+
+    # Transform to stub
+    stub_lines = []
+
+    # Process imports
+    for node in tree.body:
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            # Skip logger import
+            if isinstance(node, ast.ImportFrom) and node.module == 'dataframe_expectations.logging_utils':
+                continue
+            # Add Union to typing imports if not present
+            unparsed = ast.unparse(node)
+            if isinstance(node, ast.ImportFrom) and node.module == 'typing' and 'Union' not in unparsed:
+                unparsed = unparsed.replace('from typing import ', 'from typing import Union, ')
+            stub_lines.append(unparsed)
+
+    stub_lines.append('')  # Empty line after imports
+
+    # Process classes
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            stub_lines.append(format_class_stub(node))
+
+    return '\n'.join(stub_lines)
+
+
+def format_class_stub(class_node: ast.ClassDef) -> str:
+    """Format a class as a stub with all methods replaced by ..."""
+    lines = []
+
+    # Class definition
+    bases = ', '.join(ast.unparse(base) for base in class_node.bases)
+    if bases:
+        lines.append(f'class {class_node.name}({bases}):')
+    else:
+        lines.append(f'class {class_node.name}:')
+
+    # Class docstring
+    if (class_node.body and
+        isinstance(class_node.body[0], ast.Expr) and
+        isinstance(class_node.body[0].value, ast.Constant) and
+        isinstance(class_node.body[0].value.value, str)):
+        docstring = class_node.body[0].value.value
+        lines.append(f'    """{docstring}"""')
+        body_start = 1
+    else:
+        body_start = 0
+
+    # Process methods and properties
+    for item in class_node.body[body_start:]:
+        if isinstance(item, ast.FunctionDef):
+            lines.append(format_method_stub(item))
+        elif isinstance(item, ast.Assign):
+            # Keep class-level assignments
+            lines.append(f'    {ast.unparse(item)}')
+
+    lines.append('')  # Empty line after class
+    return '\n'.join(lines)
+
+
+def format_method_stub(func_node: ast.FunctionDef) -> str:
+    """Format a method as a stub."""
+    lines = []
+
+    # Handle decorators
+    for decorator in func_node.decorator_list:
+        lines.append(f'    @{ast.unparse(decorator)}')
+
+    # Method signature
+    args = ast.unparse(func_node.args)
+    returns = f' -> {ast.unparse(func_node.returns)}' if func_node.returns else ''
+    lines.append(f'    def {func_node.name}({args}){returns}:')
+
+    # Method docstring
+    if (func_node.body and
+        isinstance(func_node.body[0], ast.Expr) and
+        isinstance(func_node.body[0].value, ast.Constant) and
+        isinstance(func_node.body[0].value.value, str)):
+        docstring = func_node.body[0].value.value
+        # Format docstring with proper indentation
+        docstring_lines = docstring.split('\n')
+        lines.append('        """')
+        for line in docstring_lines:
+            lines.append(f'        {line}' if line.strip() else '')
+        lines.append('        """')
+
+    # Add ...
+    lines.append('        ...')
+
+    return '\n'.join(lines)
+
+
+def format_type_hint(type_hint: Any) -> str:
+    """Format a type hint for use in function signatures."""
     if type_hint is None:
         return "object"
 
@@ -57,19 +158,9 @@ def format_type_hint(type_hint: Any) -> str:
 def generate_stub_method(
     suite_method_name: str,
     expectation_name: str,
-    metadata
+    metadata: Any,
 ) -> str:
-    """
-    Generate a stub method for a single expectation.
-
-    Args:
-        suite_method_name: The name of the suite method (e.g., 'expect_value_equals')
-        expectation_name: The name of the expectation class (e.g., 'ExpectationValueEquals')
-        metadata: The metadata (ExpectationMetadata) for the expectation
-
-    Returns:
-        The generated method code as a string
-    """
+    """Generate a stub method signature for a single expectation."""
     description = metadata.pydoc
     category = metadata.category
     subcategory = metadata.subcategory
@@ -87,7 +178,6 @@ def generate_stub_method(
     params_signature = ",\n        ".join(param_list)
 
     # Build docstring
-    # Use .value for enums to ensure consistent output across Python versions
     category_str = category.value if hasattr(category, 'value') else str(category)
     subcategory_str = subcategory.value if hasattr(subcategory, 'value') else str(subcategory)
 
@@ -112,82 +202,60 @@ def generate_stub_method(
     docstring_lines.append('        :return: An instance of DataFrameExpectationsSuite.')
     docstring_lines.append('        """')
 
-    # Generate the method signature for .pyi file (no implementation)
+    # Generate the method signature for .pyi file
     method_code = f'''    def {suite_method_name}(
         self,
         {params_signature},
     ) -> DataFrameExpectationsSuite:
 {chr(10).join(docstring_lines)}
         ...
+
 '''
 
     return method_code
 
 
 def generate_pyi_file() -> str:
-    """
-    Generate complete .pyi stub file content.
-
-    Returns:
-        The complete .pyi file content as a string
-    """
+    """Generate complete .pyi stub file content."""
     # Import here to avoid issues if not in the right directory
     from dataframe_expectations.registry import (
         DataFrameExpectationRegistry,
     )
 
+    # Start with header
+    pyi_content = """\
+# Type stubs for DataFrameExpectationsSuite
+# Auto-generated by scripts/generate_suite_stubs.py
+# DO NOT EDIT - Regenerate with: python scripts/generate_suite_stubs.py
+
+"""
+
+    # Get the base stub from suite.py
+    base_stub = transform_suite_to_stub()
+
+    # Find where to insert the dynamic methods (before __getattr__)
+    getattr_pos = base_stub.find('    def __getattr__(self, name: str)')
+
+    if getattr_pos == -1:
+        raise ValueError("Could not find __getattr__ method in transformed suite")
+
     # Get all metadata and suite method mapping
     mapping = DataFrameExpectationRegistry.get_suite_method_mapping()
 
-    # Start with imports and class definition
-    pyi_content = [
-        '# Type stubs for DataFrameExpectationsSuite',
-        '# Auto-generated by scripts/generate_suite_stubs.py',
-        '# DO NOT EDIT - Regenerate with: python scripts/generate_suite_stubs.py',
-        '',
-        'from typing import List, Union',
-        'from dataframe_expectations.expectations import DataFrameLike',
-        'from dataframe_expectations.result_message import DataFrameExpectationFailureMessage',
-        '',
-        'class DataFrameExpectationsSuiteFailure(Exception):',
-        '    failures: List[DataFrameExpectationFailureMessage]',
-        '    total_expectations: int',
-        '    def __init__(',
-        '        self,',
-        '        total_expectations: int,',
-        '        failures: List[DataFrameExpectationFailureMessage],',
-        '        *args,',
-        '    ) -> None: ...',
-        '',
-        'class DataFrameExpectationsSuite:',
-        '    def __init__(self) -> None: ...',
-        '',
-    ]
-
     # Generate all stub methods (sorted for consistency)
+    dynamic_methods = '\n'
     for suite_method, exp_name in sorted(mapping.items()):
         metadata = DataFrameExpectationRegistry.get_metadata(exp_name)
-        pyi_content.append(generate_stub_method(suite_method, exp_name, metadata))
+        dynamic_methods += generate_stub_method(suite_method, exp_name, metadata)
 
-    # Add run method
-    pyi_content.extend([
-        '    def run(self, data_frame: DataFrameLike) -> None: ...',
-        ''
-    ])
+    # Insert dynamic methods before __getattr__
+    pyi_content += base_stub[:getattr_pos] + dynamic_methods + base_stub[getattr_pos:]
 
-    return '\n'.join(pyi_content)
+    return pyi_content
 
 
 def update_pyi_file(dry_run: bool = False) -> bool:
-    """
-    Update the suite.pyi stub file.
-
-    Args:
-        dry_run: If True, only check if update is needed without writing
-
-    Returns:
-        True if file was updated (or would be updated in dry_run mode), False otherwise
-    """
+    """Update the suite.pyi stub file."""
     pyi_file = Path(__file__).parent.parent / 'dataframe_expectations' / 'suite.pyi'
 
     # Generate the new .pyi content
@@ -238,42 +306,31 @@ Examples:
   python scripts/generate_suite_stubs.py --print
         """
     )
-
     parser.add_argument(
         '--check',
         action='store_true',
-        help='Check if stub file is up-to-date without modifying files'
+        help='Check if stub file is up-to-date without modifying it'
     )
-
     parser.add_argument(
         '--print',
         action='store_true',
-        help='Print generated stub file to stdout instead of writing'
+        help='Print generated stubs to stdout instead of writing to file'
     )
 
     args = parser.parse_args()
 
-    try:
-        if args.print:
-            # Just print the generated stub file
-            pyi_content = generate_pyi_file()
-            print(pyi_content)
-            return 0
-        else:
-            # Update the .pyi file (or check if it needs updating)
-            needs_update = update_pyi_file(dry_run=args.check)
+    if args.print:
+        # Print to stdout
+        print(generate_pyi_file())
+        return
 
-            if args.check and needs_update:
-                return 1  # Exit with error code for CI
+    # Update or check the file
+    was_updated = update_pyi_file(dry_run=args.check)
 
-            return 0
-
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc()
-        return 1
+    # Exit with error code if --check and file is out of date
+    if args.check and was_updated:
+        sys.exit(1)
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

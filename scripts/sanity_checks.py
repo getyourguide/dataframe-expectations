@@ -25,7 +25,7 @@ class ExpectationsSanityChecker:
         self.expectations_dir = project_root / "dataframe_expectations" / "expectations"
         self.suite_file = project_root / "dataframe_expectations" / "suite.py"
         self.stub_file = project_root / "dataframe_expectations" / "suite.pyi"
-        self.tests_dir = project_root / "tests" / "expectations_implemented"
+        self.tests_dir = project_root / "tests" / "expectations"
 
         # Results storage
         self.registered_expectations: Dict[str, str] = {}  # expectation_name -> file_path
