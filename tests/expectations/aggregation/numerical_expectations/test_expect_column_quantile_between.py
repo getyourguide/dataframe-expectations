@@ -80,7 +80,7 @@ def test_expectation_description():
 
 
 @pytest.mark.parametrize(
-    "df_type,data,quantile,min_value,max_value,should_succeed,expected_message",
+    "df_type, data, quantile, min_value, max_value, should_succeed, expected_message",
     [
         # Pandas success scenarios - various quantiles
         ("pandas", [20, 25, 30, 35], 0.0, 15, 25, True, None),  # min = 20
