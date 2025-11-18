@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -23,11 +22,6 @@ def create_dataframe(df_type, data, column_name, spark):
         return spark.createDataFrame([(item,) for item in data], [column_name])
 
 
-def get_df_type_enum(df_type):
-    """Helper function to get DataFrameType enum."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
-
-
 def test_expectation_name():
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringNotContains",
@@ -40,29 +34,31 @@ def test_expectation_name():
 
 
 @pytest.mark.parametrize(
-    "df_type,data,substring,expected_result,expected_violations,test_id",
+    "df_type, data, substring, expected_result, expected_violations",
     [
-        # Basic success and violations - pandas
-        ("pandas", ["bar", "baz", "qux"], "foo", "success", None, "pandas_basic_success"),
-        ("pandas", ["test", "demo", "exam"], "xyz", "success", None, "pandas_success_no_match"),
+        # Basic success - pandas
+        ("pandas", ["bar", "baz", "qux"], "foo", "success", None),
+        # Basic success - pyspark
+        ("pyspark", ["bar", "baz", "qux"], "foo", "success", None),
+        # Success no match - pandas
+        ("pandas", ["test", "demo", "exam"], "xyz", "success", None),
+        # Success no match - pyspark
+        ("pyspark", ["test", "demo", "exam"], "xyz", "success", None),
+        # Success different substring - pandas
         (
             "pandas",
             ["hello", "world", "python"],
             "java",
             "success",
             None,
-            "pandas_success_different_substring",
         ),
-        # Basic success and violations - pyspark
-        ("pyspark", ["bar", "baz", "qux"], "foo", "success", None, "pyspark_basic_success"),
-        ("pyspark", ["test", "demo", "exam"], "xyz", "success", None, "pyspark_success_no_match"),
+        # Success different substring - pyspark
         (
             "pyspark",
             ["hello", "world", "python"],
             "java",
             "success",
             None,
-            "pyspark_success_different_substring",
         ),
         # Basic violations - pandas
         (
@@ -71,23 +67,6 @@ def test_expectation_name():
             "foo",
             "violations",
             ["foobar", "foo"],
-            "pandas_basic_violations",
-        ),
-        (
-            "pandas",
-            ["testing", "test", "attest"],
-            "test",
-            "violations",
-            ["testing", "test", "attest"],
-            "pandas_all_violations",
-        ),
-        (
-            "pandas",
-            ["good", "bad", "badge"],
-            "bad",
-            "violations",
-            ["bad", "badge"],
-            "pandas_mixed_violations",
         ),
         # Basic violations - pyspark
         (
@@ -96,15 +75,38 @@ def test_expectation_name():
             "foo",
             "violations",
             ["foobar", "foo"],
-            "pyspark_basic_violations",
         ),
+        # All violations - pandas
+        (
+            "pandas",
+            ["testing", "test", "attest"],
+            "test",
+            "violations",
+            ["testing", "test", "attest"],
+        ),
+        # All violations - pyspark
         (
             "pyspark",
             ["testing", "test", "attest"],
             "test",
             "violations",
             ["testing", "test", "attest"],
-            "pyspark_all_violations",
+        ),
+        # Mixed violations - pandas
+        (
+            "pandas",
+            ["good", "bad", "badge"],
+            "bad",
+            "violations",
+            ["bad", "badge"],
+        ),
+        # Mixed violations - pyspark
+        (
+            "pyspark",
+            ["good", "bad", "badge"],
+            "bad",
+            "violations",
+            ["bad", "badge"],
         ),
         # Substring at beginning - pandas
         (
@@ -113,15 +115,6 @@ def test_expectation_name():
             "prefix",
             "violations",
             ["prefix_test", "prefix_demo"],
-            "pandas_substring_at_beginning",
-        ),
-        (
-            "pandas",
-            ["no_match", "also_no", "nope"],
-            "prefix",
-            "success",
-            None,
-            "pandas_no_substring_at_beginning",
         ),
         # Substring at beginning - pyspark
         (
@@ -130,15 +123,22 @@ def test_expectation_name():
             "prefix",
             "violations",
             ["prefix_test", "prefix_demo"],
-            "pyspark_substring_at_beginning",
         ),
+        # No substring at beginning - pandas
+        (
+            "pandas",
+            ["no_match", "also_no", "nope"],
+            "prefix",
+            "success",
+            None,
+        ),
+        # No substring at beginning - pyspark
         (
             "pyspark",
             ["no_match", "also_no", "nope"],
             "prefix",
             "success",
             None,
-            "pyspark_no_substring_at_beginning",
         ),
         # Substring at end - pandas
         (
@@ -147,15 +147,6 @@ def test_expectation_name():
             "suffix",
             "violations",
             ["test_suffix", "demo_suffix"],
-            "pandas_substring_at_end",
-        ),
-        (
-            "pandas",
-            ["no_match", "also_no", "nope"],
-            "suffix",
-            "success",
-            None,
-            "pandas_no_substring_at_end",
         ),
         # Substring at end - pyspark
         (
@@ -164,15 +155,22 @@ def test_expectation_name():
             "suffix",
             "violations",
             ["test_suffix", "demo_suffix"],
-            "pyspark_substring_at_end",
         ),
+        # No substring at end - pandas
+        (
+            "pandas",
+            ["no_match", "also_no", "nope"],
+            "suffix",
+            "success",
+            None,
+        ),
+        # No substring at end - pyspark
         (
             "pyspark",
             ["no_match", "also_no", "nope"],
             "suffix",
             "success",
             None,
-            "pyspark_no_substring_at_end",
         ),
         # Substring in middle - pandas
         (
@@ -181,15 +179,6 @@ def test_expectation_name():
             "mid",
             "violations",
             ["pre_mid_post", "another_mid_test"],
-            "pandas_substring_in_middle",
-        ),
-        (
-            "pandas",
-            ["no_match", "also_no", "nope"],
-            "mid",
-            "success",
-            None,
-            "pandas_no_substring_in_middle",
         ),
         # Substring in middle - pyspark
         (
@@ -198,188 +187,231 @@ def test_expectation_name():
             "mid",
             "violations",
             ["pre_mid_post", "another_mid_test"],
-            "pyspark_substring_in_middle",
         ),
-        # Case sensitivity - pandas
-        ("pandas", ["FOO", "Foo", "fOo"], "foo", "success", None, "pandas_case_sensitive_success"),
+        # No substring in middle - pandas
         (
             "pandas",
-            ["foo", "FOO", "test"],
-            "FOO",
-            "violations",
-            ["FOO"],
-            "pandas_case_sensitive_violations",
+            ["no_match", "also_no", "nope"],
+            "mid",
+            "success",
+            None,
         ),
-        # Case sensitivity - pyspark
+        # No substring in middle - pyspark
+        (
+            "pyspark",
+            ["no_match", "also_no", "nope"],
+            "mid",
+            "success",
+            None,
+        ),
+        # Case sensitive success - pandas
+        ("pandas", ["FOO", "Foo", "fOo"], "foo", "success", None),
+        # Case sensitive success - pyspark
         (
             "pyspark",
             ["FOO", "Foo", "fOo"],
             "foo",
             "success",
             None,
-            "pyspark_case_sensitive_success",
         ),
+        # Case sensitive violations - pandas
+        (
+            "pandas",
+            ["foo", "FOO", "test"],
+            "FOO",
+            "violations",
+            ["FOO"],
+        ),
+        # Case sensitive violations - pyspark
         (
             "pyspark",
             ["foo", "FOO", "test"],
             "FOO",
             "violations",
             ["FOO"],
-            "pyspark_case_sensitive_violations",
         ),
-        # Empty strings - pandas
-        ("pandas", ["", "", ""], "foo", "success", None, "pandas_empty_string_success"),
+        # Empty string success - pandas
+        ("pandas", ["", "", ""], "foo", "success", None),
+        # Empty string success - pyspark
+        ("pyspark", ["", "", ""], "foo", "success", None),
+        # Empty string with violation - pandas
         (
             "pandas",
             ["", "foo", ""],
             "foo",
             "violations",
             ["foo"],
-            "pandas_empty_string_with_violation",
         ),
-        # Empty strings - pyspark
-        ("pyspark", ["", "", ""], "foo", "success", None, "pyspark_empty_string_success"),
-        # Whitespace handling - pandas
-        ("pandas", ["   ", "  ", " "], "test", "success", None, "pandas_whitespace_only_success"),
+        # Empty string with violation - pyspark
+        (
+            "pyspark",
+            ["", "foo", ""],
+            "foo",
+            "violations",
+            ["foo"],
+        ),
+        # Whitespace only success - pandas
+        ("pandas", ["   ", "  ", " "], "test", "success", None),
+        # Whitespace only success - pyspark
+        ("pyspark", ["   ", "  ", " "], "test", "success", None),
+        # Whitespace in text violations - pandas
         (
             "pandas",
             ["test with spaces", "test", "no match"],
             "test",
             "violations",
             ["test with spaces", "test"],
-            "pandas_whitespace_in_text_violations",
         ),
+        # Whitespace in text violations - pyspark
+        (
+            "pyspark",
+            ["test with spaces", "test", "no match"],
+            "test",
+            "violations",
+            ["test with spaces", "test"],
+        ),
+        # Whitespace around violations - pandas
         (
             "pandas",
             ["   test   ", "test", "clean"],
             "test",
             "violations",
             ["   test   ", "test"],
-            "pandas_whitespace_around_violations",
         ),
-        # Whitespace handling - pyspark
-        ("pyspark", ["   ", "  ", " "], "test", "success", None, "pyspark_whitespace_only_success"),
+        # Whitespace around violations - pyspark
         (
             "pyspark",
-            ["test with spaces", "test", "no match"],
+            ["   test   ", "test", "clean"],
             "test",
             "violations",
-            ["test with spaces", "test"],
-            "pyspark_whitespace_in_text_violations",
+            ["   test   ", "test"],
         ),
-        # Special characters - pandas
+        # Special char at violations - pandas
         (
             "pandas",
             ["test@email", "user@domain", "plain"],
             "@",
             "violations",
             ["test@email", "user@domain"],
-            "pandas_special_char_at_violations",
         ),
+        # Special char at violations - pyspark
+        (
+            "pyspark",
+            ["test@email", "user@domain", "plain"],
+            "@",
+            "violations",
+            ["test@email", "user@domain"],
+        ),
+        # Special char at success - pandas
         (
             "pandas",
             ["no-match", "also-no", "nope"],
             "@",
             "success",
             None,
-            "pandas_special_char_at_success",
         ),
+        # Special char at success - pyspark
+        (
+            "pyspark",
+            ["no-match", "also-no", "nope"],
+            "@",
+            "success",
+            None,
+        ),
+        # Special char hash violations - pandas
         (
             "pandas",
             ["test#tag", "demo#hash", "plain"],
             "#",
             "violations",
             ["test#tag", "demo#hash"],
-            "pandas_special_char_hash_violations",
         ),
-        # Special characters - pyspark
+        # Special char hash violations - pyspark
         (
             "pyspark",
-            ["test@email", "user@domain", "plain"],
-            "@",
+            ["test#tag", "demo#hash", "plain"],
+            "#",
             "violations",
-            ["test@email", "user@domain"],
-            "pyspark_special_char_at_violations",
+            ["test#tag", "demo#hash"],
         ),
-        (
-            "pyspark",
-            ["no-match", "also-no", "nope"],
-            "@",
-            "success",
-            None,
-            "pyspark_special_char_at_success",
-        ),
-        # Numbers in strings - pandas
+        # Numbers violations - pandas
         (
             "pandas",
             ["version123", "test456", "plain"],
             "123",
             "violations",
             ["version123"],
-            "pandas_numbers_violations",
         ),
-        ("pandas", ["v1.0", "v2.1", "v3.5"], "123", "success", None, "pandas_numbers_no_match"),
+        # Numbers violations - pyspark
+        (
+            "pyspark",
+            ["version123", "test456", "plain"],
+            "123",
+            "violations",
+            ["version123"],
+        ),
+        # Numbers no match - pandas
+        ("pandas", ["v1.0", "v2.1", "v3.5"], "123", "success", None),
+        # Numbers no match - pyspark
+        ("pyspark", ["v1.0", "v2.1", "v3.5"], "123", "success", None),
+        # Numbers exact match - pandas
         (
             "pandas",
             ["test", "demo", "123"],
             "123",
             "violations",
             ["123"],
-            "pandas_numbers_exact_match",
         ),
-        # Numbers in strings - pyspark
+        # Numbers exact match - pyspark
         (
             "pyspark",
-            ["version123", "test456", "plain"],
+            ["test", "demo", "123"],
             "123",
             "violations",
-            ["version123"],
-            "pyspark_numbers_violations",
+            ["123"],
         ),
-        ("pyspark", ["v1.0", "v2.1", "v3.5"], "123", "success", None, "pyspark_numbers_no_match"),
-        # Single character substring - pandas
-        ("pandas", ["a", "b", "c"], "x", "success", None, "pandas_single_char_success"),
-        ("pandas", ["a", "b", "c"], "a", "violations", ["a"], "pandas_single_char_violation"),
-        # Single character substring - pyspark
-        ("pyspark", ["a", "b", "c"], "x", "success", None, "pyspark_single_char_success"),
-        ("pyspark", ["a", "b", "c"], "a", "violations", ["a"], "pyspark_single_char_violation"),
-        # Long strings and substrings - pandas
+        # Single char success - pandas
+        ("pandas", ["a", "b", "c"], "x", "success", None),
+        # Single char success - pyspark
+        ("pyspark", ["a", "b", "c"], "x", "success", None),
+        # Single char violation - pandas
+        ("pandas", ["a", "b", "c"], "a", "violations", ["a"]),
+        # Single char violation - pyspark
+        ("pyspark", ["a", "b", "c"], "a", "violations", ["a"]),
+        # Long string success - pandas
         (
             "pandas",
             ["a" * 100, "b" * 100, "c" * 100],
             "x",
             "success",
             None,
-            "pandas_long_string_success",
         ),
-        (
-            "pandas",
-            ["a" * 50 + "test" + "b" * 50, "clean" * 20, "other"],
-            "test",
-            "violations",
-            ["a" * 50 + "test" + "b" * 50],
-            "pandas_long_string_with_substring",
-        ),
-        # Long strings and substrings - pyspark
+        # Long string success - pyspark
         (
             "pyspark",
             ["a" * 100, "b" * 100, "c" * 100],
             "x",
             "success",
             None,
-            "pyspark_long_string_success",
         ),
+        # Long string with substring - pandas
+        (
+            "pandas",
+            ["a" * 50 + "test" + "b" * 50, "clean" * 20, "other"],
+            "test",
+            "violations",
+            ["a" * 50 + "test" + "b" * 50],
+        ),
+        # Long string with substring - pyspark
         (
             "pyspark",
             ["a" * 50 + "test" + "b" * 50, "clean" * 20, "other"],
             "test",
             "violations",
             ["a" * 50 + "test" + "b" * 50],
-            "pyspark_long_string_with_substring",
         ),
-        # Exact match (string equals substring) - pandas
-        ("pandas", ["test", "demo", "exam"], "test", "violations", ["test"], "pandas_exact_match"),
-        ("pandas", ["test", "demo", "exam"], "testing", "success", None, "pandas_no_exact_match"),
+        # Exact match - pandas
+        ("pandas", ["test", "demo", "exam"], "test", "violations", ["test"]),
         # Exact match - pyspark
         (
             "pyspark",
@@ -387,12 +419,79 @@ def test_expectation_name():
             "test",
             "violations",
             ["test"],
-            "pyspark_exact_match",
         ),
+        # No exact match - pandas
+        ("pandas", ["test", "demo", "exam"], "testing", "success", None),
+        # No exact match - pyspark
+        ("pyspark", ["test", "demo", "exam"], "testing", "success", None),
+    ],
+    ids=[
+        "pandas_basic_success",
+        "pyspark_basic_success",
+        "pandas_success_no_match",
+        "pyspark_success_no_match",
+        "pandas_success_different_substring",
+        "pyspark_success_different_substring",
+        "pandas_basic_violations",
+        "pyspark_basic_violations",
+        "pandas_all_violations",
+        "pyspark_all_violations",
+        "pandas_mixed_violations",
+        "pyspark_mixed_violations",
+        "pandas_substring_at_beginning",
+        "pyspark_substring_at_beginning",
+        "pandas_no_substring_at_beginning",
+        "pyspark_no_substring_at_beginning",
+        "pandas_substring_at_end",
+        "pyspark_substring_at_end",
+        "pandas_no_substring_at_end",
+        "pyspark_no_substring_at_end",
+        "pandas_substring_in_middle",
+        "pyspark_substring_in_middle",
+        "pandas_no_substring_in_middle",
+        "pyspark_no_substring_in_middle",
+        "pandas_case_sensitive_success",
+        "pyspark_case_sensitive_success",
+        "pandas_case_sensitive_violations",
+        "pyspark_case_sensitive_violations",
+        "pandas_empty_string_success",
+        "pyspark_empty_string_success",
+        "pandas_empty_string_with_violation",
+        "pyspark_empty_string_with_violation",
+        "pandas_whitespace_only_success",
+        "pyspark_whitespace_only_success",
+        "pandas_whitespace_in_text_violations",
+        "pyspark_whitespace_in_text_violations",
+        "pandas_whitespace_around_violations",
+        "pyspark_whitespace_around_violations",
+        "pandas_special_char_at_violations",
+        "pyspark_special_char_at_violations",
+        "pandas_special_char_at_success",
+        "pyspark_special_char_at_success",
+        "pandas_special_char_hash_violations",
+        "pyspark_special_char_hash_violations",
+        "pandas_numbers_violations",
+        "pyspark_numbers_violations",
+        "pandas_numbers_no_match",
+        "pyspark_numbers_no_match",
+        "pandas_numbers_exact_match",
+        "pyspark_numbers_exact_match",
+        "pandas_single_char_success",
+        "pyspark_single_char_success",
+        "pandas_single_char_violation",
+        "pyspark_single_char_violation",
+        "pandas_long_string_success",
+        "pyspark_long_string_success",
+        "pandas_long_string_with_substring",
+        "pyspark_long_string_with_substring",
+        "pandas_exact_match",
+        "pyspark_exact_match",
+        "pandas_no_exact_match",
+        "pyspark_no_exact_match",
     ],
 )
 def test_expectation_basic_scenarios(
-    df_type, data, substring, expected_result, expected_violations, test_id, spark
+    df_type, data, substring, expected_result, expected_violations, spark
 ):
     """Test various scenarios for ExpectationStringNotContains expectation."""
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -407,14 +506,14 @@ def test_expectation_basic_scenarios(
     if expected_result == "success":
         assert str(result) == str(
             DataFrameExpectationSuccessMessage(expectation_name="ExpectationStringNotContains")
-        ), f"Test {test_id}: Expected success message but got: {result}"
+        ), f"Expected success message but got: {result}"
 
         # Also test with suite
         expectations_suite = DataFrameExpectationsSuite().expect_string_not_contains(
             column_name="col1", substring=substring
         )
         suite_result = expectations_suite.build().run(data_frame=data_frame)
-        assert suite_result is None, f"Test {test_id}: Expected no exceptions to be raised"
+        assert suite_result is None, "Expected no exceptions to be raised"
     else:  # violations
         violations_df = create_dataframe(df_type, expected_violations, "col1", spark)
         expected_message = (
@@ -424,12 +523,12 @@ def test_expectation_basic_scenarios(
         assert str(result) == str(
             DataFrameExpectationFailureMessage(
                 expectation_str=str(expectation),
-                data_frame_type=get_df_type_enum(df_type),
+                data_frame_type=str(df_type),
                 violations_data_frame=violations_df,
                 message=expected_message,
                 limit_violations=5,
             )
-        ), f"Test {test_id}: Expected failure message but got: {result}"
+        ), f"Expected failure message but got: {result}"
 
         # Also test with suite
         expectations_suite = DataFrameExpectationsSuite().expect_string_not_contains(
@@ -453,7 +552,7 @@ def test_column_missing_error(df_type, spark):
 
     expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=get_df_type_enum(df_type),
+        data_frame_type=str(df_type),
         message="Column 'col1' does not exist in the DataFrame.",
     )
     assert str(result) == str(expected_failure_message), (

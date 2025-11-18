@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -46,11 +45,6 @@ def create_dataframe(df_type, df_data, spark):
     rows = list(zip(*[df_data[col] for col in columns]))
 
     return spark.createDataFrame(rows, schema)
-
-
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
 
 
 @pytest.mark.parametrize(
@@ -162,6 +156,18 @@ def get_df_type_enum(df_type):
             "success",
             None,
         ),
+        (
+            "pyspark",
+            {
+                "col1": [1, 2, 3, 4],
+                "col2": ["a", "b", "c", "d"],
+                "col3": [1.1, 2.2, 3.3, 4.4],
+                "col4": [True, False, True, False],
+            },
+            3,
+            "success",
+            None,
+        ),
         # Mixed data types - 5 rows >= 3 min
         (
             "pandas",
@@ -176,11 +182,32 @@ def get_df_type_enum(df_type):
             "success",
             None,
         ),
+        (
+            "pyspark",
+            {
+                "int_col": [1, 2, 3, 4, 5],
+                "str_col": ["a", "b", "c", "d", "e"],
+                "float_col": [1.1, 2.2, 3.3, 4.4, 5.5],
+                "bool_col": [True, False, True, False, True],
+                "null_col": [None, None, None, None, None],
+            },
+            3,
+            "success",
+            None,
+        ),
         # Low min count - 3 rows >= 1 min
         ("pandas", {"col1": [1, 2, 3]}, 1, "success", None),
+        ("pyspark", {"col1": [1, 2, 3]}, 1, "success", None),
         # High min count - 3 rows < 1000000 min
         (
             "pandas",
+            {"col1": [1, 2, 3]},
+            1000000,
+            "failure",
+            "DataFrame has 3 rows, expected at least 1000000.",
+        ),
+        (
+            "pyspark",
             {"col1": [1, 2, 3]},
             1000000,
             "failure",
@@ -194,13 +221,30 @@ def get_df_type_enum(df_type):
             "success",
             None,
         ),
+        (
+            "pyspark",
+            {"col1": [42, 42, 42, 42], "col2": ["same", "same", "same", "same"]},
+            3,
+            "success",
+            None,
+        ),
         # Boundary condition - 1 row == 1 min (edge case equals actual)
         ("pandas", {"col1": [1]}, 1, "success", None),
+        ("pyspark", {"col1": [1]}, 1, "success", None),
         # Progressive counts - 5 rows meets various minimums
         ("pandas", {"col1": [1, 2, 3, 4, 5]}, 5, "success", None),
+        ("pyspark", {"col1": [1, 2, 3, 4, 5]}, 5, "success", None),
         ("pandas", {"col1": [1, 2, 3, 4, 5]}, 4, "success", None),
+        ("pyspark", {"col1": [1, 2, 3, 4, 5]}, 4, "success", None),
         (
             "pandas",
+            {"col1": [1, 2, 3, 4, 5]},
+            6,
+            "failure",
+            "DataFrame has 5 rows, expected at least 6.",
+        ),
+        (
+            "pyspark",
             {"col1": [1, 2, 3, 4, 5]},
             6,
             "failure",
@@ -231,14 +275,23 @@ def get_df_type_enum(df_type):
         "pandas_large_dataset_failure",
         "pyspark_large_dataset_failure",
         "pandas_multiple_columns",
+        "pyspark_multiple_columns",
         "pandas_mixed_data_types",
+        "pyspark_mixed_data_types",
         "pandas_low_min_count",
+        "pyspark_low_min_count",
         "pandas_high_min_count",
+        "pyspark_high_min_count",
         "pandas_identical_values",
+        "pyspark_identical_values",
         "pandas_boundary_condition",
+        "pyspark_boundary_condition",
         "pandas_progressive_count_at_min",
+        "pyspark_progressive_count_at_min",
         "pandas_progressive_count_below_min",
+        "pyspark_progressive_count_below_min",
         "pandas_progressive_count_above_min",
+        "pyspark_progressive_count_above_min",
     ],
 )
 def test_expectation_basic_scenarios(
@@ -268,7 +321,7 @@ def test_expectation_basic_scenarios(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=get_df_type_enum(df_type),
+            data_frame_type=str(df_type),
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (

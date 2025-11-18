@@ -2,7 +2,6 @@ import pytest
 import pandas as pd
 from datetime import datetime
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -51,11 +50,6 @@ def create_dataframe(df_type, data, column_name, spark, data_type="long"):
         return spark.createDataFrame([(val,) for val in data], schema)
 
 
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
-
-
 def test_expectation_name():
     """Test that the expectation name is correctly returned."""
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -69,11 +63,11 @@ def test_expectation_name():
 
 
 @pytest.mark.parametrize(
-    "df_type, data, values, should_succeed, expected_violations, expected_message, missing_column, data_type",
+    "df_type, data, values, should_succeed, expected_violations, expected_message, data_type",
     [
         # Basic integer scenarios - success
-        ("pandas", [1, 2, 3, 2, 1], [1, 2, 3], True, None, None, False, "long"),
-        ("pyspark", [1, 2, 3, 2, 1], [1, 2, 3], True, None, None, False, "long"),
+        ("pandas", [1, 2, 3, 2, 1], [1, 2, 3], True, None, None, "long"),
+        ("pyspark", [1, 2, 3, 2, 1], [1, 2, 3], True, None, None, "long"),
         # Integer scenarios - violations
         (
             "pandas",
@@ -82,7 +76,6 @@ def test_expectation_name():
             False,
             [4, 5],
             "Found 2 row(s) where 'col1' is not in [1, 2, 3].",
-            False,
             "long",
         ),
         (
@@ -92,7 +85,6 @@ def test_expectation_name():
             False,
             [4, 5],
             "Found 2 row(s) where 'col1' is not in [1, 2, 3].",
-            False,
             "long",
         ),
         # String data type scenarios
@@ -103,7 +95,6 @@ def test_expectation_name():
             True,
             None,
             None,
-            False,
             "string",
         ),
         (
@@ -113,7 +104,6 @@ def test_expectation_name():
             True,
             None,
             None,
-            False,
             "string",
         ),
         (
@@ -123,7 +113,6 @@ def test_expectation_name():
             False,
             ["orange"],
             "Found 1 row(s) where 'col1' is not in ['apple', 'banana'].",
-            False,
             "string",
         ),
         (
@@ -133,7 +122,6 @@ def test_expectation_name():
             False,
             ["orange"],
             "Found 1 row(s) where 'col1' is not in ['apple', 'banana'].",
-            False,
             "string",
         ),
         # String case sensitivity
@@ -144,7 +132,6 @@ def test_expectation_name():
             False,
             ["Apple", "APPLE"],
             "Found 2 row(s) where 'col1' is not in ['apple'].",
-            False,
             "string",
         ),
         (
@@ -154,12 +141,11 @@ def test_expectation_name():
             False,
             ["Apple", "APPLE"],
             "Found 2 row(s) where 'col1' is not in ['apple'].",
-            False,
             "string",
         ),
         # Float/Double data type scenarios
-        ("pandas", [1.5, 2.5, 3.5], [1.5, 2.5, 3.5], True, None, None, False, "double"),
-        ("pyspark", [1.5, 2.5, 3.5], [1.5, 2.5, 3.5], True, None, None, False, "double"),
+        ("pandas", [1.5, 2.5, 3.5], [1.5, 2.5, 3.5], True, None, None, "double"),
+        ("pyspark", [1.5, 2.5, 3.5], [1.5, 2.5, 3.5], True, None, None, "double"),
         (
             "pandas",
             [1.5, 4.5, 2.5],
@@ -167,7 +153,6 @@ def test_expectation_name():
             False,
             [4.5],
             "Found 1 row(s) where 'col1' is not in [1.5, 2.5].",
-            False,
             "double",
         ),
         (
@@ -177,14 +162,13 @@ def test_expectation_name():
             False,
             [4.5],
             "Found 1 row(s) where 'col1' is not in [1.5, 2.5].",
-            False,
             "double",
         ),
         # Boolean data type scenarios
-        ("pandas", [True, False, True], [True, False], True, None, None, False, "boolean"),
-        ("pyspark", [True, False, True], [True, False], True, None, None, False, "boolean"),
-        ("pandas", [True, True, True], [True], True, None, None, False, "boolean"),
-        ("pyspark", [True, True, True], [True], True, None, None, False, "boolean"),
+        ("pandas", [True, False, True], [True, False], True, None, None, "boolean"),
+        ("pyspark", [True, False, True], [True, False], True, None, None, "boolean"),
+        ("pandas", [True, True, True], [True], True, None, None, "boolean"),
+        ("pyspark", [True, True, True], [True], True, None, None, "boolean"),
         (
             "pandas",
             [True, False, True],
@@ -192,7 +176,6 @@ def test_expectation_name():
             False,
             [False],
             "Found 1 row(s) where 'col1' is not in [True].",
-            False,
             "boolean",
         ),
         (
@@ -202,7 +185,6 @@ def test_expectation_name():
             False,
             [False],
             "Found 1 row(s) where 'col1' is not in [True].",
-            False,
             "boolean",
         ),
         # Timestamp/Datetime scenarios
@@ -213,7 +195,6 @@ def test_expectation_name():
             True,
             None,
             None,
-            False,
             "timestamp",
         ),
         (
@@ -223,7 +204,6 @@ def test_expectation_name():
             True,
             None,
             None,
-            False,
             "timestamp",
         ),
         (
@@ -233,7 +213,6 @@ def test_expectation_name():
             False,
             [datetime(2023, 1, 4)],
             "Found 1 row(s) where 'col1' is not in [datetime.datetime(2023, 1, 1, 0, 0), datetime.datetime(2023, 1, 2, 0, 0)].",
-            False,
             "timestamp",
         ),
         (
@@ -243,20 +222,19 @@ def test_expectation_name():
             False,
             [datetime(2023, 1, 4)],
             "Found 1 row(s) where 'col1' is not in [datetime.datetime(2023, 1, 1, 0, 0), datetime.datetime(2023, 1, 2, 0, 0)].",
-            False,
             "timestamp",
         ),
         # Empty string scenarios
-        ("pandas", ["", "text", ""], ["", "text"], True, None, None, False, "string"),
-        ("pyspark", ["", "text", ""], ["", "text"], True, None, None, False, "string"),
+        ("pandas", ["", "text", ""], ["", "text"], True, None, None, "string"),
+        ("pyspark", ["", "text", ""], ["", "text"], True, None, None, "string"),
         # Zero value scenarios
-        ("pandas", [0, 1, 2, 0], [0, 1, 2], True, None, None, False, "long"),
-        ("pyspark", [0, 1, 2, 0], [0, 1, 2], True, None, None, False, "long"),
-        ("pandas", [0.0, 1.0, 2.0], [0.0, 1.0, 2.0], True, None, None, False, "double"),
-        ("pyspark", [0.0, 1.0, 2.0], [0.0, 1.0, 2.0], True, None, None, False, "double"),
+        ("pandas", [0, 1, 2, 0], [0, 1, 2], True, None, None, "long"),
+        ("pyspark", [0, 1, 2, 0], [0, 1, 2], True, None, None, "long"),
+        ("pandas", [0.0, 1.0, 2.0], [0.0, 1.0, 2.0], True, None, None, "double"),
+        ("pyspark", [0.0, 1.0, 2.0], [0.0, 1.0, 2.0], True, None, None, "double"),
         # Negative numbers
-        ("pandas", [-1, -2, -3], [-1, -2, -3], True, None, None, False, "long"),
-        ("pyspark", [-1, -2, -3], [-1, -2, -3], True, None, None, False, "long"),
+        ("pandas", [-1, -2, -3], [-1, -2, -3], True, None, None, "long"),
+        ("pyspark", [-1, -2, -3], [-1, -2, -3], True, None, None, "long"),
         (
             "pandas",
             [-1, 5, -2],
@@ -264,7 +242,6 @@ def test_expectation_name():
             False,
             [5],
             "Found 1 row(s) where 'col1' is not in [-1, -2].",
-            False,
             "long",
         ),
         (
@@ -274,15 +251,14 @@ def test_expectation_name():
             False,
             [5],
             "Found 1 row(s) where 'col1' is not in [-1, -2].",
-            False,
             "long",
         ),
         # Large numbers
-        ("pandas", [1000000, 2000000], [1000000, 2000000], True, None, None, False, "long"),
-        ("pyspark", [1000000, 2000000], [1000000, 2000000], True, None, None, False, "long"),
+        ("pandas", [1000000, 2000000], [1000000, 2000000], True, None, None, "long"),
+        ("pyspark", [1000000, 2000000], [1000000, 2000000], True, None, None, "long"),
         # Single value in list
-        ("pandas", [5, 5, 5], [5], True, None, None, False, "long"),
-        ("pyspark", [5, 5, 5], [5], True, None, None, False, "long"),
+        ("pandas", [5, 5, 5], [5], True, None, None, "long"),
+        ("pyspark", [5, 5, 5], [5], True, None, None, "long"),
         # Multiple values with single violation
         (
             "pandas",
@@ -291,7 +267,6 @@ def test_expectation_name():
             False,
             [5],
             "Found 1 row(s) where 'col1' is not in [1, 2, 3, 4].",
-            False,
             "long",
         ),
         (
@@ -301,30 +276,50 @@ def test_expectation_name():
             False,
             [5],
             "Found 1 row(s) where 'col1' is not in [1, 2, 3, 4].",
-            False,
             "long",
         ),
-        # Missing column scenarios
-        (
-            "pandas",
-            [1, 2, 3],
-            [1, 2, 3],
-            False,
-            None,
-            "Column 'col1' does not exist in the DataFrame.",
-            True,
-            "long",
-        ),
-        (
-            "pyspark",
-            [1, 2, 3],
-            [1, 2, 3],
-            False,
-            None,
-            "Column 'col1' does not exist in the DataFrame.",
-            True,
-            "long",
-        ),
+    ],
+    ids=[
+        "pandas_int_basic_success",
+        "pyspark_int_basic_success",
+        "pandas_int_violations",
+        "pyspark_int_violations",
+        "pandas_string_success",
+        "pyspark_string_success",
+        "pandas_string_violations",
+        "pyspark_string_violations",
+        "pandas_string_case_sensitive",
+        "pyspark_string_case_sensitive",
+        "pandas_double_success",
+        "pyspark_double_success",
+        "pandas_double_violations",
+        "pyspark_double_violations",
+        "pandas_boolean_both_values",
+        "pyspark_boolean_both_values",
+        "pandas_boolean_single_value",
+        "pyspark_boolean_single_value",
+        "pandas_boolean_violation",
+        "pyspark_boolean_violation",
+        "pandas_timestamp_success",
+        "pyspark_timestamp_success",
+        "pandas_timestamp_violation",
+        "pyspark_timestamp_violation",
+        "pandas_empty_string",
+        "pyspark_empty_string",
+        "pandas_zero_int",
+        "pyspark_zero_int",
+        "pandas_zero_double",
+        "pyspark_zero_double",
+        "pandas_negative_int_success",
+        "pyspark_negative_int_success",
+        "pandas_negative_int_violation",
+        "pyspark_negative_int_violation",
+        "pandas_large_numbers",
+        "pyspark_large_numbers",
+        "pandas_single_value_list",
+        "pyspark_single_value_list",
+        "pandas_multiple_values_single_violation",
+        "pyspark_multiple_values_single_violation",
     ],
 )
 def test_expectation_basic_scenarios(
@@ -334,7 +329,6 @@ def test_expectation_basic_scenarios(
     should_succeed,
     expected_violations,
     expected_message,
-    missing_column,
     data_type,
     spark,
 ):
@@ -346,11 +340,9 @@ def test_expectation_basic_scenarios(
     - Floats (double): precision, zero values
     - Booleans: True/False combinations
     - Timestamps: datetime objects
-    - Edge cases: missing columns, single value lists
+    - Edge cases: single value lists
     """
-    # Create DataFrame with different column name if testing missing column scenario
-    column_name = "col2" if missing_column else "col1"
-    df = create_dataframe(df_type, data, column_name, spark, data_type)
+    df = create_dataframe(df_type, data, "col1", spark, data_type)
 
     # Test through registry
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -379,7 +371,7 @@ def test_expectation_basic_scenarios(
             )
             expected_failure = DataFrameExpectationFailureMessage(
                 expectation_str=str(expectation),
-                data_frame_type=get_df_type_enum(df_type),
+                data_frame_type=str(df_type),
                 violations_data_frame=expected_violations_df,
                 message=expected_message,
                 limit_violations=5,
@@ -397,6 +389,42 @@ def test_expectation_basic_scenarios(
     else:
         with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.build().run(data_frame=df)
+
+
+@pytest.mark.parametrize(
+    "df_type",
+    ["pandas", "pyspark"],
+    ids=["pandas", "pyspark"],
+)
+def test_column_missing_error(df_type, spark):
+    """Test missing column error for both pandas and PySpark DataFrames."""
+    if df_type == "pandas":
+        df = pd.DataFrame({"col1": [1, 2, 3]})
+    else:
+        df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
+
+    expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
+
+    # Test through registry
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationValueIn",
+        column_name="nonexistent_col",
+        values=[1, 2, 3],
+    )
+    result = expectation.validate(data_frame=df)
+    expected_failure = DataFrameExpectationFailureMessage(
+        expectation_str=str(expectation),
+        data_frame_type=str(df_type),
+        message=expected_message,
+    )
+    assert str(result) == str(expected_failure)
+
+    # Test through suite
+    suite = DataFrameExpectationsSuite().expect_value_in(
+        column_name="nonexistent_col", values=[1, 2, 3]
+    )
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
+        suite.build().run(data_frame=df)
 
 
 def test_large_dataset_performance():

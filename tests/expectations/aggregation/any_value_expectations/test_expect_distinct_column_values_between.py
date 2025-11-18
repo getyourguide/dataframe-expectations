@@ -15,21 +15,40 @@ from dataframe_expectations.result_message import (
 )
 
 
-def create_dataframe(df_type, data, column_name, spark):
-    """Helper function to create pandas or pyspark DataFrame."""
+def create_dataframe(df_type, data, column_name, spark, data_type="long"):
+    """Helper function to create pandas or pyspark DataFrame.
+
+    Args:
+        df_type: "pandas" or "pyspark"
+        data: List of values for the column
+        column_name: Name of the column
+        spark: Spark session (required for pyspark)
+        data_type: Data type for the column - "long", "string", "double", "boolean", "timestamp"
+    """
     if df_type == "pandas":
         return pd.DataFrame(data, columns=[column_name])
     else:  # pyspark
-        # Use explicit schema for all PySpark DataFrames (required for empty DataFrames)
-        from pyspark.sql.types import StructType, StructField, LongType
+        # Use explicit schema for all PySpark DataFrames
+        from pyspark.sql.types import (
+            StructType,
+            StructField,
+            LongType,
+            StringType,
+            DoubleType,
+            BooleanType,
+            TimestampType,
+        )
 
-        schema = StructType([StructField(column_name, LongType(), True)])
+        type_mapping = {
+            "long": LongType(),
+            "string": StringType(),
+            "double": DoubleType(),
+            "boolean": BooleanType(),
+            "timestamp": TimestampType(),
+        }
+
+        schema = StructType([StructField(column_name, type_mapping[data_type], True)])
         return spark.createDataFrame([(val,) for val in data], schema)
-
-
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
 
 
 def test_expectation_name():
@@ -48,23 +67,23 @@ def test_expectation_name():
 
 
 @pytest.mark.parametrize(
-    "df_type, df_data, min_value, max_value, expected_result, expected_message",
+    "df_type, df_data, min_value, max_value, expected_result, expected_message, data_type",
     [
         # Basic success - 3 distinct values within range [2, 5]
-        ("pandas", [1, 2, 3, 2, 1], 2, 5, "success", None),
-        ("pyspark", [1, 2, 3, 2, 1], 2, 5, "success", None),
+        ("pandas", [1, 2, 3, 2, 1], 2, 5, "success", None, "long"),
+        ("pyspark", [1, 2, 3, 2, 1], 2, 5, "success", None, "long"),
         # Success with nulls - 3 distinct values [1, 2, None] within range [3, 4]
-        ("pandas", [1, 2, None, 2, 1], 3, 4, "success", None),
-        ("pyspark", [1, 2, None, 2, 1], 3, 4, "success", None),
+        ("pandas", [1, 2, None, 2, 1], 3, 4, "success", None, "long"),
+        ("pyspark", [1, 2, None, 2, 1], 3, 4, "success", None, "long"),
         # Exact minimum boundary - 3 distinct values at min boundary [3, 5]
-        ("pandas", [1, 2, 3, 2, 1], 3, 5, "success", None),
-        ("pyspark", [1, 2, 3, 2, 1], 3, 5, "success", None),
+        ("pandas", [1, 2, 3, 2, 1], 3, 5, "success", None, "long"),
+        ("pyspark", [1, 2, 3, 2, 1], 3, 5, "success", None, "long"),
         # Exact maximum boundary - 5 distinct values at max boundary [3, 5]
-        ("pandas", [1, 2, 3, 4, 5, 1], 3, 5, "success", None),
-        ("pyspark", [1, 2, 3, 4, 5, 1], 3, 5, "success", None),
+        ("pandas", [1, 2, 3, 4, 5, 1], 3, 5, "success", None, "long"),
+        ("pyspark", [1, 2, 3, 4, 5, 1], 3, 5, "success", None, "long"),
         # Edge case: zero range (min == max) - success with exact match
-        ("pandas", [1, 2, 3, 2, 1], 3, 3, "success", None),
-        ("pyspark", [1, 2, 3, 2, 1], 3, 3, "success", None),
+        ("pandas", [1, 2, 3, 2, 1], 3, 3, "success", None, "long"),
+        ("pyspark", [1, 2, 3, 2, 1], 3, 3, "success", None, "long"),
         # Edge case: zero range (min == max) - failure when not exact
         (
             "pandas",
@@ -73,6 +92,7 @@ def test_expectation_name():
             3,
             "failure",
             "Column 'col1' has 2 distinct values, expected between 3 and 3.",
+            "long",
         ),
         (
             "pyspark",
@@ -81,13 +101,14 @@ def test_expectation_name():
             3,
             "failure",
             "Column 'col1' has 2 distinct values, expected between 3 and 3.",
+            "long",
         ),
         # Edge case: empty DataFrame - 0 distinct values within range [0, 5]
-        ("pandas", [], 0, 5, "success", None),
-        ("pyspark", [], 0, 5, "success", None),
+        ("pandas", [], 0, 5, "success", None, "long"),
+        ("pyspark", [], 0, 5, "success", None, "long"),
         # Edge case: single distinct value - 1 distinct value within range [1, 1]
-        ("pandas", [1, 1, 1, 1, 1], 1, 1, "success", None),
-        ("pyspark", [1, 1, 1, 1, 1], 1, 1, "success", None),
+        ("pandas", [1, 1, 1, 1, 1], 1, 1, "success", None, "long"),
+        ("pyspark", [1, 1, 1, 1, 1], 1, 1, "success", None, "long"),
         # Too few distinct values - 2 distinct, expecting [4, 6]
         (
             "pandas",
@@ -96,6 +117,7 @@ def test_expectation_name():
             6,
             "failure",
             "Column 'col1' has 2 distinct values, expected between 4 and 6.",
+            "long",
         ),
         (
             "pyspark",
@@ -104,6 +126,7 @@ def test_expectation_name():
             6,
             "failure",
             "Column 'col1' has 2 distinct values, expected between 4 and 6.",
+            "long",
         ),
         # Too many distinct values - 5 distinct, expecting [2, 3]
         (
@@ -113,6 +136,7 @@ def test_expectation_name():
             3,
             "failure",
             "Column 'col1' has 5 distinct values, expected between 2 and 3.",
+            "long",
         ),
         (
             "pyspark",
@@ -121,7 +145,52 @@ def test_expectation_name():
             3,
             "failure",
             "Column 'col1' has 5 distinct values, expected between 2 and 3.",
+            "long",
         ),
+        # Data type validation scenarios (consolidated from test_data_type_validation)
+        # String column with mixed values including None
+        ("pandas", ["A", "B", "C", "B", "A", None], 3, 5, "success", None, "string"),
+        ("pyspark", ["A", "B", "C", "B", "A", None], 3, 5, "success", None, "string"),
+        # Float column
+        ("pandas", [1.1, 2.2, 3.3, 2.2, 1.1], 2, 4, "success", None, "double"),
+        ("pyspark", [1.1, 2.2, 3.3, 2.2, 1.1], 2, 4, "success", None, "double"),
+        # Boolean column
+        ("pandas", [True, False, True, False, True], 2, 2, "success", None, "boolean"),
+        ("pyspark", [True, False, True, False, True], 2, 2, "success", None, "boolean"),
+        # Datetime column - pandas with pd.to_datetime
+        (
+            "pandas",
+            pd.to_datetime(["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-02", "2023-01-01"]),
+            2,
+            4,
+            "success",
+            None,
+            "timestamp",
+        ),
+        # Datetime column - pyspark with datetime objects
+        (
+            "pyspark",
+            pd.to_datetime(
+                ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-02", "2023-01-01"]
+            ).to_pydatetime(),
+            2,
+            4,
+            "success",
+            None,
+            "timestamp",
+        ),
+        # Negative integers
+        ("pandas", [-10, -20, -30, -20, -10], 2, 4, "success", None, "long"),
+        ("pyspark", [-10, -20, -30, -20, -10], 2, 4, "success", None, "long"),
+        # Mixed positive and negative integers
+        ("pandas", [-1, 0, 1, 0, -1], 2, 4, "success", None, "long"),
+        ("pyspark", [-1, 0, 1, 0, -1], 2, 4, "success", None, "long"),
+        # Large integers
+        ("pandas", [1000000, 2000000, 3000000, 2000000, 1000000], 2, 4, "success", None, "long"),
+        ("pyspark", [1000000, 2000000, 3000000, 2000000, 1000000], 2, 4, "success", None, "long"),
+        # All null values
+        ("pandas", [None, None, None, None], 0, 1, "success", None, "long"),
+        ("pyspark", [None, None, None, None], 0, 1, "success", None, "long"),
     ],
     ids=[
         "pandas_success",
@@ -144,18 +213,35 @@ def test_expectation_name():
         "pyspark_too_few",
         "pandas_too_many",
         "pyspark_too_many",
+        "pandas_string_with_nulls",
+        "pyspark_string_with_nulls",
+        "pandas_float",
+        "pyspark_float",
+        "pandas_boolean",
+        "pyspark_boolean",
+        "pandas_datetime",
+        "pyspark_datetime",
+        "pandas_negative_integers",
+        "pyspark_negative_integers",
+        "pandas_mixed_positive_negative",
+        "pyspark_mixed_positive_negative",
+        "pandas_large_integers",
+        "pyspark_large_integers",
+        "pandas_all_nulls",
+        "pyspark_all_nulls",
     ],
 )
 def test_expectation_basic_scenarios(
-    df_type, df_data, min_value, max_value, expected_result, expected_message, spark
+    df_type, df_data, min_value, max_value, expected_result, expected_message, data_type, spark
 ):
     """
     Test the expectation for various scenarios across pandas and PySpark DataFrames.
     Tests both direct expectation validation and suite-based validation.
     Covers: success cases, success with nulls, exact boundaries, edge cases (zero range, empty, single value),
-    too few values, and too many values.
+    too few values, too many values, and various data types (string, float, boolean, datetime, negative integers,
+    mixed positive/negative integers, large integers, all nulls).
     """
-    data_frame = create_dataframe(df_type, df_data, "col1", spark)
+    data_frame = create_dataframe(df_type, df_data, "col1", spark, data_type)
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -176,7 +262,7 @@ def test_expectation_basic_scenarios(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=get_df_type_enum(df_type),
+            data_frame_type=str(df_type),
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (
@@ -261,46 +347,6 @@ def test_invalid_parameters(min_value, max_value, expected_error_message):
         )
     assert expected_error_message in str(context.value), (
         f"Expected '{expected_error_message}' in error message: {str(context.value)}"
-    )
-
-
-@pytest.mark.parametrize(
-    "df_data, min_value, max_value, expected_distinct, description",
-    [
-        # String column with mixed values including None
-        (["A", "B", "C", "B", "A", None], 3, 5, 4, "string_with_nulls"),
-        # Float column
-        ([1.1, 2.2, 3.3, 2.2, 1.1], 2, 4, 3, "float"),
-        # Boolean column
-        ([True, False, True, False, True], 2, 2, 2, "boolean"),
-        # Datetime column
-        (
-            pd.to_datetime(["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-02", "2023-01-01"]),
-            2,
-            4,
-            3,
-            "datetime",
-        ),
-    ],
-    ids=["string_with_nulls", "float", "boolean", "datetime"],
-)
-def test_data_type_validation(df_data, min_value, max_value, expected_distinct, description):
-    """
-    Test the expectation with various data types.
-    Verifies that distinct value counting works correctly across different column types.
-    """
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationDistinctColumnValuesBetween",
-        column_name="col1",
-        min_value=min_value,
-        max_value=max_value,
-    )
-
-    data_frame = pd.DataFrame({"col1": df_data})
-    result = expectation.validate(data_frame=data_frame)
-
-    assert isinstance(result, DataFrameExpectationSuccessMessage), (
-        f"Expected DataFrameExpectationSuccessMessage for {description} data type but got: {type(result)}"
     )
 
 

@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -46,11 +45,6 @@ def create_dataframe(df_type, df_data, spark):
     rows = list(zip(*[df_data[col] for col in columns]))
 
     return spark.createDataFrame(rows, schema)
-
-
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
 
 
 @pytest.mark.parametrize(
@@ -144,6 +138,18 @@ def get_df_type_enum(df_type):
             "failure",
             "DataFrame has 4 rows, expected at most 3.",
         ),
+        (
+            "pyspark",
+            {
+                "col1": [1, 2, 3, 4],
+                "col2": ["a", "b", "c", "d"],
+                "col3": [1.1, 2.2, 3.3, 4.4],
+                "col4": [True, False, True, False],
+            },
+            3,
+            "failure",
+            "DataFrame has 4 rows, expected at most 3.",
+        ),
         # Mixed data types - 5 rows <= 10 max
         (
             "pandas",
@@ -158,15 +164,38 @@ def get_df_type_enum(df_type):
             "success",
             None,
         ),
+        (
+            "pyspark",
+            {
+                "int_col": [1, 2, 3, 4, 5],
+                "str_col": ["a", "b", "c", "d", "e"],
+                "float_col": [1.1, 2.2, 3.3, 4.4, 5.5],
+                "bool_col": [True, False, True, False, True],
+                "null_col": [None, None, None, None, None],
+            },
+            10,
+            "success",
+            None,
+        ),
         # High max rows - 3 rows << 1000000 max
         ("pandas", {"col1": [1, 2, 3]}, 1000000, "success", None),
+        ("pyspark", {"col1": [1, 2, 3]}, 1000000, "success", None),
         # Boundary condition 1 - 1 row == 1 max
         ("pandas", {"col1": [1]}, 1, "success", None),
+        ("pyspark", {"col1": [1]}, 1, "success", None),
         # Boundary condition 2 - 2 rows > 1 max
         ("pandas", {"col1": [1, 2]}, 1, "failure", "DataFrame has 2 rows, expected at most 1."),
+        ("pyspark", {"col1": [1, 2]}, 1, "failure", "DataFrame has 2 rows, expected at most 1."),
         # Identical values - 4 rows > 3 max
         (
             "pandas",
+            {"col1": [42, 42, 42, 42], "col2": ["same", "same", "same", "same"]},
+            3,
+            "failure",
+            "DataFrame has 4 rows, expected at most 3.",
+        ),
+        (
+            "pyspark",
             {"col1": [42, 42, 42, 42], "col2": ["same", "same", "same", "same"]},
             3,
             "failure",
@@ -193,11 +222,17 @@ def get_df_type_enum(df_type):
         "pandas_with_nulls",
         "pyspark_with_nulls",
         "pandas_multiple_columns",
+        "pyspark_multiple_columns",
         "pandas_mixed_data_types",
+        "pyspark_mixed_data_types",
         "pandas_high_max_rows",
+        "pyspark_high_max_rows",
         "pandas_boundary_condition_1",
+        "pyspark_boundary_condition_1",
         "pandas_boundary_condition_2",
+        "pyspark_boundary_condition_2",
         "pandas_identical_values",
+        "pyspark_identical_values",
     ],
 )
 def test_expectation_basic_scenarios(
@@ -226,7 +261,7 @@ def test_expectation_basic_scenarios(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=get_df_type_enum(df_type),
+            data_frame_type=str(df_type),
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (

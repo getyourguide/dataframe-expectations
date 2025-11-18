@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -23,11 +22,6 @@ def create_dataframe(df_type, data, column_name, spark):
         return spark.createDataFrame([(item,) for item in data], [column_name])
 
 
-def get_df_type_enum(df_type):
-    """Helper function to get DataFrameType enum."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
-
-
 def test_expectation_name():
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringLengthLessThan",
@@ -40,16 +34,20 @@ def test_expectation_name():
 
 
 @pytest.mark.parametrize(
-    "df_type,data,length,expected_result,expected_violations,test_id",
+    "df_type,data,length,expected_result,expected_violations",
     [
-        # Basic success and violations - pandas
-        ("pandas", ["foo", "bar", "baz"], 5, "success", None, "pandas_basic_success"),
-        ("pandas", ["ab", "cd", "ef"], 3, "success", None, "pandas_success_length_2"),
-        ("pandas", ["abc", "def", "ghi"], 5, "success", None, "pandas_success_length_4"),
-        # Basic success and violations - pyspark
-        ("pyspark", ["foo", "bar", "baz"], 5, "success", None, "pyspark_basic_success"),
-        ("pyspark", ["ab", "cd", "ef"], 3, "success", None, "pyspark_success_length_2"),
-        ("pyspark", ["abc", "def", "ghi"], 5, "success", None, "pyspark_success_length_4"),
+        # Basic success - pandas
+        ("pandas", ["foo", "bar", "baz"], 5, "success", None),
+        # Basic success - pyspark
+        ("pyspark", ["foo", "bar", "baz"], 5, "success", None),
+        # Success length 2 - pandas
+        ("pandas", ["ab", "cd", "ef"], 3, "success", None),
+        # Success length 2 - pyspark
+        ("pyspark", ["ab", "cd", "ef"], 3, "success", None),
+        # Success length 4 - pandas
+        ("pandas", ["abc", "def", "ghi"], 5, "success", None),
+        # Success length 4 - pyspark
+        ("pyspark", ["abc", "def", "ghi"], 5, "success", None),
         # Basic violations - pandas
         (
             "pandas",
@@ -57,23 +55,6 @@ def test_expectation_name():
             5,
             "violations",
             ["foobar", "bazbaz"],
-            "pandas_basic_violations",
-        ),
-        (
-            "pandas",
-            ["testing", "longer", "strings"],
-            5,
-            "violations",
-            ["testing", "longer", "strings"],
-            "pandas_all_violations",
-        ),
-        (
-            "pandas",
-            ["ok", "fail", "good"],
-            3,
-            "violations",
-            ["fail", "good"],
-            "pandas_mixed_violations",
         ),
         # Basic violations - pyspark
         (
@@ -82,158 +63,242 @@ def test_expectation_name():
             5,
             "violations",
             ["foobar", "bazbaz"],
-            "pyspark_basic_violations",
         ),
+        # All violations - pandas
+        (
+            "pandas",
+            ["testing", "longer", "strings"],
+            5,
+            "violations",
+            ["testing", "longer", "strings"],
+        ),
+        # All violations - pyspark
         (
             "pyspark",
             ["testing", "longer", "strings"],
             5,
             "violations",
             ["testing", "longer", "strings"],
-            "pyspark_all_violations",
         ),
-        # Boundary conditions - pandas (exact length equals threshold)
+        # Mixed violations - pandas
+        (
+            "pandas",
+            ["ok", "fail", "good"],
+            3,
+            "violations",
+            ["fail", "good"],
+        ),
+        # Mixed violations - pyspark
+        (
+            "pyspark",
+            ["ok", "fail", "good"],
+            3,
+            "violations",
+            ["fail", "good"],
+        ),
+        # Boundary exact violation - pandas
         (
             "pandas",
             ["test", "exam", "demo"],
             4,
             "violations",
             ["test", "exam", "demo"],
-            "pandas_boundary_exact_violation",
         ),
-        ("pandas", ["tes", "exa", "dem"], 4, "success", None, "pandas_boundary_success"),
-        # Boundary conditions - pyspark
+        # Boundary exact violation - pyspark
         (
             "pyspark",
             ["test", "exam", "demo"],
             4,
             "violations",
             ["test", "exam", "demo"],
-            "pyspark_boundary_exact_violation",
         ),
-        ("pyspark", ["tes", "exa", "dem"], 4, "success", None, "pyspark_boundary_success"),
-        # Zero length threshold - pandas
-        ("pandas", ["", "", ""], 1, "success", None, "pandas_zero_length_success"),
+        # Boundary success - pandas
+        ("pandas", ["tes", "exa", "dem"], 4, "success", None),
+        # Boundary success - pyspark
+        ("pyspark", ["tes", "exa", "dem"], 4, "success", None),
+        # Zero length success - pandas
+        ("pandas", ["", "", ""], 1, "success", None),
+        # Zero length success - pyspark
+        ("pyspark", ["", "", ""], 1, "success", None),
+        # Zero length violation - pandas
         (
             "pandas",
             ["a", "b", "c"],
             1,
             "violations",
             ["a", "b", "c"],
-            "pandas_zero_length_violation",
         ),
-        # Zero length threshold - pyspark
-        ("pyspark", ["", "", ""], 1, "success", None, "pyspark_zero_length_success"),
-        # Single character strings - pandas
-        ("pandas", ["a", "b", "c"], 2, "success", None, "pandas_single_char_success"),
+        # Zero length violation - pyspark
+        (
+            "pyspark",
+            ["a", "b", "c"],
+            1,
+            "violations",
+            ["a", "b", "c"],
+        ),
+        # Single char success - pandas
+        ("pandas", ["a", "b", "c"], 2, "success", None),
+        # Single char success - pyspark
+        ("pyspark", ["a", "b", "c"], 2, "success", None),
+        # Single char violations - pandas
         (
             "pandas",
             ["a", "b", "c"],
             1,
             "violations",
             ["a", "b", "c"],
-            "pandas_single_char_violations",
         ),
-        # Single character strings - pyspark
-        ("pyspark", ["a", "b", "c"], 2, "success", None, "pyspark_single_char_success"),
+        # Single char violations - pyspark
+        (
+            "pyspark",
+            ["a", "b", "c"],
+            1,
+            "violations",
+            ["a", "b", "c"],
+        ),
         # Empty strings - pandas
-        ("pandas", ["", "", ""], 5, "success", None, "pandas_empty_string_success"),
+        ("pandas", ["", "", ""], 5, "success", None),
         # Empty strings - pyspark
-        ("pyspark", ["", "", ""], 5, "success", None, "pyspark_empty_string_success"),
-        # Whitespace handling - pandas
-        ("pandas", ["  ", " ", ""], 3, "success", None, "pandas_whitespace_success"),
-        ("pandas", ["a b", "a", "ab"], 4, "success", None, "pandas_whitespace_in_text"),
+        ("pyspark", ["", "", ""], 5, "success", None),
+        # Whitespace success - pandas
+        ("pandas", ["  ", " ", ""], 3, "success", None),
+        # Whitespace success - pyspark
+        ("pyspark", ["  ", " ", ""], 3, "success", None),
+        # Whitespace in text - pandas
+        ("pandas", ["a b", "a", "ab"], 4, "success", None),
+        # Whitespace in text - pyspark
+        ("pyspark", ["a b", "a", "ab"], 4, "success", None),
+        # Whitespace violations - pandas
         (
             "pandas",
             ["    ", "     ", "      "],
             3,
             "violations",
             ["    ", "     ", "      "],
-            "pandas_whitespace_violations",
         ),
-        # Whitespace handling - pyspark
-        ("pyspark", ["  ", " ", ""], 3, "success", None, "pyspark_whitespace_success"),
-        ("pyspark", ["a b", "a", "ab"], 4, "success", None, "pyspark_whitespace_in_text"),
-        # Special characters - pandas
-        ("pandas", ["@#$", "!^&", "*()"], 4, "success", None, "pandas_special_chars_success"),
-        ("pandas", ["test@", "ex!m", "de#o"], 6, "success", None, "pandas_special_chars_in_text"),
+        # Whitespace violations - pyspark
+        (
+            "pyspark",
+            ["    ", "     ", "      "],
+            3,
+            "violations",
+            ["    ", "     ", "      "],
+        ),
+        # Special chars success - pandas
+        ("pandas", ["@#$", "!^&", "*()"], 4, "success", None),
+        # Special chars success - pyspark
+        ("pyspark", ["@#$", "!^&", "*()"], 4, "success", None),
+        # Special chars in text - pandas
+        ("pandas", ["test@", "ex!m", "de#o"], 6, "success", None),
+        # Special chars in text - pyspark
+        ("pyspark", ["test@", "ex!m", "de#o"], 6, "success", None),
+        # Special chars violations - pandas
         (
             "pandas",
             ["@#$%^", "&*()_", "+=-[]"],
             4,
             "violations",
             ["@#$%^", "&*()_", "+=-[]"],
-            "pandas_special_chars_violations",
         ),
-        # Special characters - pyspark
-        ("pyspark", ["@#$", "!^&", "*()"], 4, "success", None, "pyspark_special_chars_success"),
-        ("pyspark", ["test@", "ex!m", "de#o"], 6, "success", None, "pyspark_special_chars_in_text"),
-        # Numbers in strings - pandas
-        ("pandas", ["123", "456", "789"], 4, "success", None, "pandas_numbers_success"),
-        ("pandas", ["v1.0", "v2.1", "v3.5"], 5, "success", None, "pandas_numbers_versions"),
+        # Special chars violations - pyspark
+        (
+            "pyspark",
+            ["@#$%^", "&*()_", "+=-[]"],
+            4,
+            "violations",
+            ["@#$%^", "&*()_", "+=-[]"],
+        ),
+        # Numbers success - pandas
+        ("pandas", ["123", "456", "789"], 4, "success", None),
+        # Numbers success - pyspark
+        ("pyspark", ["123", "456", "789"], 4, "success", None),
+        # Numbers versions - pandas
+        ("pandas", ["v1.0", "v2.1", "v3.5"], 5, "success", None),
+        # Numbers versions - pyspark
+        ("pyspark", ["v1.0", "v2.1", "v3.5"], 5, "success", None),
+        # Numbers violations - pandas
         (
             "pandas",
             ["12345", "67890", "11111"],
             4,
             "violations",
             ["12345", "67890", "11111"],
-            "pandas_numbers_violations",
         ),
-        # Numbers in strings - pyspark
-        ("pyspark", ["123", "456", "789"], 4, "success", None, "pyspark_numbers_success"),
-        ("pyspark", ["v1.0", "v2.1", "v3.5"], 5, "success", None, "pyspark_numbers_versions"),
-        # Long strings - pandas
-        ("pandas", ["a" * 9, "b" * 8, "c" * 7], 11, "success", None, "pandas_length_10_success"),
+        # Numbers violations - pyspark
+        (
+            "pyspark",
+            ["12345", "67890", "11111"],
+            4,
+            "violations",
+            ["12345", "67890", "11111"],
+        ),
+        # Length 10 success - pandas
+        ("pandas", ["a" * 9, "b" * 8, "c" * 7], 11, "success", None),
+        # Length 10 success - pyspark
+        ("pyspark", ["a" * 9, "b" * 8, "c" * 7], 11, "success", None),
+        # Length 20 success - pandas
         (
             "pandas",
             ["test " * 3, "demo " * 3, "exam " * 3],
             21,
             "success",
             None,
-            "pandas_length_20_success",
         ),
+        # Length 20 success - pyspark
+        (
+            "pyspark",
+            ["test " * 3, "demo " * 3, "exam " * 3],
+            21,
+            "success",
+            None,
+        ),
+        # Length 10 violation - pandas
         (
             "pandas",
             ["x" * 11, "y" * 12, "z" * 13],
             10,
             "violations",
             ["x" * 11, "y" * 12, "z" * 13],
-            "pandas_length_10_violation",
         ),
-        # Long strings - pyspark
-        ("pyspark", ["a" * 9, "b" * 8, "c" * 7], 11, "success", None, "pyspark_length_10_success"),
+        # Length 10 violation - pyspark
         (
             "pyspark",
-            ["test " * 3, "demo " * 3, "exam " * 3],
-            21,
-            "success",
-            None,
-            "pyspark_length_20_success",
+            ["x" * 11, "y" * 12, "z" * 13],
+            10,
+            "violations",
+            ["x" * 11, "y" * 12, "z" * 13],
         ),
-        # Very long strings - pandas
-        (
-            "pyspark",
-            ["a" * 99, "b" * 98, "c" * 97],
-            101,
-            "success",
-            None,
-            "pyspark_long_strings_success",
-        ),
+        # Long strings success - pandas
         (
             "pandas",
             ["x" * 99, "y" * 98, "z" * 97],
             101,
             "success",
             None,
-            "pandas_long_strings_success",
         ),
+        # Long strings success - pyspark
+        (
+            "pyspark",
+            ["a" * 99, "b" * 98, "c" * 97],
+            101,
+            "success",
+            None,
+        ),
+        # Long strings violation - pandas
         (
             "pandas",
             ["x" * 101, "y" * 102, "z" * 103],
             100,
             "violations",
             ["x" * 101, "y" * 102, "z" * 103],
-            "pandas_long_strings_violation",
+        ),
+        # Long strings violation - pyspark
+        (
+            "pyspark",
+            ["x" * 101, "y" * 102, "z" * 103],
+            100,
+            "violations",
+            ["x" * 101, "y" * 102, "z" * 103],
         ),
         # Mixed violations - pandas
         (
@@ -242,7 +307,6 @@ def test_expectation_name():
             4,
             "violations",
             ["abcd"],
-            "pandas_mixed_short_and_exact",
         ),
         # Mixed violations - pyspark
         (
@@ -251,12 +315,69 @@ def test_expectation_name():
             4,
             "violations",
             ["abcd"],
-            "pyspark_mixed_short_and_exact",
         ),
+    ],
+    ids=[
+        "pandas_basic_success",
+        "pyspark_basic_success",
+        "pandas_success_length_2",
+        "pyspark_success_length_2",
+        "pandas_success_length_4",
+        "pyspark_success_length_4",
+        "pandas_basic_violations",
+        "pyspark_basic_violations",
+        "pandas_all_violations",
+        "pyspark_all_violations",
+        "pandas_mixed_violations",
+        "pyspark_mixed_violations",
+        "pandas_boundary_exact_violation",
+        "pyspark_boundary_exact_violation",
+        "pandas_boundary_success",
+        "pyspark_boundary_success",
+        "pandas_zero_length_success",
+        "pyspark_zero_length_success",
+        "pandas_zero_length_violation",
+        "pyspark_zero_length_violation",
+        "pandas_single_char_success",
+        "pyspark_single_char_success",
+        "pandas_single_char_violations",
+        "pyspark_single_char_violations",
+        "pandas_empty_string_success",
+        "pyspark_empty_string_success",
+        "pandas_whitespace_success",
+        "pyspark_whitespace_success",
+        "pandas_whitespace_in_text",
+        "pyspark_whitespace_in_text",
+        "pandas_whitespace_violations",
+        "pyspark_whitespace_violations",
+        "pandas_special_chars_success",
+        "pyspark_special_chars_success",
+        "pandas_special_chars_in_text",
+        "pyspark_special_chars_in_text",
+        "pandas_special_chars_violations",
+        "pyspark_special_chars_violations",
+        "pandas_numbers_success",
+        "pyspark_numbers_success",
+        "pandas_numbers_versions",
+        "pyspark_numbers_versions",
+        "pandas_numbers_violations",
+        "pyspark_numbers_violations",
+        "pandas_length_10_success",
+        "pyspark_length_10_success",
+        "pandas_length_20_success",
+        "pyspark_length_20_success",
+        "pandas_length_10_violation",
+        "pyspark_length_10_violation",
+        "pandas_long_strings_success",
+        "pyspark_long_strings_success",
+        "pandas_long_strings_violation",
+        "pyspark_long_strings_violation",
+        "pandas_mixed_short_and_exact",
+        "pyspark_mixed_short_and_exact",
     ],
 )
 def test_expectation_basic_scenarios(
-    df_type, data, length, expected_result, expected_violations, test_id, spark
+    df_type, data, length, expected_result, expected_violations, spark
 ):
     """Test various scenarios for ExpectationStringLengthLessThan expectation."""
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -271,14 +392,14 @@ def test_expectation_basic_scenarios(
     if expected_result == "success":
         assert str(result) == str(
             DataFrameExpectationSuccessMessage(expectation_name="ExpectationStringLengthLessThan")
-        ), f"Test {test_id}: Expected success message but got: {result}"
+        ), f"Expected success message but got: {result}"
 
         # Also test with suite
         expectations_suite = DataFrameExpectationsSuite().expect_string_length_less_than(
             column_name="col1", length=length
         )
         suite_result = expectations_suite.build().run(data_frame=data_frame)
-        assert suite_result is None, f"Test {test_id}: Expected no exceptions to be raised"
+        assert suite_result is None, "Expected no exceptions to be raised"
     else:  # violations
         violations_df = create_dataframe(df_type, expected_violations, "col1", spark)
         expected_message = f"Found {len(expected_violations)} row(s) where 'col1' length is not less than {length}."
@@ -286,12 +407,12 @@ def test_expectation_basic_scenarios(
         assert str(result) == str(
             DataFrameExpectationFailureMessage(
                 expectation_str=str(expectation),
-                data_frame_type=get_df_type_enum(df_type),
+                data_frame_type=str(df_type),
                 violations_data_frame=violations_df,
                 message=expected_message,
                 limit_violations=5,
             )
-        ), f"Test {test_id}: Expected failure message but got: {result}"
+        ), f"Expected failure message but got: {result}"
 
         # Also test with suite
         expectations_suite = DataFrameExpectationsSuite().expect_string_length_less_than(
@@ -315,7 +436,7 @@ def test_column_missing_error(df_type, spark):
 
     expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=get_df_type_enum(df_type),
+        data_frame_type=str(df_type),
         message="Column 'col1' does not exist in the DataFrame.",
     )
     assert str(result) == str(expected_failure_message), (

@@ -2,7 +2,6 @@ import pytest
 import pandas as pd
 from pyspark.sql.types import IntegerType, StructField, StructType
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -33,11 +32,6 @@ def create_dataframe(df_type, df_data, spark):
     return spark.createDataFrame(rows, columns)
 
 
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
-
-
 def test_expectation_name():
     """Test that the expectation name is correctly returned."""
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -61,10 +55,28 @@ def test_expectation_name():
             None,
             None,
         ),
+        # PySpark success - specific columns
+        (
+            "pyspark",
+            ([(1, 10, 100), (2, 20, 100), (3, 30, 100), (1, 20, 100)], ["col1", "col2", "col3"]),
+            ["col1", "col2"],
+            "success",
+            None,
+            None,
+        ),
         # Pandas success - all columns (empty list)
         (
             "pandas",
             {"col1": [1, 2, 3], "col2": [10, 20, 30], "col3": [100, 200, 300]},
+            [],
+            "success",
+            None,
+            None,
+        ),
+        # PySpark success - all columns
+        (
+            "pyspark",
+            ([(1, 10, 100), (2, 20, 200), (3, 30, 300)], ["col1", "col2", "col3"]),
             [],
             "success",
             None,
@@ -79,73 +91,19 @@ def test_expectation_name():
             None,
             None,
         ),
-        # Pandas success - single row
-        (
-            "pandas",
-            {"col1": [1]},
-            ["col1"],
-            "success",
-            None,
-            None,
-        ),
-        # Pandas failure - specific columns with duplicates
-        (
-            "pandas",
-            {"col1": [1, 2, 1, 3], "col2": [10, 20, 10, 30], "col3": [100, 200, 300, 400]},
-            ["col1", "col2"],
-            "failure",
-            pd.DataFrame({"col1": [1], "col2": [10], "#duplicates": [2]}),
-            "Found 2 duplicate row(s). duplicate rows found for columns ['col1', 'col2']",
-        ),
-        # Pandas failure - all columns with duplicates
-        (
-            "pandas",
-            {"col1": [1, 2, 1], "col2": [10, 20, 10], "col3": [100, 200, 100]},
-            [],
-            "failure",
-            pd.DataFrame({"col1": [1], "col2": [10], "col3": [100], "#duplicates": [2]}),
-            "Found 2 duplicate row(s). duplicate rows found",
-        ),
-        # Pandas failure - multiple duplicate groups
-        (
-            "pandas",
-            {"col1": [1, 2, 1, 3, 2, 3], "col2": [10, 20, 30, 40, 50, 60]},
-            ["col1"],
-            "failure",
-            pd.DataFrame({"col1": [1, 2, 3], "#duplicates": [2, 2, 2]}),
-            "Found 6 duplicate row(s). duplicate rows found for columns ['col1']",
-        ),
-        # Pandas failure - with nulls (nulls counted as duplicates)
-        (
-            "pandas",
-            {"col1": [1, None, 1, None], "col2": [10, None, 20, None]},
-            ["col1", "col2"],
-            "failure",
-            pd.DataFrame({"col1": [None], "col2": [None], "#duplicates": [2]}),
-            "Found 2 duplicate row(s). duplicate rows found for columns ['col1', 'col2']",
-        ),
-        # PySpark success - specific columns
-        (
-            "pyspark",
-            ([(1, 10, 100), (2, 20, 100), (3, 30, 100), (1, 20, 100)], ["col1", "col2", "col3"]),
-            ["col1", "col2"],
-            "success",
-            None,
-            None,
-        ),
-        # PySpark success - all columns
-        (
-            "pyspark",
-            ([(1, 10, 100), (2, 20, 200), (3, 30, 300)], ["col1", "col2", "col3"]),
-            [],
-            "success",
-            None,
-            None,
-        ),
         # PySpark success - empty DataFrame
         (
             "pyspark",
             ([], "col1: int"),
+            ["col1"],
+            "success",
+            None,
+            None,
+        ),
+        # Pandas success - single row
+        (
+            "pandas",
+            {"col1": [1]},
             ["col1"],
             "success",
             None,
@@ -160,6 +118,15 @@ def test_expectation_name():
             None,
             None,
         ),
+        # Pandas failure - specific columns with duplicates
+        (
+            "pandas",
+            {"col1": [1, 2, 1, 3], "col2": [10, 20, 10, 30], "col3": [100, 200, 300, 400]},
+            ["col1", "col2"],
+            "failure",
+            pd.DataFrame({"col1": [1], "col2": [10], "#duplicates": [2]}),
+            "Found 2 duplicate row(s). duplicate rows found for columns ['col1', 'col2']",
+        ),
         # PySpark failure - specific columns with duplicates
         (
             "pyspark",
@@ -168,6 +135,15 @@ def test_expectation_name():
             "failure",
             ([(1, 10, 2)], ["col1", "col2", "#duplicates"]),
             "Found 2 duplicate row(s). duplicate rows found for columns ['col1', 'col2']",
+        ),
+        # Pandas failure - all columns with duplicates
+        (
+            "pandas",
+            {"col1": [1, 2, 1], "col2": [10, 20, 10], "col3": [100, 200, 100]},
+            [],
+            "failure",
+            pd.DataFrame({"col1": [1], "col2": [10], "col3": [100], "#duplicates": [2]}),
+            "Found 2 duplicate row(s). duplicate rows found",
         ),
         # PySpark failure - all columns with duplicates
         (
@@ -178,6 +154,15 @@ def test_expectation_name():
             ([(1, 10, 100, 2)], ["col1", "col2", "col3", "#duplicates"]),
             "Found 2 duplicate row(s). duplicate rows found",
         ),
+        # Pandas failure - multiple duplicate groups
+        (
+            "pandas",
+            {"col1": [1, 2, 1, 3, 2, 3], "col2": [10, 20, 30, 40, 50, 60]},
+            ["col1"],
+            "failure",
+            pd.DataFrame({"col1": [1, 2, 3], "#duplicates": [2, 2, 2]}),
+            "Found 6 duplicate row(s). duplicate rows found for columns ['col1']",
+        ),
         # PySpark failure - multiple duplicate groups
         (
             "pyspark",
@@ -186,6 +171,15 @@ def test_expectation_name():
             "failure",
             ([(1, 2), (2, 2), (3, 2)], ["col1", "#duplicates"]),
             "Found 6 duplicate row(s). duplicate rows found for columns ['col1']",
+        ),
+        # Pandas failure - with nulls (nulls counted as duplicates)
+        (
+            "pandas",
+            {"col1": [1, None, 1, None], "col2": [10, None, 20, None]},
+            ["col1", "col2"],
+            "failure",
+            pd.DataFrame({"col1": [None], "col2": [None], "#duplicates": [2]}),
+            "Found 2 duplicate row(s). duplicate rows found for columns ['col1', 'col2']",
         ),
         # PySpark failure - with nulls
         (
@@ -208,20 +202,20 @@ def test_expectation_name():
     ],
     ids=[
         "pandas_success_specific_columns",
-        "pandas_success_all_columns",
-        "pandas_empty",
-        "pandas_single_row",
-        "pandas_violations_specific_columns",
-        "pandas_violations_all_columns",
-        "pandas_multiple_duplicate_groups",
-        "pandas_with_nulls",
         "pyspark_success_specific_columns",
+        "pandas_success_all_columns",
         "pyspark_success_all_columns",
+        "pandas_empty",
         "pyspark_empty",
+        "pandas_single_row",
         "pyspark_single_row",
+        "pandas_violations_specific_columns",
         "pyspark_violations_specific_columns",
+        "pandas_violations_all_columns",
         "pyspark_violations_all_columns",
+        "pandas_multiple_duplicate_groups",
         "pyspark_multiple_duplicate_groups",
+        "pandas_with_nulls",
         "pyspark_with_nulls",
     ],
 )
@@ -264,7 +258,7 @@ def test_expectation_basic_scenarios(
 
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=get_df_type_enum(df_type),
+            data_frame_type=str(df_type),
             violations_data_frame=violations_df,
             message=expected_message,
             limit_violations=5,
@@ -308,7 +302,7 @@ def test_column_missing_error(df_type, spark):
     result = expectation.validate(data_frame=data_frame)
     expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=get_df_type_enum(df_type),
+        data_frame_type=str(df_type),
         message="Column 'nonexistent_col' does not exist in the DataFrame.",
     )
     assert str(result) == str(expected_failure_message), (

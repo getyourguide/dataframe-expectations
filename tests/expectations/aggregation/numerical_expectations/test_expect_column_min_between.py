@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
+from pyspark.sql.types import DoubleType, StructField, StructType
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -16,25 +16,25 @@ from dataframe_expectations.result_message import (
 
 
 def create_dataframe(df_type, data, column_name, spark):
-    """Helper function to create pandas or pyspark DataFrame."""
+    """Create a pandas or PySpark DataFrame."""
     if df_type == "pandas":
         return pd.DataFrame({column_name: data})
-    else:  # pyspark
-        from pyspark.sql.types import DoubleType, StructField, StructType
-
-        if not data:  # Empty DataFrame
+    elif df_type == "pyspark":
+        # Handle empty or all-null data with explicit schema
+        if not data or all(v is None for v in data):
             schema = StructType([StructField(column_name, DoubleType(), True)])
-            return spark.createDataFrame([], schema)
-        # Handle all nulls case with explicit schema
-        if all(val is None for val in data):
+            return spark.createDataFrame([[v] for v in data], schema=schema)
+
+        # Use explicit DoubleType schema if the data contains any float values
+        # This ensures consistent type handling for mixed int/float data
+        has_float = any(isinstance(v, float) for v in data if v is not None)
+        if has_float:
+            float_data = [[float(v) if v is not None else None] for v in data]
             schema = StructType([StructField(column_name, DoubleType(), True)])
-            return spark.createDataFrame([{column_name: None} for _ in data], schema)
-        return spark.createDataFrame([(val,) for val in data], [column_name])
-
-
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
+            return spark.createDataFrame(float_data, schema=schema)
+        else:
+            # For pure integer data, let PySpark infer the schema
+            return spark.createDataFrame([[v] for v in data], schema=[column_name])
 
 
 def test_expectation_name():
@@ -76,90 +76,76 @@ def test_expectation_description():
 @pytest.mark.parametrize(
     "df_type, data, min_value, max_value, should_succeed, expected_message",
     [
-        # Pandas success scenarios
-        ("pandas", [20, 25, 30, 35], 15, 25, True, None),  # min = 20, basic success
-        ("pandas", [25], 20, 30, True, None),  # min = 25, single row
-        ("pandas", [-20, -15, -10, -5], -25, -15, True, None),  # min = -20, negative values
-        ("pandas", [1.1, 2.5, 3.7, 3.8], 1.0, 1.5, True, None),  # min = 1.1, float values
-        ("pandas", [25, 25, 25, 25], 24, 26, True, None),  # min = 25, identical values
-        ("pandas", [20, 25.5, 30, 37], 15, 25, True, None),  # min = 20, mixed data types
-        ("pandas", [-5, 0, 0, 2], -10, -1, True, None),  # min = -5, with zeros
-        ("pandas", [20, None, 35, None, 25], 15, 25, True, None),  # min = 20, with nulls
-        # PySpark success scenarios
-        ("pyspark", [20, 25, 30, 35], 15, 25, True, None),  # min = 20, basic success
-        ("pyspark", [25], 20, 30, True, None),  # min = 25, single row
-        ("pyspark", [-20, -15, -10, -5], -25, -15, True, None),  # min = -20, negative values
-        ("pyspark", [20, None, 35, None, 25], 15, 25, True, None),  # min = 20, with nulls
-        # Boundary scenarios
-        ("pandas", [20, 25, 30, 35], 20, 25, True, None),  # min = 20, exact minimum
-        ("pandas", [20, 25, 30, 35], 15, 20, True, None),  # min = 20, exact maximum
-        ("pyspark", [20, 25, 30, 35], 20, 25, True, None),  # min = 20, exact minimum
-        ("pyspark", [20, 25, 30, 35], 15, 20, True, None),  # min = 20, exact maximum
-        # Minimum calculation specifics
-        ("pandas", [100, 50, 75, 25], 24, 26, True, None),  # min = 25, mixed order
-        ("pandas", [0, 1, 2, 3], -0.1, 0.1, True, None),  # min = 0, minimum is zero
-        ("pandas", [-10, -5, -1, -20], -20.1, -19.9, True, None),  # min = -20, with negatives
-        ("pandas", [1.001, 1.002, 1.003], 1.0, 1.002, True, None),  # min = 1.001, small differences
-        ("pandas", [1e6, 1e5, 1e4], 1e4 - 100, 1e4 + 100, True, None),  # min = 1e4, large numbers
-        ("pandas", [1e-6, 1e-5, 1e-4], 1e-7, 1e-5, True, None),  # min = 1e-6, very small numbers
-        ("pyspark", [100, 50, 75, 25], 24, 26, True, None),  # min = 25, mixed order
-        ("pyspark", [0, 1, 2, 3], -0.1, 0.1, True, None),  # min = 0, minimum is zero
-        ("pyspark", [-10, -5, -1, -20], -20.1, -19.9, True, None),  # min = -20, with negatives
-        (
-            "pyspark",
-            [1.001, 1.002, 1.003],
-            1.0,
-            1.002,
-            True,
-            None,
-        ),  # min = 1.001, small differences
-        ("pyspark", [1e6, 1e5, 1e4], 1e4 - 100, 1e4 + 100, True, None),  # min = 1e4, large numbers
-        ("pyspark", [1e-6, 1e-5, 1e-4], 1e-7, 1e-5, True, None),  # min = 1e-6, very small numbers
-        # Outlier impact scenarios (minimum is sensitive to outliers)
-        (
-            "pandas",
-            [1, 2, 3, -1000],
-            -1100,
-            -900,
-            True,
-            None,
-        ),  # extreme low outlier becomes minimum
-        (
-            "pandas",
-            [100, 200, 300, 50],
-            40,
-            60,
-            True,
-            None,
-        ),  # outlier changes minimum significantly
-        ("pandas", [1.5, 2.0, 2.5, 0.1], 0.05, 0.15, True, None),  # small outlier affects minimum
-        (
-            "pyspark",
-            [1, 2, 3, -1000],
-            -1100,
-            -900,
-            True,
-            None,
-        ),  # extreme low outlier becomes minimum
-        (
-            "pyspark",
-            [100, 200, 300, 50],
-            40,
-            60,
-            True,
-            None,
-        ),  # outlier changes minimum significantly
-        ("pyspark", [1.5, 2.0, 2.5, 0.1], 0.05, 0.15, True, None),  # small outlier affects minimum
+        # Basic success scenarios
+        ("pandas", [20, 25, 30, 35], 15, 25, True, None),  # min = 20
+        ("pyspark", [20, 25, 30, 35], 15, 25, True, None),  # min = 20
+        # Single row scenarios
+        ("pandas", [25], 20, 30, True, None),  # min = 25
+        ("pyspark", [25], 20, 30, True, None),  # min = 25
+        # Negative value scenarios
+        ("pandas", [-20, -15, -10, -5], -25, -15, True, None),  # min = -20
+        ("pyspark", [-20, -15, -10, -5], -25, -15, True, None),  # min = -20
+        # Float value scenarios
+        ("pandas", [1.1, 2.5, 3.7, 3.8], 1.0, 1.5, True, None),  # min = 1.1
+        ("pyspark", [1.1, 2.5, 3.7, 3.8], 1.0, 1.5, True, None),  # min = 1.1
         # Identical value scenarios
-        ("pandas", [42, 42, 42, 42], 41.9, 42.1, True, None),  # integer repetition
-        ("pandas", [3.14, 3.14, 3.14], 3.13, 3.15, True, None),  # float repetition
-        ("pandas", [-7, -7, -7, -7, -7], -7.1, -6.9, True, None),  # negative repetition
-        ("pandas", [0, 0, 0], -0.1, 0.1, True, None),  # zero repetition
-        ("pyspark", [42, 42, 42, 42], 41.9, 42.1, True, None),  # integer repetition
-        ("pyspark", [3.14, 3.14, 3.14], 3.13, 3.15, True, None),  # float repetition
-        ("pyspark", [-7, -7, -7, -7, -7], -7.1, -6.9, True, None),  # negative repetition
-        ("pyspark", [0, 0, 0], -0.1, 0.1, True, None),  # zero repetition
-        # Pandas failure scenarios
+        ("pandas", [25, 25, 25, 25], 24, 26, True, None),  # min = 25
+        ("pyspark", [25, 25, 25, 25], 24, 26, True, None),  # min = 25
+        # Mixed type scenarios
+        ("pandas", [20, 25.5, 30, 37], 15, 25, True, None),  # min = 20
+        ("pyspark", [20, 25.5, 30, 37], 15, 25, True, None),  # min = 20
+        # Zero scenarios
+        ("pandas", [-5, 0, 0, 2], -10, -1, True, None),  # min = -5
+        ("pyspark", [-5, 0, 0, 2], -10, -1, True, None),  # min = -5
+        # Null scenarios
+        ("pandas", [20, None, 35, None, 25], 15, 25, True, None),  # min = 20
+        ("pyspark", [20, None, 35, None, 25], 15, 25, True, None),  # min = 20
+        # Boundary scenarios - exact minimum
+        ("pandas", [20, 25, 30, 35], 20, 25, True, None),  # min = 20
+        ("pyspark", [20, 25, 30, 35], 20, 25, True, None),  # min = 20
+        # Boundary scenarios - exact maximum
+        ("pandas", [20, 25, 30, 35], 15, 20, True, None),  # min = 20
+        ("pyspark", [20, 25, 30, 35], 15, 20, True, None),  # min = 20
+        # Minimum calculation - mixed order
+        ("pandas", [100, 50, 75, 25], 24, 26, True, None),  # min = 25
+        ("pyspark", [100, 50, 75, 25], 24, 26, True, None),  # min = 25
+        # Minimum calculation - zero
+        ("pandas", [0, 1, 2, 3], -0.1, 0.1, True, None),  # min = 0
+        ("pyspark", [0, 1, 2, 3], -0.1, 0.1, True, None),  # min = 0
+        # Minimum calculation - negative
+        ("pandas", [-10, -5, -1, -20], -20.1, -19.9, True, None),  # min = -20
+        ("pyspark", [-10, -5, -1, -20], -20.1, -19.9, True, None),  # min = -20
+        # Minimum calculation - small differences
+        ("pandas", [1.001, 1.002, 1.003], 1.0, 1.002, True, None),  # min = 1.001
+        ("pyspark", [1.001, 1.002, 1.003], 1.0, 1.002, True, None),  # min = 1.001
+        # Minimum calculation - large numbers
+        ("pandas", [1e6, 1e5, 1e4], 1e4 - 100, 1e4 + 100, True, None),  # min = 1e4
+        ("pyspark", [1e6, 1e5, 1e4], 1e4 - 100, 1e4 + 100, True, None),  # min = 1e4
+        # Minimum calculation - very small numbers
+        ("pandas", [1e-6, 1e-5, 1e-4], 1e-7, 1e-5, True, None),  # min = 1e-6
+        ("pyspark", [1e-6, 1e-5, 1e-4], 1e-7, 1e-5, True, None),  # min = 1e-6
+        # Outlier impact - extreme low outlier
+        ("pandas", [1, 2, 3, -1000], -1100, -900, True, None),
+        ("pyspark", [1, 2, 3, -1000], -1100, -900, True, None),
+        # Outlier impact - significant outlier
+        ("pandas", [100, 200, 300, 50], 40, 60, True, None),
+        ("pyspark", [100, 200, 300, 50], 40, 60, True, None),
+        # Outlier impact - small outlier
+        ("pandas", [1.5, 2.0, 2.5, 0.1], 0.05, 0.15, True, None),
+        ("pyspark", [1.5, 2.0, 2.5, 0.1], 0.05, 0.15, True, None),
+        # Identical values - integer repetition
+        ("pandas", [42, 42, 42, 42], 41.9, 42.1, True, None),
+        ("pyspark", [42, 42, 42, 42], 41.9, 42.1, True, None),
+        # Identical values - float repetition
+        ("pandas", [3.14, 3.14, 3.14], 3.13, 3.15, True, None),
+        ("pyspark", [3.14, 3.14, 3.14], 3.13, 3.15, True, None),
+        # Identical values - negative repetition
+        ("pandas", [-7, -7, -7, -7, -7], -7.1, -6.9, True, None),
+        ("pyspark", [-7, -7, -7, -7, -7], -7.1, -6.9, True, None),
+        # Identical values - zero repetition
+        ("pandas", [0, 0, 0], -0.1, 0.1, True, None),
+        ("pyspark", [0, 0, 0], -0.1, 0.1, True, None),
+        # Failure scenarios - minimum too low
         (
             "pandas",
             [20, 25, 30, 35],
@@ -169,6 +155,15 @@ def test_expectation_description():
             "Column 'col1' minimum value 20 is not between 25 and 35.",
         ),
         (
+            "pyspark",
+            [20, 25, 30, 35],
+            25,
+            35,
+            False,
+            "Column 'col1' minimum value 20 is not between 25 and 35.",
+        ),
+        # Failure scenarios - minimum too high
+        (
             "pandas",
             [20, 25, 30, 35],
             10,
@@ -176,27 +171,76 @@ def test_expectation_description():
             False,
             "Column 'col1' minimum value 20 is not between 10 and 15.",
         ),
+        (
+            "pyspark",
+            [20, 25, 30, 35],
+            10,
+            15,
+            False,
+            "Column 'col1' minimum value 20 is not between 10 and 15.",
+        ),
+        # Failure scenarios - all nulls
         ("pandas", [None, None, None], 15, 25, False, "Column 'col1' contains only null values."),
-        ("pandas", [], 15, 25, False, "Column 'col1' contains only null values."),
-        # PySpark failure scenarios
-        (
-            "pyspark",
-            [20, 25, 30, 35],
-            25,
-            35,
-            False,
-            "Column 'col1' minimum value 20 is not between 25 and 35.",
-        ),
-        (
-            "pyspark",
-            [20, 25, 30, 35],
-            10,
-            15,
-            False,
-            "Column 'col1' minimum value 20 is not between 10 and 15.",
-        ),
         ("pyspark", [None, None, None], 15, 25, False, "Column 'col1' contains only null values."),
+        # Failure scenarios - empty
+        ("pandas", [], 15, 25, False, "Column 'col1' contains only null values."),
         ("pyspark", [], 15, 25, False, "Column 'col1' contains only null values."),
+    ],
+    ids=[
+        "pandas_basic_success",
+        "pyspark_basic_success",
+        "pandas_single_row",
+        "pyspark_single_row",
+        "pandas_negative_values",
+        "pyspark_negative_values",
+        "pandas_float_values",
+        "pyspark_float_values",
+        "pandas_identical_values",
+        "pyspark_identical_values",
+        "pandas_mixed_types",
+        "pyspark_mixed_types",
+        "pandas_with_zeros",
+        "pyspark_with_zeros",
+        "pandas_with_nulls",
+        "pyspark_with_nulls",
+        "pandas_boundary_exact_min",
+        "pyspark_boundary_exact_min",
+        "pandas_boundary_exact_max",
+        "pyspark_boundary_exact_max",
+        "pandas_calc_mixed_order",
+        "pyspark_calc_mixed_order",
+        "pandas_calc_zero",
+        "pyspark_calc_zero",
+        "pandas_calc_negative",
+        "pyspark_calc_negative",
+        "pandas_calc_small_differences",
+        "pyspark_calc_small_differences",
+        "pandas_calc_large_numbers",
+        "pyspark_calc_large_numbers",
+        "pandas_calc_very_small_numbers",
+        "pyspark_calc_very_small_numbers",
+        "pandas_outlier_extreme_low",
+        "pyspark_outlier_extreme_low",
+        "pandas_outlier_significant",
+        "pyspark_outlier_significant",
+        "pandas_outlier_small",
+        "pyspark_outlier_small",
+        "pandas_identical_integer",
+        "pyspark_identical_integer",
+        "pandas_identical_float",
+        "pyspark_identical_float",
+        "pandas_identical_negative",
+        "pyspark_identical_negative",
+        "pandas_identical_zero",
+        "pyspark_identical_zero",
+        "pandas_min_too_low",
+        "pyspark_min_too_low",
+        "pandas_min_too_high",
+        "pyspark_min_too_high",
+        "pandas_all_nulls",
+        "pyspark_all_nulls",
+        "pandas_empty",
+        "pyspark_empty",
     ],
 )
 def test_expectation_basic_scenarios(
@@ -262,7 +306,7 @@ def test_column_missing_error(df_type, spark):
     result = expectation.validate(data_frame=df)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=get_df_type_enum(df_type),
+        data_frame_type=str(df_type),
         message=expected_message,
     )
     assert str(result) == str(expected_failure)

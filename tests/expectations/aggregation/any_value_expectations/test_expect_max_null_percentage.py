@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -42,11 +41,6 @@ def create_dataframe(df_type, df_data, spark):
     return spark.createDataFrame(rows, schema)
 
 
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
-
-
 @pytest.mark.parametrize(
     "df_type, df_data, column_name, max_percentage, expected_result, expected_message",
     [
@@ -82,6 +76,7 @@ def get_df_type_enum(df_type):
         ("pyspark", {"col1": [1, 2, None, 4, 5]}, "col1", 20.0, "success", None),
         # With NaN - 33.33% < 50%
         ("pandas", {"col1": [1, 2, 3], "col2": [4.0, np.nan, 6.0]}, "col2", 50.0, "success", None),
+        ("pyspark", {"col1": [1, 2, 3], "col2": [4.0, None, 6.0]}, "col2", 50.0, "success", None),
         # Exceeds threshold - 50% > 20%
         (
             "pandas",
@@ -182,8 +177,21 @@ def get_df_type_enum(df_type):
             "success",
             None,
         ),
+        (
+            "pyspark",
+            {
+                "int_col": [1, None, 3, 4],
+                "str_col": ["a", "b", None, "d"],
+                "float_col": [1.1, 2.2, 3.3, None],
+            },
+            "float_col",
+            50.0,
+            "success",
+            None,
+        ),
         # Precision boundary - 25% == 25%
         ("pandas", {"col1": [1, None, 3, 4]}, "col1", 25.0, "success", None),
+        ("pyspark", {"col1": [1, None, 3, 4]}, "col1", 25.0, "success", None),
     ],
     ids=[
         "pandas_no_nulls",
@@ -193,6 +201,7 @@ def get_df_type_enum(df_type):
         "pandas_exactly_at_threshold",
         "pyspark_exactly_at_threshold",
         "pandas_with_nan",
+        "pyspark_with_nan",
         "pandas_exceeds_threshold",
         "pyspark_exceeds_threshold",
         "pandas_all_nulls",
@@ -210,7 +219,9 @@ def get_df_type_enum(df_type):
         "pandas_other_columns_ignored",
         "pyspark_other_columns_ignored",
         "pandas_mixed_data_types",
+        "pyspark_mixed_data_types",
         "pandas_precision_boundary",
+        "pyspark_precision_boundary",
     ],
 )
 def test_expectation_basic_scenarios(
@@ -240,7 +251,7 @@ def test_expectation_basic_scenarios(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=get_df_type_enum(df_type),
+            data_frame_type=str(df_type),
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (

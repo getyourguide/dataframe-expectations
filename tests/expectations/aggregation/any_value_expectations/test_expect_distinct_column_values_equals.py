@@ -52,11 +52,6 @@ def create_dataframe(df_type, data, column_name, spark, data_type="long"):
         return spark.createDataFrame([(val,) for val in data], schema)
 
 
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
-
-
 def test_expectation_name():
     """
     Test that the expectation name is correctly returned.
@@ -227,29 +222,29 @@ def test_expectation_name():
         "pyspark_empty",
         "pandas_single_value",
         "pyspark_single_value",
-        "string_with_nulls_pandas",
-        "string_with_nulls_pyspark",
-        "string_case_sensitive_pandas",
-        "string_case_sensitive_pyspark",
-        "float_pandas",
-        "float_pyspark",
-        "numeric_precision_pandas",
-        "numeric_precision_pyspark",
-        "boolean_pandas",
-        "boolean_pyspark",
-        "boolean_with_none_pandas",
-        "boolean_with_none_pyspark",
-        "datetime_pandas",
-        "datetime_pyspark",
-        "datetime_with_timezone_pandas",
-        "datetime_with_timezone_pyspark",
-        "mixed_data_types",
-        "categorical",
-        "duplicate_nan_handling_pandas",
-        "duplicate_nan_handling_pyspark",
-        "string_whitespace_pandas",
-        "string_whitespace_pyspark",
-        "numeric_string_vs_numeric",
+        "pandas_string_with_nulls",
+        "pyspark_string_with_nulls",
+        "pandas_string_case_sensitive",
+        "pyspark_string_case_sensitive",
+        "pandas_float",
+        "pyspark_float",
+        "pandas_numeric_precision",
+        "pyspark_numeric_precision",
+        "pandas_boolean",
+        "pyspark_boolean",
+        "pandas_boolean_with_none",
+        "pyspark_boolean_with_none",
+        "pandas_datetime",
+        "pyspark_datetime",
+        "pandas_datetime_with_timezone",
+        "pyspark_datetime_with_timezone",
+        "pandas_mixed_data_types",
+        "pandas_categorical",
+        "pandas_duplicate_nan_handling",
+        "pyspark_duplicate_nan_handling",
+        "pandas_string_whitespace",
+        "pyspark_string_whitespace",
+        "pandas_numeric_string_vs_numeric",
     ],
 )
 def test_expectation_basic_scenarios(
@@ -285,7 +280,7 @@ def test_expectation_basic_scenarios(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=get_df_type_enum(df_type),
+            data_frame_type=str(df_type),
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (

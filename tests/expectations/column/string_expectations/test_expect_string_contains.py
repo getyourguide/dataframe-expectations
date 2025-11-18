@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 
-from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
 )
@@ -16,16 +15,25 @@ from dataframe_expectations.result_message import (
 
 
 def create_dataframe(df_type, data, column_name, spark):
-    """Helper function to create pandas or pyspark DataFrame."""
+    """Helper function to create pandas or pyspark DataFrame.
+
+    Args:
+        df_type: "pandas" or "pyspark"
+        data: List of values for the column
+        column_name: Name of the column
+        spark: Spark session (required for pyspark)
+    """
     if df_type == "pandas":
         return pd.DataFrame({column_name: data})
     else:  # pyspark
-        return spark.createDataFrame([(val,) for val in data], [column_name])
+        from pyspark.sql.types import (
+            StructType,
+            StructField,
+            StringType,
+        )
 
-
-def get_df_type_enum(df_type):
-    """Get DataFrameType enum value."""
-    return DataFrameType.PANDAS if df_type == "pandas" else DataFrameType.PYSPARK
+        schema = StructType([StructField(column_name, StringType(), True)])
+        return spark.createDataFrame([(val,) for val in data], schema)
 
 
 def test_expectation_name():
@@ -43,13 +51,17 @@ def test_expectation_name():
 @pytest.mark.parametrize(
     "df_type, data, substring, expected_result, expected_violations, expected_message",
     [
-        # Basic success scenarios - pandas
+        # Basic success - pandas
         ("pandas", ["foobar", "foo123", "barfoo"], "foo", "success", None, None),
-        ("pandas", ["hello", "hello world", "say hello"], "hello", "success", None, None),
-        ("pandas", ["test123", "test456", "testing"], "test", "success", None, None),
-        # Basic success scenarios - pyspark
+        # Basic success - pyspark
         ("pyspark", ["foobar", "foo123", "barfoo"], "foo", "success", None, None),
+        # Success hello - pandas
+        ("pandas", ["hello", "hello world", "say hello"], "hello", "success", None, None),
+        # Success hello - pyspark
         ("pyspark", ["hello", "hello world", "say hello"], "hello", "success", None, None),
+        # Success test - pandas
+        ("pandas", ["test123", "test456", "testing"], "test", "success", None, None),
+        # Success test - pyspark
         ("pyspark", ["test123", "test456", "testing"], "test", "success", None, None),
         # Basic violation scenarios - pandas
         (
@@ -93,7 +105,15 @@ def test_expectation_name():
             ["apple", "banana", "cherry"],
             "Found 3 row(s) where 'col1' does not contain 'xyz'.",
         ),
-        # Case sensitivity - pandas (contains is case-sensitive)
+        (
+            "pyspark",
+            ["test", "testing", "best"],
+            "testing",
+            "failure",
+            ["test", "best"],
+            "Found 2 row(s) where 'col1' does not contain 'testing'.",
+        ),
+        # Case sensitive all fail - pandas
         (
             "pandas",
             ["Foo", "FOO", "fOo"],
@@ -102,16 +122,7 @@ def test_expectation_name():
             ["Foo", "FOO", "fOo"],
             "Found 3 row(s) where 'col1' does not contain 'foo'.",
         ),
-        ("pandas", ["foo", "foobar", "barfoo"], "foo", "success", None, None),
-        (
-            "pandas",
-            ["Hello", "HELLO", "hello"],
-            "Hello",
-            "failure",
-            ["HELLO", "hello"],
-            "Found 2 row(s) where 'col1' does not contain 'Hello'.",
-        ),
-        # Case sensitivity - pyspark
+        # Case sensitive all fail - pyspark
         (
             "pyspark",
             ["Foo", "FOO", "fOo"],
@@ -120,16 +131,40 @@ def test_expectation_name():
             ["Foo", "FOO", "fOo"],
             "Found 3 row(s) where 'col1' does not contain 'foo'.",
         ),
+        # Case sensitive mixed - pandas
+        ("pandas", ["foo", "foobar", "barfoo"], "foo", "success", None, None),
+        # Case sensitive mixed - pyspark
         ("pyspark", ["foo", "foobar", "barfoo"], "foo", "success", None, None),
-        # Position tests - substring at start - pandas
+        # Case hello violations - pandas
+        (
+            "pandas",
+            ["Hello", "HELLO", "hello"],
+            "Hello",
+            "failure",
+            ["HELLO", "hello"],
+            "Found 2 row(s) where 'col1' does not contain 'Hello'.",
+        ),
+        # Case hello violations - pyspark
+        (
+            "pyspark",
+            ["Hello", "HELLO", "hello"],
+            "Hello",
+            "failure",
+            ["HELLO", "hello"],
+            "Found 2 row(s) where 'col1' does not contain 'Hello'.",
+        ),
+        # Position start - pandas
         ("pandas", ["foobar", "foobaz", "foo"], "foo", "success", None, None),
-        # Position tests - substring at end - pandas
-        ("pandas", ["barfoo", "bazfoo", "foo"], "foo", "success", None, None),
-        # Position tests - substring in middle - pandas
-        ("pandas", ["barfoobar", "bazfoobaz"], "foo", "success", None, None),
-        # Position tests - pyspark
+        # Position start - pyspark
         ("pyspark", ["foobar", "foobaz", "foo"], "foo", "success", None, None),
+        # Position end - pandas
+        ("pandas", ["barfoo", "bazfoo", "foo"], "foo", "success", None, None),
+        # Position end - pyspark
         ("pyspark", ["barfoo", "bazfoo", "foo"], "foo", "success", None, None),
+        # Position middle - pandas
+        ("pandas", ["barfoobar", "bazfoobaz"], "foo", "success", None, None),
+        # Position middle - pyspark
+        ("pyspark", ["barfoobar", "bazfoobaz"], "foo", "success", None, None),
         # Single character substring - pandas
         ("pandas", ["a", "ab", "abc"], "a", "success", None, None),
         (
@@ -142,6 +177,14 @@ def test_expectation_name():
         ),
         # Single character substring - pyspark
         ("pyspark", ["a", "ab", "abc"], "a", "success", None, None),
+        (
+            "pyspark",
+            ["b", "c", "d"],
+            "a",
+            "failure",
+            ["b", "c", "d"],
+            "Found 3 row(s) where 'col1' does not contain 'a'.",
+        ),
         # Empty string scenarios - pandas
         (
             "pandas",
@@ -160,9 +203,15 @@ def test_expectation_name():
             ["", "more"],
             "Found 2 row(s) where 'col1' does not contain 'text'.",
         ),
-        # Whitespace handling - pandas
+        # Whitespace in data - pandas
         ("pandas", ["foo bar", "foo  bar", "foobar"], "foo", "success", None, None),
+        # Whitespace in data - pyspark
+        ("pyspark", ["foo bar", "foo  bar", "foobar"], "foo", "success", None, None),
+        # Whitespace around - pandas
         ("pandas", [" foo", "foo ", " foo "], "foo", "success", None, None),
+        # Whitespace around - pyspark
+        ("pyspark", [" foo", "foo ", " foo "], "foo", "success", None, None),
+        # Whitespace in substring - pandas
         (
             "pandas",
             ["foo bar", "bar", "baz"],
@@ -171,11 +220,20 @@ def test_expectation_name():
             ["bar", "baz"],
             "Found 2 row(s) where 'col1' does not contain 'foo bar'.",
         ),
-        # Whitespace handling - pyspark
-        ("pyspark", ["foo bar", "foo  bar", "foobar"], "foo", "success", None, None),
-        ("pyspark", [" foo", "foo ", " foo "], "foo", "success", None, None),
-        # Special characters - pandas
+        # Whitespace in substring - pyspark
+        (
+            "pyspark",
+            ["foo bar", "bar", "baz"],
+            "foo bar",
+            "failure",
+            ["bar", "baz"],
+            "Found 2 row(s) where 'col1' does not contain 'foo bar'.",
+        ),
+        # Special at sign - pandas
         ("pandas", ["test@email.com", "user@domain.org"], "@", "success", None, None),
+        # Special at sign - pyspark
+        ("pyspark", ["test@email.com", "user@domain.org"], "@", "success", None, None),
+        # Special exclamation - pandas
         (
             "pandas",
             ["hello!", "world!", "test"],
@@ -184,7 +242,20 @@ def test_expectation_name():
             ["test"],
             "Found 1 row(s) where 'col1' does not contain '!'.",
         ),
+        # Special exclamation - pyspark
+        (
+            "pyspark",
+            ["hello!", "world!", "test"],
+            "!",
+            "failure",
+            ["test"],
+            "Found 1 row(s) where 'col1' does not contain '!'.",
+        ),
+        # Special slash - pandas
         ("pandas", ["path/to/file", "another/path"], "/", "success", None, None),
+        # Special slash - pyspark
+        ("pyspark", ["path/to/file", "another/path"], "/", "success", None, None),
+        # Special hash - pandas
         (
             "pandas",
             ["#tag1", "#tag2", "notag"],
@@ -193,10 +264,16 @@ def test_expectation_name():
             ["notag"],
             "Found 1 row(s) where 'col1' does not contain '#'.",
         ),
-        # Special characters - pyspark
-        ("pyspark", ["test@email.com", "user@domain.org"], "@", "success", None, None),
-        ("pyspark", ["path/to/file", "another/path"], "/", "success", None, None),
-        # Numbers in strings - pandas
+        # Special hash - pyspark
+        (
+            "pyspark",
+            ["#tag1", "#tag2", "notag"],
+            "#",
+            "failure",
+            ["notag"],
+            "Found 1 row(s) where 'col1' does not contain '#'.",
+        ),
+        # Numbers 123 - pandas
         (
             "pandas",
             ["test123", "test456", "test"],
@@ -205,6 +282,16 @@ def test_expectation_name():
             ["test456", "test"],
             "Found 2 row(s) where 'col1' does not contain '123'.",
         ),
+        # Numbers 123 - pyspark
+        (
+            "pyspark",
+            ["test123", "test456", "test"],
+            "123",
+            "failure",
+            ["test456", "test"],
+            "Found 2 row(s) where 'col1' does not contain '123'.",
+        ),
+        # Numbers version - pandas
         (
             "pandas",
             ["v1.0.0", "v2.0.0", "v1.1.0"],
@@ -213,14 +300,14 @@ def test_expectation_name():
             ["v2.0.0"],
             "Found 1 row(s) where 'col1' does not contain '1.'.",
         ),
-        # Numbers in strings - pyspark
+        # Numbers version - pyspark
         (
             "pyspark",
-            ["test123", "test456", "test"],
-            "123",
+            ["v1.0.0", "v2.0.0", "v1.1.0"],
+            "1.",
             "failure",
-            ["test456", "test"],
-            "Found 2 row(s) where 'col1' does not contain '123'.",
+            ["v2.0.0"],
+            "Found 1 row(s) where 'col1' does not contain '1.'.",
         ),
         # Multiple occurrences - pandas
         ("pandas", ["foofoo", "foobarfoo", "foo"], "foo", "success", None, None),
@@ -244,8 +331,11 @@ def test_expectation_name():
             ["c" * 200],
             "Found 1 row(s) where 'col1' does not contain 'foo'.",
         ),
-        # Partial word matches - pandas
+        # Partial word success - pandas
         ("pandas", ["football", "foolish", "foo"], "foo", "success", None, None),
+        # Partial word success - pyspark
+        ("pyspark", ["football", "foolish", "foo"], "foo", "success", None, None),
+        # Partial word violation - pandas
         (
             "pandas",
             ["food", "foot", "bar"],
@@ -254,57 +344,73 @@ def test_expectation_name():
             ["bar"],
             "Found 1 row(s) where 'col1' does not contain 'foo'.",
         ),
-        # Partial word matches - pyspark
-        ("pyspark", ["football", "foolish", "foo"], "foo", "success", None, None),
+        # Partial word violation - pyspark
+        (
+            "pyspark",
+            ["food", "foot", "bar"],
+            "foo",
+            "failure",
+            ["bar"],
+            "Found 1 row(s) where 'col1' does not contain 'foo'.",
+        ),
     ],
     ids=[
         "pandas_basic_success",
-        "pandas_success_hello",
-        "pandas_success_test",
         "pyspark_basic_success",
+        "pandas_success_hello",
         "pyspark_success_hello",
+        "pandas_success_test",
         "pyspark_success_test",
         "pandas_basic_violations",
-        "pandas_all_violations",
-        "pandas_partial_match_violations",
         "pyspark_basic_violations",
+        "pandas_all_violations",
         "pyspark_all_violations",
+        "pandas_partial_match_violations",
+        "pyspark_partial_match_violations",
         "pandas_case_sensitive_all_fail",
-        "pandas_case_sensitive_mixed",
-        "pandas_case_hello_violations",
         "pyspark_case_sensitive_all_fail",
+        "pandas_case_sensitive_mixed",
         "pyspark_case_sensitive_mixed",
+        "pandas_case_hello_violations",
+        "pyspark_case_hello_violations",
         "pandas_position_start",
-        "pandas_position_end",
-        "pandas_position_middle",
         "pyspark_position_start",
+        "pandas_position_end",
         "pyspark_position_end",
+        "pandas_position_middle",
+        "pyspark_position_middle",
         "pandas_single_char_success",
-        "pandas_single_char_violations",
         "pyspark_single_char_success",
+        "pandas_single_char_violations",
+        "pyspark_single_char_violations",
         "pandas_empty_string_violations",
         "pyspark_empty_string_violations",
         "pandas_whitespace_in_data",
-        "pandas_whitespace_around",
-        "pandas_whitespace_in_substring",
         "pyspark_whitespace_in_data",
+        "pandas_whitespace_around",
         "pyspark_whitespace_around",
+        "pandas_whitespace_in_substring",
+        "pyspark_whitespace_in_substring",
         "pandas_special_at_sign",
-        "pandas_special_exclamation",
-        "pandas_special_slash",
-        "pandas_special_dollar",
         "pyspark_special_at_sign",
+        "pandas_special_exclamation",
+        "pyspark_special_exclamation",
+        "pandas_special_slash",
         "pyspark_special_slash",
+        "pandas_special_hash",
+        "pyspark_special_hash",
         "pandas_numbers_123",
-        "pandas_numbers_version",
         "pyspark_numbers_123",
+        "pandas_numbers_version",
+        "pyspark_numbers_version",
         "pandas_multiple_occurrences",
         "pyspark_multiple_occurrences",
         "pandas_long_strings",
         "pyspark_long_strings",
         "pandas_partial_word_success",
-        "pandas_partial_word_violation",
         "pyspark_partial_word_success",
+        "pandas_partial_word_violation",
+        "pyspark_partial_word_violation",
     ],
 )
 def test_expectation_basic_scenarios(
@@ -336,7 +442,7 @@ def test_expectation_basic_scenarios(
         expected_violations_df = create_dataframe(df_type, expected_violations, "col1", spark)
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=get_df_type_enum(df_type),
+            data_frame_type=str(df_type),
             violations_data_frame=expected_violations_df,
             message=expected_message,
             limit_violations=5,
@@ -381,7 +487,7 @@ def test_column_missing_error(df_type, spark):
     result = expectation.validate(data_frame=data_frame)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=get_df_type_enum(df_type),
+        data_frame_type=str(df_type),
         message=expected_message,
     )
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
