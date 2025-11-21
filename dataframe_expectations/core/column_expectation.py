@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List, Optional
 
 from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 from dataframe_expectations.core.expectation import DataFrameExpectation
@@ -23,6 +23,7 @@ class DataFrameColumnExpectation(DataFrameExpectation):
         fn_violations_pyspark: Callable,
         description: str,
         error_message: str,
+        tags: Optional[List[str]] = None,
     ):
         """
         Template for implementing DataFrame column expectations, where a column value is tested against a
@@ -34,7 +35,10 @@ class DataFrameColumnExpectation(DataFrameExpectation):
         :param fn_violations_pyspark: Function to find violations in a PySpark DataFrame.
         :param description: A description of the expectation used in logging.
         :param error_message: The error message to return if the expectation fails.
+        :param tags: Optional tags as list of strings in "key:value" format.
+                    Example: ["priority:high", "env:test"]
         """
+        super().__init__(tags=tags)
         self.column_name = column_name
         self.expectation_name = expectation_name
         self.fn_violations_pandas = fn_violations_pandas

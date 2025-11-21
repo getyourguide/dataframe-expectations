@@ -9,6 +9,7 @@ from dataframe_expectations.suite import (
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
 )
+from dataframe_expectations.core.suite_result import SuiteExecutionResult
 
 
 def test_suite_success():
@@ -25,7 +26,11 @@ def test_suite_success():
     data_Frame = pd.DataFrame({"col1": [3, 4, 5]})
     runner = suite.build()
     result = runner.run(data_frame=data_Frame)
-    assert result is None, "Expected no result for successful suite"
+    assert result is not None, "Expected SuiteExecutionResult"
+    assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
+    assert result.success, "Expected all expectations to pass"
+    assert result.total_passed == 2, "Expected 2 passed expectations"
+    assert result.total_failed == 0, "Expected 0 failed expectations"
 
 
 def test_suite_failure():
@@ -74,12 +79,18 @@ def test_suite_with_supported_dataframe_types(spark):
     # Test with pandas DataFrame
     pandas_df = pd.DataFrame({"col1": [1, 2, 3]})
     result = runner.run(data_frame=pandas_df)
-    assert result is None, "Expected success for pandas DataFrame"
+    assert result is not None, "Expected SuiteExecutionResult for pandas DataFrame"
+    assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
+    assert result.success, "Expected success for pandas DataFrame"
+    assert result.dataframe_type == DataFrameType.PANDAS
 
     # Test with PySpark DataFrame
     spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
     result = runner.run(data_frame=spark_df)
-    assert result is None, "Expected success for PySpark DataFrame"
+    assert result is not None, "Expected SuiteExecutionResult for PySpark DataFrame"
+    assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
+    assert result.success, "Expected success for PySpark DataFrame"
+    assert result.dataframe_type == DataFrameType.PYSPARK
 
 
 def test_suite_with_unsupported_dataframe_types():
@@ -126,6 +137,9 @@ def test_suite_with_pyspark_connect_dataframe():
             self.is_cached = False
             return self
 
+        def count(self):
+            return 0
+
     suite = DataFrameExpectationsSuite().expect_min_rows(min_rows=0)
     runner = suite.build()
 
@@ -147,7 +161,9 @@ def test_suite_with_pyspark_connect_dataframe():
 
             mock_connect_df = MockConnectDataFrame()
             result = runner.run(data_frame=mock_connect_df)
-            assert result is None, "Expected success for mock Connect DataFrame"
+            assert result is not None, "Expected SuiteExecutionResult for mock Connect DataFrame"
+            assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
+            assert result.success, "Expected success for mock Connect DataFrame"
 
 
 def test_expectation_suite_failure_message():
@@ -232,11 +248,17 @@ def test_builder_pattern_immutability():
 
     # Runner1 should only have 1 expectation (passes)
     result1 = runner1.run(data_frame=df)
-    assert result1 is None, "Runner1 should pass with only 1 expectation"
+    assert result1 is not None, "Runner1 should return SuiteExecutionResult"
+    assert isinstance(result1, SuiteExecutionResult), "Result1 should be SuiteExecutionResult"
+    assert result1.success, "Runner1 should pass with only 1 expectation"
+    assert result1.total_passed == 1
 
     # Runner2 should have 2 expectations (passes)
     result2 = runner2.run(data_frame=df)
-    assert result2 is None, "Runner2 should pass with 2 expectations"
+    assert result2 is not None, "Runner2 should return SuiteExecutionResult"
+    assert isinstance(result2, SuiteExecutionResult), "Result2 should be SuiteExecutionResult"
+    assert result2.success, "Runner2 should pass with 2 expectations"
+    assert result2.total_passed == 2
 
 
 def test_decorator_success():

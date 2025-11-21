@@ -1,4 +1,4 @@
-from typing import cast
+from typing import List, Optional, cast
 
 from pandas import DataFrame as PandasDataFrame
 from pyspark.sql import DataFrame as PySparkDataFrame
@@ -35,11 +35,12 @@ class ExpectationMinRows(DataFrameAggregationExpectation):
         - ExpectationMinRows(min_rows=150) → FAIL
     """
 
-    def __init__(self, min_rows: int):
+    def __init__(self, min_rows: int, tags: Optional[List[str]] = None):
         """
         Initialize the minimum rows expectation.
 
         :param min_rows: Minimum number of rows required (inclusive).
+        :param tags: Optional key-value tags for this expectation.
         """
         if min_rows < 0:
             raise ValueError(f"min_rows must be non-negative, got {min_rows}")
@@ -52,6 +53,7 @@ class ExpectationMinRows(DataFrameAggregationExpectation):
             expectation_name="ExpectationMinRows",
             column_names=[],  # No specific columns required
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -120,11 +122,12 @@ class ExpectationMaxRows(DataFrameAggregationExpectation):
         - ExpectationMaxRows(max_rows=50) → FAIL
     """
 
-    def __init__(self, max_rows: int):
+    def __init__(self, max_rows: int, tags: Optional[List[str]] = None):
         """
         Initialize the maximum rows expectation.
 
         :param max_rows: Maximum number of rows allowed (inclusive).
+        :param tags: Optional key-value tags for this expectation.
         """
         if max_rows < 0:
             raise ValueError(f"max_rows must be non-negative, got {max_rows}")
@@ -137,6 +140,7 @@ class ExpectationMaxRows(DataFrameAggregationExpectation):
             expectation_name="ExpectationMaxRows",
             column_names=[],  # No specific columns required
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -209,12 +213,13 @@ class ExpectationMaxNullPercentage(DataFrameAggregationExpectation):
     Note: The percentage is expressed as a value between 0.0 and 100.0 (e.g., 5.5 for 5.5%).
     """
 
-    def __init__(self, column_name: str, max_percentage: float):
+    def __init__(self, column_name: str, max_percentage: float, tags: Optional[List[str]] = None):
         """
         Initialize the maximum null percentage expectation.
 
         :param column_name: Name of the column to check for null percentage.
         :param max_percentage: Maximum percentage of null values allowed (0.0-100.0).
+        :param tags: Optional key-value tags for this expectation.
         """
         if not 0 <= max_percentage <= 100:
             raise ValueError(f"max_percentage must be between 0.0 and 100.0, got {max_percentage}")
@@ -228,6 +233,7 @@ class ExpectationMaxNullPercentage(DataFrameAggregationExpectation):
             expectation_name="ExpectationMaxNullPercentage",
             column_names=[column_name],  # Specify the required column
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -326,12 +332,13 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
     Note: The count is the absolute number of null values, not a percentage.
     """
 
-    def __init__(self, column_name: str, max_count: int):
+    def __init__(self, column_name: str, max_count: int, tags: Optional[List[str]] = None):
         """
         Initialize the maximum null count expectation.
 
         :param column_name: Name of the column to check for null count.
         :param max_count: Maximum number of null values allowed.
+        :param tags: Optional key-value tags for this expectation.
         """
         if max_count < 0:
             raise ValueError(f"max_count must be non-negative, got {max_count}")
@@ -345,6 +352,7 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
             expectation_name="ExpectationMaxNullCount",
             column_names=[column_name],  # Specify the required column
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -423,14 +431,17 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
     },
 )
 @requires_params("min_rows", types={"min_rows": int})
-def create_expectation_min_rows(min_rows: int) -> ExpectationMinRows:
+def create_expectation_min_rows(
+    min_rows: int, tags: Optional[List[str]] = None
+) -> ExpectationMinRows:
     """
     Create an ExpectMinRows instance.
 
     :param min_rows: Minimum number of rows required.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance.
     """
-    return ExpectationMinRows(min_rows=min_rows)
+    return ExpectationMinRows(min_rows=min_rows, tags=tags)
 
 
 @register_expectation(
@@ -443,14 +454,17 @@ def create_expectation_min_rows(min_rows: int) -> ExpectationMinRows:
     },
 )
 @requires_params("max_rows", types={"max_rows": int})
-def create_expectation_max_rows(max_rows: int) -> ExpectationMaxRows:
+def create_expectation_max_rows(
+    max_rows: int, tags: Optional[List[str]] = None
+) -> ExpectationMaxRows:
     """
     Create an ExpectationMaxRows instance.
 
     :param max_rows: Maximum number of rows allowed.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance.
     """
-    return ExpectationMaxRows(max_rows=max_rows)
+    return ExpectationMaxRows(max_rows=max_rows, tags=tags)
 
 
 @register_expectation(
@@ -469,18 +483,20 @@ def create_expectation_max_rows(max_rows: int) -> ExpectationMaxRows:
     types={"column_name": str, "max_percentage": (int, float)},
 )
 def create_expectation_max_null_percentage(
-    column_name: str, max_percentage: float
+    column_name: str, max_percentage: float, tags: Optional[List[str]] = None
 ) -> ExpectationMaxNullPercentage:
     """
     Create an ExpectationMaxNullPercentage instance.
 
     :param column_name: Name of the column to check for null percentage.
     :param max_percentage: Maximum percentage of null values allowed (0.0-100.0).
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance.
     """
     return ExpectationMaxNullPercentage(
         column_name=column_name,
         max_percentage=max_percentage,
+        tags=tags,
     )
 
 
@@ -499,15 +515,19 @@ def create_expectation_max_null_percentage(
     "max_count",
     types={"column_name": str, "max_count": int},
 )
-def create_expectation_max_null_count(column_name: str, max_count: int) -> ExpectationMaxNullCount:
+def create_expectation_max_null_count(
+    column_name: str, max_count: int, tags: Optional[List[str]] = None
+) -> ExpectationMaxNullCount:
     """
     Create an ExpectationMaxNullCount instance.
 
     :param column_name: Name of the column to check for null count.
     :param max_count: Maximum number of null values allowed.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance.
     """
     return ExpectationMaxNullCount(
         column_name=column_name,
         max_count=max_count,
+        tags=tags,
     )

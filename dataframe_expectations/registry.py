@@ -7,9 +7,9 @@ from dataframe_expectations.core.types import (
     ExpectationMetadata,
     ExpectationSubcategory,
 )
-from dataframe_expectations.logging_utils import setup_logger
+import logging
 
-logger = setup_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Type alias for registry entry (factory function + metadata)
 FactoryFunction = Callable[..., DataFrameExpectation]

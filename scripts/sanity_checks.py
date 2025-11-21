@@ -28,12 +28,12 @@ class ExpectationsSanityChecker:
         self.tests_dir = project_root / "tests" / "expectations"
 
         # Results storage
-        self.registered_expectations: Dict[str, str] = {}  # expectation_name -> file_path
-        self.suite_methods: Set[str] = set()  # expect_* method names
-        self.test_files: Dict[str, str] = {}  # expectation_name -> test_file_path
+        self.registered_expectations = {}  # expectation_name -> file_path
+        self.suite_methods = set()  # expect_* method names
+        self.test_files = {}  # expectation_name -> test_file_path
 
         # Issues tracking
-        self.issues: List[str] = []
+        self.issues = []
 
     def run_full_check(self) -> bool:
         """Run all consistency checks and return True if all pass."""
@@ -65,6 +65,9 @@ class ExpectationsSanityChecker:
         self._validate_registry_to_tests_mapping()
         self._validate_orphaned_suite_methods()
         self._validate_orphaned_test_files()
+
+        # Step 6: Check expectation constructors for tags param and super call
+        self._check_expectation_constructor_tags()
 
         # Report results
         self._print_results()
@@ -273,6 +276,100 @@ class ExpectationsSanityChecker:
         """Convert expectation name to expected test filename."""
         method_name = self._expectation_to_suite_method(expectation_name)
         return f"test_{method_name}.py"
+
+    def _check_expectation_constructor_tags(self):
+        """Check that all DataFrameExpectation subclasses accept 'tags' in their constructor and pass to super().__init__."""
+        print("   🏷️  Checking expectation constructors for 'tags' param and super call...")
+
+        for file_path in self.expectations_dir.rglob("*.py"):
+            if file_path.name == "__init__.py":
+                continue
+
+            try:
+                tree = ast.parse(file_path.read_text())
+
+                for node in ast.walk(tree):
+                    if not isinstance(node, ast.ClassDef):
+                        continue
+
+                    if not self._is_expectation_class(node):
+                        continue
+
+                    init_method = self._find_init_method(node)
+                    if not init_method:
+                        continue
+
+                    # Check for 'tags' param
+                    if not self._has_tags_param(init_method):
+                        self.issues.append(
+                            f"❌ {node.name} in {file_path.name} missing 'tags' param in __init__"
+                        )
+
+                    # Check for super().__init__(tags=tags)
+                    if not self._has_super_init_with_tags(init_method):
+                        self.issues.append(
+                            f"❌ {node.name} in {file_path.name} missing super().__init__(tags=tags) call"
+                        )
+
+            except Exception as e:
+                print(f"   ⚠️  Warning: Could not parse {file_path}: {e}")
+
+    def _is_expectation_class(self, node: ast.ClassDef) -> bool:
+        """Check if a class inherits from DataFrameExpectation (direct or indirect)."""
+        for base in node.bases:
+            if isinstance(base, ast.Name):
+                if base.id == "DataFrameExpectation" or base.id.endswith("Expectation"):
+                    return True
+        return False
+
+    def _find_init_method(self, class_node: ast.ClassDef) -> Optional[ast.FunctionDef]:
+        """Find the __init__ method in a class."""
+        for item in class_node.body:
+            if isinstance(item, ast.FunctionDef) and item.name == "__init__":
+                return item
+        return None
+
+    def _has_tags_param(self, init_method: ast.FunctionDef) -> bool:
+        """Check if __init__ method has 'tags' parameter with correct type annotation."""
+        for arg in init_method.args.args:
+            if arg.arg == "tags":
+                # Check if the parameter has the correct type annotation: Optional[List[str]]
+                if arg.annotation:
+                    annotation_str = ast.unparse(arg.annotation)
+                    # Accept various valid forms: Optional[List[str]], List[str] | None, Union[List[str], None]
+                    valid_annotations = [
+                        "Optional[List[str]]",
+                        "List[str] | None",
+                        "Union[List[str], None]",
+                        "Optional[list[str]]",
+                        "list[str] | None"
+                    ]
+                    if annotation_str not in valid_annotations:
+                        return False
+                return True
+        return False
+
+    def _has_super_init_with_tags(self, init_method: ast.FunctionDef) -> bool:
+        """Check if __init__ calls super().__init__(tags=tags)."""
+        for stmt in ast.walk(init_method):
+            if not isinstance(stmt, ast.Call):
+                continue
+
+            # Check if this is a call to __init__
+            if not (isinstance(stmt.func, ast.Attribute) and stmt.func.attr == "__init__"):
+                continue
+
+            # Check if it's called on super()
+            if not (isinstance(stmt.func.value, ast.Call) and
+                    isinstance(stmt.func.value.func, ast.Name) and
+                    stmt.func.value.func.id == "super"):
+                continue
+
+            # Check if tags is passed as keyword argument
+            if any(kw.arg == "tags" for kw in stmt.keywords):
+                return True
+
+        return False
 
     def _print_results(self):
         """Print the final results of the sanity check."""

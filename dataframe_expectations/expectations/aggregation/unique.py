@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import List, Optional, cast
 
 import pandas as pd
 from pandas import DataFrame as PandasDataFrame
@@ -53,7 +53,7 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
 
     """
 
-    def __init__(self, column_names: List[str]):
+    def __init__(self, column_names: List[str], tags: Optional[List[str]] = None):
         """
         Initialize the unique expectation.
 
@@ -72,6 +72,7 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
             expectation_name="ExpectationUniqueRows",
             column_names=column_names,
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -192,7 +193,7 @@ class ExpectationDistinctColumnValuesEquals(DataFrameAggregationExpectation):
     Note: The comparison is exact equality (inclusive).
     """
 
-    def __init__(self, column_name: str, expected_value: int):
+    def __init__(self, column_name: str, expected_value: int, tags: Optional[List[str]] = None):
         """
         Initialize the distinct values equals expectation.
 
@@ -211,6 +212,7 @@ class ExpectationDistinctColumnValuesEquals(DataFrameAggregationExpectation):
             expectation_name="ExpectationDistinctColumnValuesEquals",
             column_names=[column_name],
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -285,7 +287,7 @@ class ExpectationDistinctColumnValuesLessThan(DataFrameAggregationExpectation):
     Note: The threshold is exclusive (actual_count < threshold).
     """
 
-    def __init__(self, column_name: str, threshold: int):
+    def __init__(self, column_name: str, threshold: int, tags: Optional[List[str]] = None):
         """
         Initialize the distinct values less than expectation.
 
@@ -304,6 +306,7 @@ class ExpectationDistinctColumnValuesLessThan(DataFrameAggregationExpectation):
             expectation_name="ExpectationDistinctColumnValuesLessThan",
             column_names=[column_name],
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -378,7 +381,7 @@ class ExpectationDistinctColumnValuesGreaterThan(DataFrameAggregationExpectation
     Note: The threshold is exclusive (actual_count > threshold).
     """
 
-    def __init__(self, column_name: str, threshold: int):
+    def __init__(self, column_name: str, threshold: int, tags: Optional[List[str]] = None):
         """
         Initialize the distinct values greater than expectation.
 
@@ -397,6 +400,7 @@ class ExpectationDistinctColumnValuesGreaterThan(DataFrameAggregationExpectation
             expectation_name="ExpectationDistinctColumnValuesGreaterThan",
             column_names=[column_name],
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -471,7 +475,9 @@ class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
     Note: Both bounds are inclusive (min_value ≤ actual_count ≤ max_value).
     """
 
-    def __init__(self, column_name: str, min_value: int, max_value: int):
+    def __init__(
+        self, column_name: str, min_value: int, max_value: int, tags: Optional[List[str]] = None
+    ):
         """
         Initialize the distinct values between expectation.
 
@@ -498,6 +504,7 @@ class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
             expectation_name="ExpectationDistinctColumnValuesBetween",
             column_names=[column_name],
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -570,15 +577,17 @@ class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
 @requires_params("column_names", types={"column_names": list})
 def create_expectation_unique(
     column_names: List[str],
+    tags: Optional[List[str]] = None,
 ) -> ExpectationUniqueRows:
     """
     Create an ExpectationUniqueRows instance.
 
     :param column_names: List of column names to check for uniqueness. If empty, checks all columns.
+    :param tags: Optional list of tags for filtering expectations.
     :return: ExpectationUniqueRows instance
     """
     column_names = column_names
-    return ExpectationUniqueRows(column_names=column_names)
+    return ExpectationUniqueRows(column_names=column_names, tags=tags)
 
 
 @register_expectation(
@@ -599,17 +608,20 @@ def create_expectation_unique(
 def create_expectation_distinct_column_values_equals(
     column_name: str,
     expected_value: int,
+    tags: Optional[List[str]] = None,
 ) -> ExpectationDistinctColumnValuesEquals:
     """
     Create an ExpectationDistinctColumnValuesEquals instance.
 
     :param column_name: Name of the column to check.
     :param expected_value: Expected number of distinct values.
+    :param tags: Optional list of tags for filtering expectations.
     :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesEquals(
         column_name=column_name,
         expected_value=expected_value,
+        tags=tags,
     )
 
 
@@ -631,17 +643,20 @@ def create_expectation_distinct_column_values_equals(
 def create_expectation_distinct_column_values_less_than(
     column_name: str,
     threshold: int,
+    tags: Optional[List[str]] = None,
 ) -> ExpectationDistinctColumnValuesLessThan:
     """
     Create an ExpectationDistinctColumnValuesLessThan instance.
 
     :param column_name: Name of the column to check.
     :param threshold: Threshold for distinct values count (exclusive upper bound).
+    :param tags: Optional list of tags for filtering expectations.
     :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesLessThan(
         column_name=column_name,
         threshold=threshold,
+        tags=tags,
     )
 
 
@@ -663,17 +678,20 @@ def create_expectation_distinct_column_values_less_than(
 def create_expectation_distinct_column_values_greater_than(
     column_name: str,
     threshold: int,
+    tags: Optional[List[str]] = None,
 ) -> ExpectationDistinctColumnValuesGreaterThan:
     """
     Create an ExpectationDistinctColumnValuesGreaterThan instance.
 
     :param column_name: Name of the column to check.
     :param threshold: Threshold for distinct values count (exclusive lower bound).
+    :param tags: Optional list of tags for filtering expectations.
     :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesGreaterThan(
         column_name=column_name,
         threshold=threshold,
+        tags=tags,
     )
 
 
@@ -698,6 +716,7 @@ def create_expectation_distinct_column_values_between(
     column_name: str,
     min_value: int,
     max_value: int,
+    tags: Optional[List[str]] = None,
 ) -> ExpectationDistinctColumnValuesBetween:
     """
     Create an ExpectationDistinctColumnValuesBetween instance.
@@ -705,10 +724,12 @@ def create_expectation_distinct_column_values_between(
     :param column_name: Name of the column to check.
     :param min_value: Minimum number of distinct values (inclusive lower bound).
     :param max_value: Maximum number of distinct values (inclusive upper bound).
+    :param tags: Optional key-value tags for this expectation.
     :return: A configured expectation instance.
     """
     return ExpectationDistinctColumnValuesBetween(
         column_name=column_name,
         min_value=min_value,
         max_value=max_value,
+        tags=tags,
     )

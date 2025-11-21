@@ -33,7 +33,7 @@ jobs:
           uv run python scripts/sanity_checks.py
       - name: Run tests
         run: |
-          uv run pytest tests/ --cov=dataframe_expectations
+          uv run pytest tests/ -n auto --tb=line --cov=dataframe_expectations
 
   lint:
     runs-on: ubuntu-latest

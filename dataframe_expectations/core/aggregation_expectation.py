@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Union
+from typing import List, Optional, Union
 
 from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 from dataframe_expectations.core.expectation import DataFrameExpectation
@@ -20,6 +20,7 @@ class DataFrameAggregationExpectation(DataFrameExpectation):
         expectation_name: str,
         column_names: List[str],
         description: str,
+        tags: Optional[List[str]] = None,
     ):
         """
         Template for implementing DataFrame aggregation expectations, where data is first aggregated
@@ -28,7 +29,10 @@ class DataFrameAggregationExpectation(DataFrameExpectation):
         :param expectation_name: The name of the expectation. This will be used during logging.
         :param column_names: The list of column names to aggregate on.
         :param description: A description of the expectation used in logging.
+        :param tags: Optional tags as list of strings in "key:value" format.
+                    Example: ["priority:high", "env:test"]
         """
+        super().__init__(tags=tags)
         self.expectation_name = expectation_name
         self.column_names = column_names
         self.description = description

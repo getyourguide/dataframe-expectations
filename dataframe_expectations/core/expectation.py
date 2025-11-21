@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import cast
+from typing import List, Optional, cast
 
 from pandas import DataFrame as PandasDataFrame
 from pyspark.sql import DataFrame as PySparkDataFrame
@@ -12,6 +12,7 @@ except ImportError:
     PySparkConnectDataFrame = None  # type: ignore[misc,assignment]
 
 from dataframe_expectations.core.types import DataFrameLike, DataFrameType
+from dataframe_expectations.core.tagging import TagSet
 from dataframe_expectations.result_message import (
     DataFrameExpectationResultMessage,
 )
@@ -21,6 +22,14 @@ class DataFrameExpectation(ABC):
     """
     Base class for DataFrame expectations.
     """
+
+    def __init__(self, tags: Optional[List[str]] = None):
+        """
+        Initialize the base expectation with optional tags.
+        :param tags: Optional tags as list of strings in "key:value" format.
+                    Example: ["priority:high", "env:test"]
+        """
+        self.tags = TagSet(tags)
 
     def get_expectation_name(self) -> str:
         """
@@ -48,16 +57,17 @@ class DataFrameExpectation(ABC):
         """
         Infer the DataFrame type based on the provided DataFrame.
         """
-        if isinstance(data_frame, PandasDataFrame):
-            return DataFrameType.PANDAS
-        elif isinstance(data_frame, PySparkDataFrame):
-            return DataFrameType.PYSPARK
-        elif PySparkConnectDataFrame is not None and isinstance(
-            data_frame, PySparkConnectDataFrame
-        ):
-            return DataFrameType.PYSPARK
-        else:
-            raise ValueError(f"Unsupported DataFrame type: {type(data_frame)}")
+        match data_frame:
+            case PandasDataFrame():
+                return DataFrameType.PANDAS
+            case PySparkDataFrame():
+                return DataFrameType.PYSPARK
+            case _ if PySparkConnectDataFrame is not None and isinstance(
+                data_frame, PySparkConnectDataFrame
+            ):
+                return DataFrameType.PYSPARK
+            case _:
+                raise ValueError(f"Unsupported DataFrame type: {type(data_frame)}")
 
     def validate(self, data_frame: DataFrameLike, **kwargs):
         """
@@ -65,12 +75,13 @@ class DataFrameExpectation(ABC):
         """
         data_frame_type = self.infer_data_frame_type(data_frame)
 
-        if data_frame_type == DataFrameType.PANDAS:
-            return self.validate_pandas(data_frame=data_frame, **kwargs)
-        elif data_frame_type == DataFrameType.PYSPARK:
-            return self.validate_pyspark(data_frame=data_frame, **kwargs)
-        else:
-            raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
+        match data_frame_type:
+            case DataFrameType.PANDAS:
+                return self.validate_pandas(data_frame=data_frame, **kwargs)
+            case DataFrameType.PYSPARK:
+                return self.validate_pyspark(data_frame=data_frame, **kwargs)
+            case _:
+                raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
 
     @abstractmethod
     def validate_pandas(
