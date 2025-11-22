@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.4.0...v0.5.0) (2025-11-22)
+
+
+### Features
+
+* add suite_result and tagging ([e36becd](https://github.com/getyourguide/dataframe-expectations/commit/e36becd82141ad38e122d1d5209a12c2d0971b46))
+* add suite_result and tagging ([e0857b4](https://github.com/getyourguide/dataframe-expectations/commit/e0857b4ae906c297431b21cfafa4166653c9d413))
+
+
+### Documentation
+
+* updated documentation ([6a08bd9](https://github.com/getyourguide/dataframe-expectations/commit/6a08bd9166d10cbf252e5f9a0e50a0e7bf192602))
+
 ## [0.4.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.3.0...v0.4.0) (2025-11-10)
 
 
