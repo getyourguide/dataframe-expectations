@@ -41,7 +41,7 @@ def test_multiple_colons_allowed():
     """Test that multiple colons are allowed (split on first colon)."""
     tag_set = TagSet(["url:https://example.com"])
     assert len(tag_set) == 1
-    assert tag_set._tags["url"] == {"https://example.com"}
+    assert tag_set.tags["url"] == {"https://example.com"}
 
 
 def test_multiple_values_same_key():
@@ -49,8 +49,8 @@ def test_multiple_values_same_key():
     tag_set = TagSet(["priority:high", "priority:medium", "priority:low"])
     assert len(tag_set) == 3
     # Verify internal structure
-    assert "priority" in tag_set._tags
-    assert tag_set._tags["priority"] == {"high", "medium", "low"}
+    assert "priority" in tag_set.tags
+    assert tag_set.tags["priority"] == {"high", "medium", "low"}
 
 
 def test_whitespace_handling():

@@ -1,11 +1,11 @@
 """Suite execution result models for capturing validation outcomes."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, computed_field
 
-from dataframe_expectations.core.types import DataFrameType, DataFrameLike
+from dataframe_expectations.core.types import DataFrameType, DataFrameLike, TagMatchMode
 from dataframe_expectations.core.tagging import TagSet
 import logging
 
@@ -44,7 +44,7 @@ class ExpectationResult(BaseModel):
         description="Sample of violations as list of dicts (limited by violation_sample_limit)",
     )
 
-    model_config = {"frozen": True, "arbitrary_types_allowed": True}  # Make immutable, allow TagSet
+    model_config = {"frozen": True}  # Make immutable
 
 
 class SuiteExecutionResult(BaseModel):
@@ -60,8 +60,9 @@ class SuiteExecutionResult(BaseModel):
     applied_filters: TagSet = Field(
         default_factory=TagSet, description="Tag filters that were applied to select expectations"
     )
-    tag_match_mode: Optional[Literal["any", "all"]] = Field(
-        default=None, description="How tags were matched: 'any' (OR) or 'all' (AND)"
+    tag_match_mode: Optional[TagMatchMode] = Field(
+        default=None,
+        description="How tags were matched: TagMatchMode.ANY (OR) or TagMatchMode.ALL (AND)",
     )
     results: List[ExpectationResult] = Field(
         ..., description="Results for each expectation in execution order (including skipped)"
@@ -74,7 +75,7 @@ class SuiteExecutionResult(BaseModel):
         default=False, description="Whether PySpark dataframe was cached during execution"
     )
 
-    model_config = {"frozen": True, "arbitrary_types_allowed": True}  # Make immutable, allow TagSet
+    model_config = {"frozen": True}  # Make immutable
 
     @computed_field  # type: ignore[misc]
     @property

@@ -1,7 +1,7 @@
 from functools import wraps
-from typing import Any, Callable, Dict, List, Literal, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, cast
 
-from dataframe_expectations.core.types import DataFrameLike
+from dataframe_expectations.core.types import DataFrameLike, TagMatchMode
 from dataframe_expectations.core.tagging import TagSet
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
@@ -62,27 +62,24 @@ class DataFrameExpectationsSuiteRunner:
     def _matches_tag_filter(
         expectation: Any,
         filter_tag_set: TagSet,
-        tag_match_mode: Literal["any", "all"],
+        tag_match_mode: TagMatchMode,
     ) -> bool:
         """
         Check if an expectation matches the tag filter criteria.
 
         :param expectation: Expectation instance to check.
         :param filter_tag_set: Tag filter to match against.
-        :param tag_match_mode: Match mode - "any" (OR) or "all" (AND).
+        :param tag_match_mode: Match mode - TagMatchMode.ANY (OR) or TagMatchMode.ALL (AND).
         :return: True if expectation matches filter, False otherwise.
-        :raises ValueError: If tag_match_mode is invalid.
         """
         exp_tag_set = expectation.get_tags()
 
         # Check if expectation matches filter
         match tag_match_mode:
-            case "any":
+            case TagMatchMode.ANY:
                 return exp_tag_set.has_any_tag_from(filter_tag_set)
-            case "all":
+            case TagMatchMode.ALL:
                 return exp_tag_set.has_all_tags_from(filter_tag_set)
-            case _:
-                raise ValueError(f"Invalid tag_match_mode: {tag_match_mode}")
 
     def __init__(
         self,
@@ -90,7 +87,7 @@ class DataFrameExpectationsSuiteRunner:
         suite_name: Optional[str] = None,
         violation_sample_limit: int = 5,
         tags: Optional[List[str]] = None,
-        tag_match_mode: Optional[Literal["any", "all"]] = None,
+        tag_match_mode: Optional[TagMatchMode] = None,
     ):
         """
         Initialize the runner with a list of expectations and metadata.
@@ -101,10 +98,10 @@ class DataFrameExpectationsSuiteRunner:
         :param tags: Optional tag filters as list of strings in "key:value" format.
                     Example: ["priority:high", "priority:medium"]
                     If None or empty, all expectations will run.
-        :param tag_match_mode: How to match tags - "any" (OR logic) or "all" (AND logic).
+        :param tag_match_mode: How to match tags - TagMatchMode.ANY (OR logic) or TagMatchMode.ALL (AND logic).
                               Required if tags are provided, must be None if tags are not provided.
-                              - "any": Expectation matches if it has ANY of the filter tags
-                              - "all": Expectation matches if it has ALL of the filter tags
+                              - TagMatchMode.ANY: Expectation matches if it has ANY of the filter tags
+                              - TagMatchMode.ALL: Expectation matches if it has ALL of the filter tags
         :raises ValueError: If tag_match_mode is provided without tags, or if tags are provided without tag_match_mode,
                            or if tag filters result in zero expectations to run.
         """
@@ -122,7 +119,7 @@ class DataFrameExpectationsSuiteRunner:
 
         if not self.__filter_tag_set.is_empty() and tag_match_mode is None:
             raise ValueError(
-                "tag_match_mode must be specified ('any' or 'all') when tags are provided."
+                "tag_match_mode must be specified (TagMatchMode.ANY or TagMatchMode.ALL) when tags are provided."
             )
 
         self.__tag_match_mode = tag_match_mode
@@ -130,7 +127,13 @@ class DataFrameExpectationsSuiteRunner:
         # Filter expectations based on tags and track skipped ones
         if not self.__filter_tag_set.is_empty():
             # At this point, validation ensures tag_match_mode is not None
-            assert tag_match_mode is not None
+            # This check is for type narrowing (mypy/pyright)
+            if tag_match_mode is None:
+                # This should never happen due to validation above, but satisfies type checker
+                raise ValueError(
+                    "tag_match_mode must be specified (TagMatchMode.ANY or TagMatchMode.ALL) when tags are provided."
+                )
+
             filtered = []
             skipped = []
             for exp in self.__all_expectations:
@@ -201,7 +204,7 @@ class DataFrameExpectationsSuiteRunner:
         data_frame: DataFrameLike,
         raise_on_failure: bool = True,
         context: Optional[Dict[str, Any]] = None,
-    ) -> Optional[SuiteExecutionResult]:
+    ) -> SuiteExecutionResult:
         """
         Run all expectations on the provided DataFrame with PySpark caching optimization.
 
@@ -458,11 +461,11 @@ class DataFrameExpectationsSuite:
         runner_all.run(df)  # Runs all 3 expectations
 
         # Build runner for high OR medium priority expectations (OR logic)
-        runner_any = suite.build(tags=["priority:high", "priority:medium"], tag_match_mode="any")
+        runner_any = suite.build(tags=["priority:high", "priority:medium"], tag_match_mode=TagMatchMode.ANY)
         runner_any.run(df)  # Runs 2 expectations (age and salary checks)
 
         # Build runner for expectations with both high priority AND compliance category (AND logic)
-        runner_and = suite.build(tags=["priority:high", "category:compliance"], tag_match_mode="all")
+        runner_and = suite.build(tags=["priority:high", "category:compliance"], tag_match_mode=TagMatchMode.ALL)
         runner_and.run(df)  # Runs 1 expectation (age check - has both tags)
     """
 
@@ -530,7 +533,7 @@ class DataFrameExpectationsSuite:
     def build(
         self,
         tags: Optional[List[str]] = None,
-        tag_match_mode: Optional[Literal["any", "all"]] = None,
+        tag_match_mode: Optional[TagMatchMode] = None,
     ) -> DataFrameExpectationsSuiteRunner:
         """
         Build an immutable runner from the current expectations.
@@ -542,10 +545,10 @@ class DataFrameExpectationsSuite:
         :param tags: Optional tag filters as list of strings in "key:value" format.
                     Example: ["priority:high", "priority:medium"]
                     If None or empty, all expectations will be included.
-        :param tag_match_mode: How to match tags - "any" (OR logic) or "all" (AND logic).
+        :param tag_match_mode: How to match tags - TagMatchMode.ANY (OR logic) or TagMatchMode.ALL (AND logic).
                               Required if tags are provided, must be None if tags are not provided.
-                              - "any": Include expectations with ANY of the filter tags
-                              - "all": Include expectations with ALL of the filter tags
+                              - TagMatchMode.ANY: Include expectations with ANY of the filter tags
+                              - TagMatchMode.ALL: Include expectations with ALL of the filter tags
         :return: An immutable DataFrameExpectationsSuiteRunner instance.
         :raises ValueError: If no expectations have been added, if tag_match_mode validation fails,
                            or if no expectations match the tag filters.

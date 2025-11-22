@@ -14,6 +14,7 @@ from dataframe_expectations.core.suite_result import (
     SuiteExecutionResult,
     serialize_violations,
 )
+from dataframe_expectations.core.types import TagMatchMode
 from dataframe_expectations.suite import (
     DataFrameExpectationsSuite,
     DataFrameExpectationsSuiteRunner,
@@ -27,4 +28,5 @@ __all__ = [
     "DataFrameExpectationsSuite",
     "DataFrameExpectationsSuiteRunner",
     "DataFrameExpectationsSuiteFailure",
+    "TagMatchMode",
 ]

@@ -18,6 +18,13 @@ class DataFrameType(str, Enum):
     PYSPARK = "pyspark"
 
 
+class TagMatchMode(str, Enum):
+    """Enum for tag matching modes."""
+
+    ANY = "any"  # OR logic: expectation matches if it has ANY of the filter tags
+    ALL = "all"  # AND logic: expectation matches if it has ALL of the filter tags
+
+
 class ExpectationCategory(str, Enum):
     """Categories for expectations."""
 

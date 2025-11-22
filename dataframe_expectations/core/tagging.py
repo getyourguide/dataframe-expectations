@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Set
 
+from pydantic import BaseModel, ConfigDict
 
-class TagSet:
+
+class TagSet(BaseModel):
     """
     Collection of tags organized by key, supporting multiple values per key.
 
@@ -19,7 +21,11 @@ class TagSet:
     Tags are specified as strings in "key:value" format.
     """
 
-    def __init__(self, tags: Optional[List[str]] = None):
+    tags: Dict[str, Set[str]] = {}
+
+    model_config = ConfigDict(frozen=True)  # Make immutable
+
+    def __init__(self, tags: Optional[List[str]] = None, **data):
         """
         Initialize TagSet from a list of tag strings.
 
@@ -30,17 +36,22 @@ class TagSet:
             >>> TagSet(["priority:high", "env:test"])
             >>> TagSet(["priority:high", "priority:medium"])  # Multiple values for same key
         """
-        self._tags: Dict[str, Set[str]] = {}
-
-        if tags:
+        # Parse tags if provided as list
+        if tags is not None:
+            parsed_tags: Dict[str, Set[str]] = {}
             for tag_string in tags:
-                self._add_tag_string(tag_string)
+                TagSet._parse_and_add_tag(tag_string, parsed_tags)
+            data["tags"] = parsed_tags
 
-    def _add_tag_string(self, tag_string: str) -> None:
+        super().__init__(**data)
+
+    @staticmethod
+    def _parse_and_add_tag(tag_string: str, tags_dict: Dict[str, Set[str]]) -> None:
         """
-        Parse and add a tag string in "key:value" format.
+        Parse and add a tag string to the provided dictionary.
 
         :param tag_string: Tag string to parse
+        :param tags_dict: Dictionary to add parsed tag to
         :raises ValueError: If format is invalid
         """
         tag_string = tag_string.strip()
@@ -59,9 +70,9 @@ class TagSet:
         if not key or not value:
             raise ValueError("Tag key and value must be non-empty strings")
 
-        if key not in self._tags:
-            self._tags[key] = set()
-        self._tags[key].add(value)
+        if key not in tags_dict:
+            tags_dict[key] = set()
+        tags_dict[key].add(value)
 
     def has_any_tag_from(self, other: TagSet) -> bool:
         """
@@ -84,14 +95,14 @@ class TagSet:
             other = TagSet(["priority:medium", "env:test"])
             self.has_any_tag_from(other) -> True (env:test matches)
         """
-        if not other._tags:
+        if not other.tags:
             return True  # Empty filter matches everything
 
         # OR logic: any key with overlapping values
-        for key, required_values in other._tags.items():
-            if key in self._tags:
+        for key, required_values in other.tags.items():
+            if key in self.tags:
                 # Check if there's any overlap between required values and our values
-                if required_values & self._tags[key]:
+                if required_values & self.tags[key]:
                     return True
 
         return False
@@ -117,38 +128,38 @@ class TagSet:
             other = TagSet(["priority:high", "env:prod"])
             self.has_all_tags_from(other) -> False (env:prod doesn't match)
         """
-        if not other._tags:
+        if not other.tags:
             return True  # Empty filter matches everything
 
         # AND logic: all keys must have ALL required values present
-        for key, required_values in other._tags.items():
-            if key not in self._tags:
+        for key, required_values in other.tags.items():
+            if key not in self.tags:
                 return False
             # Check if ALL required values are present in our values
-            if not required_values.issubset(self._tags[key]):
+            if not required_values.issubset(self.tags[key]):
                 return False
 
         return True
 
     def is_empty(self) -> bool:
         """Check if TagSet has no tags."""
-        return len(self._tags) == 0
+        return len(self.tags) == 0
 
     def __len__(self) -> int:
         """Return total number of unique tags (key:value pairs)."""
-        return sum(len(values) for values in self._tags.values())
+        return sum(len(values) for values in self.tags.values())
 
     def __bool__(self) -> bool:
         """Return True if TagSet has any tags."""
-        return bool(self._tags)
+        return bool(self.tags)
 
     def __str__(self) -> str:
         """String representation showing all tags."""
-        tags = []
-        for key in sorted(self._tags.keys()):
-            for value in sorted(self._tags[key]):
-                tags.append(f"{key}:{value}")
-        return f"TagSet({', '.join(tags)})" if tags else "TagSet(empty)"
+        tag_list = []
+        for key in sorted(self.tags.keys()):
+            for value in sorted(self.tags[key]):
+                tag_list.append(f"{key}:{value}")
+        return f"TagSet({', '.join(tag_list)})" if tag_list else "TagSet(empty)"
 
     def __repr__(self) -> str:
         return self.__str__()
