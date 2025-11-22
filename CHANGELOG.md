@@ -5,13 +5,42 @@
 
 ### Features
 
-* add suite_result and tagging ([e36becd](https://github.com/getyourguide/dataframe-expectations/commit/e36becd82141ad38e122d1d5209a12c2d0971b46))
-* add suite_result and tagging ([e0857b4](https://github.com/getyourguide/dataframe-expectations/commit/e0857b4ae906c297431b21cfafa4166653c9d413))
+* **Tag-based filtering**: Add support for selective expectation execution using custom tags
+  - New `TagMatchMode` enum with `ANY` (OR logic) and `ALL` (AND logic) options
+  - Tag expectations with `"key:value"` format (e.g., `"priority:high"`, `"env:prod"`)
+  - Filter at build time: `suite.build(tags=["priority:high"], tag_match_mode=TagMatchMode.ANY)`
+  - All expectations automatically support the `tags` parameter
+  - Converted `TagSet` to Pydantic `BaseModel` with frozen configuration for immutability
+
+  ```python
+  # Tag expectations
+  suite = (
+      DataFrameExpectationsSuite()
+      .expect_value_greater_than(column_name="age", value=18, tags=["priority:high", "env:prod"])
+      .expect_value_not_null(column_name="name", tags=["priority:high"])
+      .expect_min_rows(min_rows=1, tags=["priority:low", "env:test"])
+  )
+
+  # Run only high-priority checks (OR logic)
+  runner = suite.build(tags=["priority:high"], tag_match_mode=TagMatchMode.ANY)
+
+  # Run production-critical checks (AND logic)
+  runner = suite.build(tags=["priority:high", "env:prod"], tag_match_mode=TagMatchMode.ALL)
+  ```
+
+* **Programmatic result inspection**: Enhanced `SuiteExecutionResult` for detailed validation analysis
+  - Use `raise_on_failure=False` to inspect results without raising exceptions
+  - Access comprehensive metrics: `total_expectations`, `total_passed`, `total_failed`, `pass_rate`, `total_duration_seconds`
+  - Inspect individual expectation results with status, violation counts, descriptions, and timing
+  - View applied tag filters in execution results
+  - Removed `arbitrary_types_allowed` from Pydantic models for cleaner type validation
 
 
 ### Documentation
 
-* updated documentation ([6a08bd9](https://github.com/getyourguide/dataframe-expectations/commit/6a08bd9166d10cbf252e5f9a0e50a0e7bf192602))
+- Added tag-based filtering examples to README.md
+- Updated Sphinx documentation with API references for `TagMatchMode` and `TagSet`
+- Documented programmatic result inspection with metrics access and failure analysis
 
 ## [0.4.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.3.0...v0.4.0) (2025-11-10)
 
