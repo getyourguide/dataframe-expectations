@@ -224,8 +224,8 @@ def test_builder_pattern_immutability():
     runner1 = suite.build()
 
     # Verify runner1 has exactly 1 expectation
-    assert runner1.expectation_count == 1, "Runner1 should have 1 expectation"
-    expectations_list = runner1.list_expectations()
+    assert runner1.total_expectations == 1, "Runner1 should have 1 expectation"
+    expectations_list = runner1.list_all_expectations()
     assert len(expectations_list) == 1
     assert expectations_list[0] == "ExpectationValueGreaterThan ('col1' is greater than 5)"
 
@@ -236,9 +236,9 @@ def test_builder_pattern_immutability():
     runner2 = suite.build()
 
     # Verify runner2 has 2 expectations but runner1 is unchanged
-    assert runner1.expectation_count == 1, "Runner1 should still have 1 expectation (immutable)"
-    assert runner2.expectation_count == 2, "Runner2 should have 2 expectations"
-    expectations_list2 = runner2.list_expectations()
+    assert runner1.total_expectations == 1, "Runner1 should still have 1 expectation (immutable)"
+    assert runner2.total_expectations == 2, "Runner2 should have 2 expectations"
+    expectations_list2 = runner2.list_all_expectations()
     assert len(expectations_list2) == 2
     assert expectations_list2[0] == "ExpectationValueGreaterThan ('col1' is greater than 5)"
     assert expectations_list2[1] == "ExpectationValueLessThan ('col1' is less than 20)"

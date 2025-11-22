@@ -4,6 +4,8 @@ Simple tag-based filtering using "key:value" format strings.
 Tags are stored internally as Dict[key, Set[values]] for efficient matching.
 """
 
+from __future__ import annotations
+
 from typing import Dict, List, Optional, Set
 
 
@@ -61,12 +63,12 @@ class TagSet:
             self._tags[key] = set()
         self._tags[key].add(value)
 
-    def has_any_tag_from(self, other: "TagSet") -> bool:
+    def has_any_tag_from(self, other: TagSet) -> bool:
         """
         Check if this TagSet has ANY tag from the other TagSet (OR logic).
 
         For each key in 'other', checks if there's any overlap in values.
-        Returns True if ANY key has matching values.
+        Returns True if ANY key has any overlapping values.
 
         :param other: TagSet to match against
         :return: True if any tag matches
@@ -94,12 +96,12 @@ class TagSet:
 
         return False
 
-    def has_all_tags_from(self, other: "TagSet") -> bool:
+    def has_all_tags_from(self, other: TagSet) -> bool:
         """
         Check if this TagSet has ALL tags from the other TagSet (AND logic).
 
         For each key in 'other', checks if there's any overlap in values.
-        Returns True only if ALL keys have matching values.
+        Returns True only if ALL keys from other have overlapping values.
 
         :param other: TagSet to match against
         :return: True if all tags match
@@ -118,12 +120,12 @@ class TagSet:
         if not other._tags:
             return True  # Empty filter matches everything
 
-        # AND logic: all keys must have overlapping values
+        # AND logic: all keys must have ALL required values present
         for key, required_values in other._tags.items():
             if key not in self._tags:
                 return False
-            # Check if there's any overlap between required values and our values
-            if not (required_values & self._tags[key]):
+            # Check if ALL required values are present in our values
+            if not required_values.issubset(self._tags[key]):
                 return False
 
         return True

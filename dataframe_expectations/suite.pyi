@@ -20,6 +20,25 @@ class DataFrameExpectationsSuiteFailure(Exception):
         ...
 
 class DataFrameExpectationsSuiteRunner:
+    """
+    Immutable runner for executing a fixed set of expectations.
+    This class is created by DataFrameExpectationsSuite.build() and
+    runs the expectations on provided DataFrames.
+    """
+    @staticmethod
+    def _matches_tag_filter(expectation: Any, filter_tag_set: TagSet, tag_match_mode: Literal['any', 'all']) -> bool:
+        """
+
+                Check if an expectation matches the tag filter criteria.
+
+                :param expectation: Expectation instance to check.
+                :param filter_tag_set: Tag filter to match against.
+                :param tag_match_mode: Match mode - "any" (OR) or "all" (AND).
+                :return: True if expectation matches filter, False otherwise.
+                :raises ValueError: If tag_match_mode is invalid.
+
+        """
+        ...
     def __init__(self, expectations: List[Any], suite_name: Optional[str]=None, violation_sample_limit: int=5, tags: Optional[List[str]]=None, tag_match_mode: Optional[Literal['any', 'all']]=None):
         """
 
@@ -41,9 +60,9 @@ class DataFrameExpectationsSuiteRunner:
         """
         ...
     @property
-    def expectation_count(self) -> int:
+    def selected_expectations_count(self) -> int:
         """
-        Return the number of expectations in this runner.
+        Return the number of expectations that will run (after filtering).
         """
         ...
     @property
@@ -58,12 +77,22 @@ class DataFrameExpectationsSuiteRunner:
         Return the applied tag filters for this runner.
         """
         ...
-    def list_expectations(self) -> List[str]:
+    def list_all_expectations(self) -> List[str]:
         """
 
-                Return a list of expectation descriptions in this runner.
+                Return a list of all expectation descriptions before filtering.
 
-                :return: List of expectation descriptions as strings in the format:
+                :return: List of all expectation descriptions as strings in the format:
+                         "ExpectationName (description)"
+
+        """
+        ...
+    def list_selected_expectations(self) -> List[str]:
+        """
+
+                Return a list of selected expectation descriptions (after filtering).
+
+                :return: List of selected expectation descriptions as strings in the format:
                          "ExpectationName (description)"
 
         """

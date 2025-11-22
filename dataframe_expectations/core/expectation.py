@@ -29,7 +29,13 @@ class DataFrameExpectation(ABC):
         :param tags: Optional tags as list of strings in "key:value" format.
                     Example: ["priority:high", "env:test"]
         """
-        self.tags = TagSet(tags)
+        self.__tags = TagSet(tags)
+
+    def get_tags(self) -> TagSet:
+        """
+        Returns the tags for this expectation.
+        """
+        return self.__tags
 
     def get_expectation_name(self) -> str:
         """

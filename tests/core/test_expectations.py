@@ -3,8 +3,59 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
+from dataframe_expectations.core.column_expectation import DataFrameColumnExpectation
 from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 from dataframe_expectations.core.expectation import DataFrameExpectation
+from dataframe_expectations.core.tagging import TagSet
+from dataframe_expectations.expectations.column.numerical import (
+    create_expectation_value_greater_than,
+    create_expectation_value_less_than,
+    create_expectation_value_between,
+)
+from dataframe_expectations.expectations.column.any_value import (
+    create_expectation_value_equals,
+    create_expectation_value_not_equals,
+    create_expectation_value_null,
+    create_expectation_value_not_null,
+    create_expectation_value_in,
+    create_expectation_value_not_in,
+)
+from dataframe_expectations.expectations.column.string import (
+    create_expectation_string_contains,
+    create_expectation_string_length_equals,
+    create_expectation_string_length_between,
+)
+from dataframe_expectations.expectations.aggregation.any_value import (
+    ExpectationMinRows,
+    ExpectationMaxRows,
+    ExpectationMaxNullPercentage,
+    ExpectationMaxNullCount,
+    create_expectation_max_null_count,
+    create_expectation_max_null_percentage,
+    create_expectation_max_rows,
+    create_expectation_min_rows,
+)
+from dataframe_expectations.expectations.aggregation.numerical import (
+    ExpectationColumnQuantileBetween,
+    ExpectationColumnMeanBetween,
+    create_expectation_column_max_to_be_between,
+    create_expectation_column_median_to_be_between,
+    create_expectation_column_min_to_be_between,
+    create_expectation_column_quantile_between,
+    create_expectation_column_mean_to_be_between,
+)
+from dataframe_expectations.expectations.aggregation.unique import (
+    ExpectationUniqueRows,
+    ExpectationDistinctColumnValuesEquals,
+    ExpectationDistinctColumnValuesLessThan,
+    ExpectationDistinctColumnValuesGreaterThan,
+    ExpectationDistinctColumnValuesBetween,
+    create_expectation_distinct_column_values_equals,
+    create_expectation_unique,
+    create_expectation_distinct_column_values_less_than,
+    create_expectation_distinct_column_values_greater_than,
+    create_expectation_distinct_column_values_between,
+)
 
 
 class MyTestExpectation(DataFrameExpectation):
@@ -300,3 +351,162 @@ def test_infer_data_frame_type_connect_import_behavior(spark):
         assert result_type == DataFrameType.PYSPARK, (
             f"Expected PYSPARK type for Connect DataFrame but got: {result_type}"
         )
+
+
+@pytest.mark.parametrize(
+    "tag_list, expected_count, expected_empty",
+    [
+        (None, 0, True),
+        ([], 0, True),
+        (["priority:high"], 1, False),
+        (["priority:high", "env:prod"], 2, False),
+        (["priority:high", "env:prod", "team:data", "critical:true"], 4, False),
+        (["priority:high", "priority:high", "env:prod"], 2, False),  # Deduplication
+    ],
+)
+def test_tags_initialization(tag_list, expected_count, expected_empty):
+    """Test that DataFrameExpectation properly initializes tags."""
+    expectation = MyTestExpectation(tags=tag_list)
+    tags = expectation.get_tags()
+
+    assert isinstance(tags, TagSet)
+    assert len(tags) == expected_count
+    assert tags.is_empty() == expected_empty
+
+
+def test_tags_propagation_to_subclass():
+    """Test that tags are properly propagated to subclasses."""
+
+    class MySubclassExpectation(MyTestExpectation):
+        def __init__(self, custom_param: str, tags=None):
+            super().__init__(tags=tags)
+            self.custom_param = custom_param
+
+    expectation_no_tags = MySubclassExpectation(custom_param="test")
+    assert expectation_no_tags.get_tags().is_empty()
+
+    expectation_with_tags = MySubclassExpectation(custom_param="test", tags=["priority:high"])
+    assert len(expectation_with_tags.get_tags()) == 1
+
+
+def test_tags_immutability():
+    """Test that get_tags() returns the same TagSet instance."""
+    expectation = MyTestExpectation(tags=["priority:high"])
+    tags1 = expectation.get_tags()
+    tags2 = expectation.get_tags()
+
+    assert isinstance(tags1, TagSet)
+    assert tags1 is tags2
+
+
+def test_tags_with_invalid_format():
+    """Test that invalid tag formats raise appropriate errors."""
+    with pytest.raises(ValueError, match="Invalid tag format"):
+        MyTestExpectation(tags=["invalid-tag-no-colon"])
+
+
+@pytest.mark.parametrize(
+    "factory_fn, kwargs",
+    [
+        (
+            DataFrameColumnExpectation,
+            {
+                "expectation_name": "TestColumn",
+                "column_name": "test",
+                "fn_violations_pandas": lambda df: df,
+                "fn_violations_pyspark": lambda df: df,
+                "description": "Test",
+                "error_message": "Error",
+            },
+        ),
+        # Column expectations (factory-created)
+        (create_expectation_value_greater_than, {"column_name": "col", "value": 10}),
+        (create_expectation_value_less_than, {"column_name": "col", "value": 10}),
+        (create_expectation_value_between, {"column_name": "col", "min_value": 1, "max_value": 10}),
+        (create_expectation_value_equals, {"column_name": "col", "value": 10}),
+        (create_expectation_value_not_equals, {"column_name": "col", "value": 10}),
+        (create_expectation_value_null, {"column_name": "col"}),
+        (create_expectation_value_not_null, {"column_name": "col"}),
+        (create_expectation_value_in, {"column_name": "col", "values": [1, 2, 3]}),
+        (create_expectation_value_not_in, {"column_name": "col", "values": [1, 2, 3]}),
+        (create_expectation_string_contains, {"column_name": "col", "substring": "test"}),
+        (create_expectation_string_length_equals, {"column_name": "col", "length": 5}),
+        (
+            create_expectation_string_length_between,
+            {"column_name": "col", "min_length": 1, "max_length": 10},
+        ),
+        # Aggregation expectations (class-based)
+        (ExpectationMinRows, {"min_rows": 10}),
+        (ExpectationMaxRows, {"max_rows": 100}),
+        (ExpectationMaxNullPercentage, {"column_name": "col", "max_percentage": 0.1}),
+        (ExpectationMaxNullCount, {"column_name": "col", "max_count": 10}),
+        (
+            ExpectationColumnQuantileBetween,
+            {"column_name": "col", "quantile": 0.5, "min_value": 1, "max_value": 10},
+        ),
+        (ExpectationColumnMeanBetween, {"column_name": "col", "min_value": 1, "max_value": 10}),
+        (ExpectationUniqueRows, {"column_names": ["col1", "col2"]}),
+        (ExpectationDistinctColumnValuesEquals, {"column_name": "col", "expected_value": 10}),
+        (ExpectationDistinctColumnValuesLessThan, {"column_name": "col", "threshold": 10}),
+        (ExpectationDistinctColumnValuesGreaterThan, {"column_name": "col", "threshold": 10}),
+        (
+            ExpectationDistinctColumnValuesBetween,
+            {"column_name": "col", "min_value": 1, "max_value": 10},
+        ),
+        # Aggregation expectations (factory-created)
+        (create_expectation_min_rows, {"min_rows": 10}),
+        (create_expectation_max_rows, {"max_rows": 100}),
+        (create_expectation_max_null_percentage, {"column_name": "col", "max_percentage": 0.1}),
+        (create_expectation_max_null_count, {"column_name": "col", "max_count": 10}),
+        (
+            create_expectation_column_quantile_between,
+            {"column_name": "col", "quantile": 0.5, "min_value": 1, "max_value": 10},
+        ),
+        (
+            create_expectation_column_max_to_be_between,
+            {"column_name": "col", "min_value": 1, "max_value": 10},
+        ),
+        (
+            create_expectation_column_min_to_be_between,
+            {"column_name": "col", "min_value": 1, "max_value": 10},
+        ),
+        (
+            create_expectation_column_mean_to_be_between,
+            {"column_name": "col", "min_value": 1, "max_value": 10},
+        ),
+        (
+            create_expectation_column_median_to_be_between,
+            {"column_name": "col", "min_value": 1, "max_value": 10},
+        ),
+        (create_expectation_unique, {"column_names": ["col1", "col2"]}),
+        (
+            create_expectation_distinct_column_values_equals,
+            {"column_name": "col", "expected_value": 10},
+        ),
+        (
+            create_expectation_distinct_column_values_less_than,
+            {"column_name": "col", "threshold": 10},
+        ),
+        (
+            create_expectation_distinct_column_values_greater_than,
+            {"column_name": "col", "threshold": 10},
+        ),
+        (
+            create_expectation_distinct_column_values_between,
+            {"column_name": "col", "min_value": 1, "max_value": 10},
+        ),
+    ],
+)
+def test_tags_sent_to_base_class(factory_fn, kwargs):
+    """
+    Test that tags are properly propagated to all expectation classes.
+
+    Covers all direct and indirect children of DataFrameExpectation:
+    - DataFrameColumnExpectation (direct child)
+    - DataFrameAggregationExpectation (direct child)
+    - All factory-created column expectations
+    - All class-based aggregation expectations
+    """
+    test_tags = ["priority:high", "env:test"]
+    expectation = factory_fn(**kwargs, tags=test_tags)
+    assert len(expectation.get_tags()) == 2

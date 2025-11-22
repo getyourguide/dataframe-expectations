@@ -45,14 +45,12 @@ class ExpectationMinRows(DataFrameAggregationExpectation):
         if min_rows < 0:
             raise ValueError(f"min_rows must be non-negative, got {min_rows}")
 
-        description = f"DataFrame contains at least {min_rows} rows"
-
         self.min_rows = min_rows
 
         super().__init__(
             expectation_name="ExpectationMinRows",
             column_names=[],  # No specific columns required
-            description=description,
+            description=f"DataFrame contains at least {min_rows} rows",
             tags=tags,
         )
 
@@ -132,14 +130,12 @@ class ExpectationMaxRows(DataFrameAggregationExpectation):
         if max_rows < 0:
             raise ValueError(f"max_rows must be non-negative, got {max_rows}")
 
-        description = f"DataFrame contains at most {max_rows} rows"
-
         self.max_rows = max_rows
 
         super().__init__(
             expectation_name="ExpectationMaxRows",
             column_names=[],  # No specific columns required
-            description=description,
+            description=f"DataFrame contains at most {max_rows} rows",
             tags=tags,
         )
 
@@ -224,15 +220,13 @@ class ExpectationMaxNullPercentage(DataFrameAggregationExpectation):
         if not 0 <= max_percentage <= 100:
             raise ValueError(f"max_percentage must be between 0.0 and 100.0, got {max_percentage}")
 
-        description = f"column '{column_name}' null percentage is at most {max_percentage}%"
-
         self.column_name = column_name
         self.max_percentage = max_percentage
 
         super().__init__(
             expectation_name="ExpectationMaxNullPercentage",
             column_names=[column_name],  # Specify the required column
-            description=description,
+            description=f"column '{column_name}' null percentage is at most {max_percentage}%",
             tags=tags,
         )
 
@@ -343,15 +337,13 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
         if max_count < 0:
             raise ValueError(f"max_count must be non-negative, got {max_count}")
 
-        description = f"column '{column_name}' has at most {max_count} null values"
-
         self.column_name = column_name
         self.max_count = max_count
 
         super().__init__(
             expectation_name="ExpectationMaxNullCount",
             column_names=[column_name],  # Specify the required column
-            description=description,
+            description=f"column '{column_name}' has at most {max_count} null values",
             tags=tags,
         )
 

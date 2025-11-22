@@ -52,6 +52,38 @@ class DataFrameExpectationsSuiteFailure(Exception):
 
 
 class DataFrameExpectationsSuiteRunner:
+    """
+    Immutable runner for executing a fixed set of expectations.
+    This class is created by DataFrameExpectationsSuite.build() and
+    runs the expectations on provided DataFrames.
+    """
+
+    @staticmethod
+    def _matches_tag_filter(
+        expectation: Any,
+        filter_tag_set: TagSet,
+        tag_match_mode: Literal["any", "all"],
+    ) -> bool:
+        """
+        Check if an expectation matches the tag filter criteria.
+
+        :param expectation: Expectation instance to check.
+        :param filter_tag_set: Tag filter to match against.
+        :param tag_match_mode: Match mode - "any" (OR) or "all" (AND).
+        :return: True if expectation matches filter, False otherwise.
+        :raises ValueError: If tag_match_mode is invalid.
+        """
+        exp_tag_set = expectation.get_tags()
+
+        # Check if expectation matches filter
+        match tag_match_mode:
+            case "any":
+                return exp_tag_set.has_any_tag_from(filter_tag_set)
+            case "all":
+                return exp_tag_set.has_all_tags_from(filter_tag_set)
+            case _:
+                raise ValueError(f"Invalid tag_match_mode: {tag_match_mode}")
+
     def __init__(
         self,
         expectations: List[Any],
@@ -97,25 +129,15 @@ class DataFrameExpectationsSuiteRunner:
 
         # Filter expectations based on tags and track skipped ones
         if not self.__filter_tag_set.is_empty():
+            # At this point, validation ensures tag_match_mode is not None
+            assert tag_match_mode is not None
             filtered = []
             skipped = []
             for exp in self.__all_expectations:
-                exp_tags = getattr(exp, "tags", None)
-                if exp_tags is None:
-                    # No tags on expectation - skip it when filtering
-                    skipped.append(exp)
+                if self._matches_tag_filter(exp, self.__filter_tag_set, tag_match_mode):
+                    filtered.append(exp)
                 else:
-                    # Create TagSet from expectation's tags and check if it matches filter
-                    exp_tag_set = exp_tags if isinstance(exp_tags, TagSet) else TagSet(exp_tags)
-                    matches = (
-                        exp_tag_set.has_any_tag_from(self.__filter_tag_set)
-                        if tag_match_mode == "any"
-                        else exp_tag_set.has_all_tags_from(self.__filter_tag_set)
-                    )
-                    if matches:
-                        filtered.append(exp)
-                    else:
-                        skipped.append(exp)
+                    skipped.append(exp)
 
             self.__expectations = tuple(filtered)
             self.__skipped_expectations = tuple(skipped)
@@ -142,8 +164,8 @@ class DataFrameExpectationsSuiteRunner:
         self.__violation_sample_limit = violation_sample_limit
 
     @property
-    def expectation_count(self) -> int:
-        """Return the number of expectations in this runner."""
+    def selected_expectations_count(self) -> int:
+        """Return the number of expectations that will run (after filtering)."""
         return len(self.__expectations)
 
     @property
@@ -156,11 +178,20 @@ class DataFrameExpectationsSuiteRunner:
         """Return the applied tag filters for this runner."""
         return self.__filter_tag_set
 
-    def list_expectations(self) -> List[str]:
+    def list_all_expectations(self) -> List[str]:
         """
-        Return a list of expectation descriptions in this runner.
+        Return a list of all expectation descriptions before filtering.
 
-        :return: List of expectation descriptions as strings in the format:
+        :return: List of all expectation descriptions as strings in the format:
+                 "ExpectationName (description)"
+        """
+        return [f"{exp}" for exp in self.__all_expectations]
+
+    def list_selected_expectations(self) -> List[str]:
+        """
+        Return a list of selected expectation descriptions (after filtering).
+
+        :return: List of selected expectation descriptions as strings in the format:
                  "ExpectationName (description)"
         """
         return [f"{exp}" for exp in self.__expectations]
@@ -225,13 +256,8 @@ class DataFrameExpectationsSuiteRunner:
             # Run all expectations
             for expectation in self.__expectations:
                 result = expectation.validate(data_frame=data_frame)
-                exp_tags = getattr(expectation, "tags", None)
-                # Convert to TagSet if needed
-                exp_tag_set = (
-                    exp_tags
-                    if isinstance(exp_tags, TagSet)
-                    else (TagSet(exp_tags) if exp_tags else None)
-                )
+                # Get expectation's tags as TagSet
+                exp_tag_set = expectation.get_tags()
 
                 # Build ExpectationResult object using pattern matching
                 match result:
@@ -298,12 +324,8 @@ class DataFrameExpectationsSuiteRunner:
         # Build skipped expectations as ExpectationResult with status="skipped"
         skipped_list = []
         for exp in self.__skipped_expectations:
-            exp_tags = getattr(exp, "tags", None)
-            exp_tag_set = (
-                exp_tags
-                if isinstance(exp_tags, TagSet)
-                else (TagSet(exp_tags) if exp_tags else None)
-            )
+            # Get expectation's tags as TagSet
+            exp_tag_set = exp.get_tags()
             skipped_list.append(
                 ExpectationResult(
                     expectation_name=exp.get_expectation_name(),
@@ -542,52 +564,3 @@ class DataFrameExpectationsSuite:
             tags=tags,
             tag_match_mode=tag_match_mode,
         )
-
-
-if __name__ == "__main__":
-    import pandas as pd
-
-    # Example 1: Direct usage
-    print("=== Example 1: Direct Usage ===")
-    suite = DataFrameExpectationsSuite()
-    suite.expect_value_greater_than(column_name="age", value=18)
-    suite.expect_value_less_than(column_name="salary", value=1000)
-    suite.expect_unique_rows(column_names=["id"])
-    suite.expect_column_mean_between(column_name="age", min_value=20, max_value=40)
-    suite.expect_column_max_between(column_name="salary", min_value=80000, max_value=85000)
-
-    # Create a sample DataFrame
-    df = pd.DataFrame(
-        {
-            "id": [1, 2, 3, 4],
-            "age": [20, 25, 30, 35],
-            "salary": [50000, 90000, 80000, 85000],
-        }
-    )
-
-    # Build the runner and execute
-    runner = suite.build()
-    runner.run(data_frame=df)
-
-    # Example 2: Decorator usage
-    print("\n=== Example 2: Decorator Usage ===")
-    suite = DataFrameExpectationsSuite()
-    suite.expect_value_greater_than(column_name="age", value=20)
-    suite.expect_unique_rows(column_names=["id"])
-
-    runner = suite.build()
-
-    @runner.validate
-    def load_employee_data():
-        """Load employee data with automatic validation."""
-        return pd.DataFrame(
-            {
-                "id": [1, 2, 3],
-                "age": [18, 30, 35],
-                "name": ["Alice", "Bob", "Charlie"],
-            }
-        )
-
-    # Function is automatically validated when called
-    validated_df = load_employee_data()
-    print(f"Successfully loaded and validated DataFrame with {len(validated_df)} rows")

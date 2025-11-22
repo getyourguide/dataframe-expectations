@@ -7,9 +7,11 @@ from pydantic import BaseModel, Field, computed_field
 
 from dataframe_expectations.core.types import DataFrameType, DataFrameLike
 from dataframe_expectations.core.tagging import TagSet
-
+import logging
 
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class ExpectationStatus(str, Enum):
@@ -171,4 +173,5 @@ def serialize_violations(
         return count, sample
     except Exception:
         # If serialization fails, return None to avoid breaking the suite
+        logger.warning("Failed to serialize violations dataframe", exc_info=True)
         return None, None
