@@ -168,6 +168,52 @@ When validations fail, you'll see detailed output like this:
     +-----+------+--------+
     ================================================================================
 
+Tag-Based Filtering for Selective Execution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can tag expectations and selectively run them based on priority, environment, or custom categories:
+
+.. code-block:: python
+
+    from dataframe_expectations import DataFrameExpectationsSuite, TagMatchMode
+
+    # Tag expectations with priorities and environments
+    suite = (
+        DataFrameExpectationsSuite()
+        .expect_value_greater_than(column_name="age", value=18, tags=["priority:high", "env:prod"])
+        .expect_value_not_null(column_name="name", tags=["priority:high"])
+        .expect_min_rows(min_rows=1, tags=["priority:low", "env:test"])
+    )
+
+    # Run only high-priority checks (OR logic - matches ANY tag)
+    runner = suite.build(tags=["priority:high"], tag_match_mode=TagMatchMode.ANY)
+    runner.run(df)
+
+    # Run production-critical checks (AND logic - matches ALL tags)
+    runner = suite.build(tags=["priority:high", "env:prod"], tag_match_mode=TagMatchMode.ALL)
+    runner.run(df)
+
+Programmatic Result Inspection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get detailed validation results without raising exceptions:
+
+.. code-block:: python
+
+    # Get detailed results without raising exceptions
+    result = runner.run(df, raise_on_failure=False)
+
+    # Inspect validation outcomes
+    print(f"Total: {result.total_expectations}, Passed: {result.total_passed}, Failed: {result.total_failed}")
+    print(f"Pass rate: {result.pass_rate:.2%}")
+    print(f"Duration: {result.total_duration_seconds:.2f}s")
+    print(f"Applied filters: {result.applied_filters}")
+
+    # Access individual results
+    for exp_result in result.results:
+        if exp_result.status == "failed":
+            print(f"Failed: {exp_result.description} - {exp_result.violation_count} violations")
+
 How to contribute?
 ------------------
 Contributions are welcome! You can enhance the library by adding new expectations, refining existing ones, or improving

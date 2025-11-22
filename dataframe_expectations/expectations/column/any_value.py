@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from pyspark.sql import functions as F
 
 from dataframe_expectations.core.column_expectation import (
@@ -22,7 +24,9 @@ from dataframe_expectations.core.utils import requires_params
     },
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
-def create_expectation_value_equals(column_name: str, value: object) -> DataFrameColumnExpectation:
+def create_expectation_value_equals(
+    column_name: str, value: object, tags: Optional[List[str]] = None
+) -> DataFrameColumnExpectation:
     column_name = column_name
     value = value
     return DataFrameColumnExpectation(
@@ -32,6 +36,7 @@ def create_expectation_value_equals(column_name: str, value: object) -> DataFram
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name) != value),
         description=f"'{column_name}' equals {value}",
         error_message=f"'{column_name}' is not equal to {value}.",
+        tags=tags,
     )
 
 
@@ -47,7 +52,7 @@ def create_expectation_value_equals(column_name: str, value: object) -> DataFram
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": object})
 def create_expectation_value_not_equals(
-    column_name: str, value: object
+    column_name: str, value: object, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     value = value
@@ -58,6 +63,7 @@ def create_expectation_value_not_equals(
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name) == value),
         description=f"'{column_name}' is not equal to {value}",
         error_message=f"'{column_name}' is equal to {value}.",
+        tags=tags,
     )
 
 
@@ -71,7 +77,9 @@ def create_expectation_value_not_equals(
     },
 )
 @requires_params("column_name", types={"column_name": str})
-def create_expectation_value_null(column_name: str) -> DataFrameColumnExpectation:
+def create_expectation_value_null(
+    column_name: str, tags: Optional[List[str]] = None
+) -> DataFrameColumnExpectation:
     column_name = column_name
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNull",
@@ -80,6 +88,7 @@ def create_expectation_value_null(column_name: str) -> DataFrameColumnExpectatio
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name).isNotNull()),
         description=f"'{column_name}' is null",
         error_message=f"'{column_name}' is not null.",
+        tags=tags,
     )
 
 
@@ -93,7 +102,9 @@ def create_expectation_value_null(column_name: str) -> DataFrameColumnExpectatio
     },
 )
 @requires_params("column_name", types={"column_name": str})
-def create_expectation_value_not_null(column_name: str) -> DataFrameColumnExpectation:
+def create_expectation_value_not_null(
+    column_name: str, tags: Optional[List[str]] = None
+) -> DataFrameColumnExpectation:
     column_name = column_name
     return DataFrameColumnExpectation(
         expectation_name="ExpectationValueNotNull",
@@ -102,6 +113,7 @@ def create_expectation_value_not_null(column_name: str) -> DataFrameColumnExpect
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name).isNull()),
         description=f"'{column_name}' is not null",
         error_message=f"'{column_name}' is null.",
+        tags=tags,
     )
 
 
@@ -116,7 +128,9 @@ def create_expectation_value_not_null(column_name: str) -> DataFrameColumnExpect
     },
 )
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
-def create_expectation_value_in(column_name: str, values: list) -> DataFrameColumnExpectation:
+def create_expectation_value_in(
+    column_name: str, values: list, tags: Optional[List[str]] = None
+) -> DataFrameColumnExpectation:
     column_name = column_name
     values = values
     return DataFrameColumnExpectation(
@@ -126,6 +140,7 @@ def create_expectation_value_in(column_name: str, values: list) -> DataFrameColu
         fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).isin(values)),
         description=f"'{column_name}' is in {values}",
         error_message=f"'{column_name}' is not in {values}.",
+        tags=tags,
     )
 
 
@@ -140,7 +155,9 @@ def create_expectation_value_in(column_name: str, values: list) -> DataFrameColu
     },
 )
 @requires_params("column_name", "values", types={"column_name": str, "values": list})
-def create_expectation_value_not_in(column_name: str, values: list) -> DataFrameColumnExpectation:
+def create_expectation_value_not_in(
+    column_name: str, values: list, tags: Optional[List[str]] = None
+) -> DataFrameColumnExpectation:
     column_name = column_name
     values = values
     return DataFrameColumnExpectation(
@@ -150,4 +167,5 @@ def create_expectation_value_not_in(column_name: str, values: list) -> DataFrame
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name).isin(values)),
         description=f"'{column_name}' is not in {values}",
         error_message=f"'{column_name}' is in {values}.",
+        tags=tags,
     )

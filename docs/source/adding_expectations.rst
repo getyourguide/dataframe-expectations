@@ -64,6 +64,7 @@ Once you have decided where the expectation needs to be added, you can define it
     def create_expectation_is_divisible(**kwargs) -> DataFrameColumnExpectation:
         column_name = kwargs["column_name"]
         value = kwargs["value"]
+        tags = kwargs.get("tags")
 
         return DataFrameColumnExpectation(
             expectation_name="ExpectIsDivisible",
@@ -72,6 +73,7 @@ Once you have decided where the expectation needs to be added, you can define it
             fn_violations_pyspark=lambda df: df.filter(F.col(column_name) % value != 0), # function that finds violations
             description=f"'{column_name}' divisible by {value}",
             error_message=f"'{column_name}' not divisible by {value}.",
+            tags=tags,
         )
 
 For additional guidance, you can refer to the implementation of ``ExpectationValueGreaterThan`` and
@@ -84,7 +86,6 @@ The ``@register_expectation`` decorator is required and has the following mandat
 - ``category``: Use ``ExpectationCategory.COLUMN`` or ``ExpectationCategory.AGGREGATION``
 - ``subcategory``: Choose from ``ExpectationSubcategory.NUMERICAL``, ``ExpectationSubcategory.STRING``, or ``ExpectationSubcategory.ANY_VALUE``
 - ``pydoc``: A brief description of what the expectation does
-- ``params``: List of parameter names (e.g., ["column_name", "value"])
 - ``params_doc``: Dictionary mapping parameter names to their descriptions
 - ``param_types``: Dictionary mapping parameter names to their Python types
 
@@ -132,7 +133,7 @@ Here's an example of how to implement an aggregation-based expectation:
         Expectation that validates the DataFrame has at least a minimum number of rows.
         """
 
-        def __init__(self, min_count: int):
+        def __init__(self, min_count: int, tags: Optional[List[str]] = None):
             description = f"DataFrame has at least {min_count} row(s)"
             self.min_count = min_count
 
@@ -140,6 +141,7 @@ Here's an example of how to implement an aggregation-based expectation:
                 expectation_name="ExpectationMinRows",
                 column_names=[],  # Empty list since this operates on entire DataFrame
                 description=description,
+                tags=tags,
             )
 
         def aggregate_and_validate_pandas(
@@ -198,7 +200,6 @@ Here's an example of how to implement an aggregation-based expectation:
         category=ExpectationCategory.AGGREGATION,
         subcategory=ExpectationSubcategory.ANY_VALUE,
         pydoc="Expect DataFrame to have at least a minimum number of rows.",
-        params=["min_count"],
         params_doc={"min_count": "Minimum required number of rows"},
         param_types={"min_count": int}
     )
@@ -213,7 +214,7 @@ Here's an example of how to implement an aggregation-based expectation:
         Returns:
             ExpectationMinRows: A configured expectation instance.
         """
-        return ExpectationMinRows(min_count=kwargs["min_count"])
+        return ExpectationMinRows(min_count=kwargs["min_count"], tags=kwargs.get("tags"))
 
 Key differences for aggregation-based expectations:
 
@@ -236,7 +237,7 @@ Example of a column-based aggregation expectation:
         Expectation that validates the mean value of a column falls within a specified range.
         """
 
-        def __init__(self, column_name: str, min_value: float, max_value: float):
+        def __init__(self, column_name: str, min_value: float, max_value: float, tags: Optional[List[str]] = None):
             description = f"column '{column_name}' mean value between {min_value} and {max_value}"
 
             self.column_name = column_name
@@ -247,6 +248,7 @@ Example of a column-based aggregation expectation:
                 expectation_name="ExpectationColumnMeanBetween",
                 column_names=[column_name],  # List of columns this expectation requires
                 description=description,
+                tags=tags,
             )
 
         def aggregate_and_validate_pandas(
@@ -415,6 +417,13 @@ The method names are automatically derived by:
 
 No manual integration is required! Simply register your expectation and it will be available in the suite.
 
+**Note for Expectation Authors:**
+
+Your expectations automatically support tagging without any additional implementation. The tagging functionality is
+handled by the ``DataFrameExpectation`` base class and the suite builder. Users simply pass the ``tags`` parameter
+when adding expectations to their suite. See the Getting Started guide for details on how users can leverage tags
+for selective execution.
+
 Generating Type Stubs for IDE Support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -424,8 +433,9 @@ To provide IDE autocomplete and type hints for all expect methods, run the stub 
 
     uv run python scripts/generate_suite_stubs.py
 
-This creates ``suite.pyi`` with type hints for all registered expectations. The stub file is automatically
-validated by the sanity check script and pre-commit hooks.
+This creates ``suite.pyi`` with type hints for all registered expectations. The stub generator automatically adds
+the ``tags`` parameter to all expectation method signatures with appropriate documentation, so you don't need to
+include it in your ``params_doc``. The stub file is automatically validated by the sanity check script and pre-commit hooks.
 
 Adding Unit Tests
 -----------------

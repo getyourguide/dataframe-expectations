@@ -297,7 +297,8 @@ def test_expectation_basic_scenarios(
 
     if should_succeed:
         suite_result = suite.build().run(data_frame=df)
-        assert suite_result is None, f"Suite test expected None but got: {suite_result}"
+        assert suite_result is not None, "Expected SuiteExecutionResult"
+        assert suite_result.success, "Expected all expectations to pass"
     else:
         with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.build().run(data_frame=df)

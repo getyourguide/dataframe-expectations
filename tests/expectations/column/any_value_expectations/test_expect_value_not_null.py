@@ -9,6 +9,7 @@ from dataframe_expectations.registry import (
 from dataframe_expectations.suite import (
     DataFrameExpectationsSuite,
     DataFrameExpectationsSuiteFailure,
+    SuiteExecutionResult,
 )
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
@@ -457,7 +458,13 @@ def test_expectation_basic_scenarios(
 
     if should_succeed:
         suite_result = suite.build().run(data_frame=df)
-        assert suite_result is None, f"Suite test expected None but got: {suite_result}"
+        assert suite_result is not None, "Expected SuiteExecutionResult"
+        assert isinstance(suite_result, SuiteExecutionResult), (
+            "Result should be SuiteExecutionResult"
+        )
+        assert suite_result.success, "Expected all expectations to pass"
+        assert suite_result.total_passed == 1, "Expected 1 passed expectation"
+        assert suite_result.total_failed == 0, "Expected 0 failed expectations"
     else:
         with pytest.raises(DataFrameExpectationsSuiteFailure):
             suite.build().run(data_frame=df)

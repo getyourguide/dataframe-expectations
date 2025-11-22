@@ -19,6 +19,7 @@ dependencies = [
 dev = [
     "numpy>=1.21.0",
     "pytest>=7.0.0",
+    "pytest-xdist>=3.0.0",
     "pre-commit>=2.20.0",
     "ruff>=0.1.0",
     "pytest-cov>=4.0.0",

@@ -1,3 +1,4 @@
+from typing import List, Optional
 from pyspark.sql import functions as F
 
 from dataframe_expectations.core.column_expectation import (
@@ -23,7 +24,7 @@ from dataframe_expectations.core.utils import requires_params
 )
 @requires_params("column_name", "substring", types={"column_name": str, "substring": str})
 def create_expectation_string_contains(
-    column_name: str, substring: str
+    column_name: str, substring: str, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     substring = substring
@@ -34,6 +35,7 @@ def create_expectation_string_contains(
         fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).contains(substring)),
         description=f"'{column_name}' contains '{substring}'",
         error_message=f"'{column_name}' does not contain '{substring}'.",
+        tags=tags,
     )
 
 
@@ -49,7 +51,7 @@ def create_expectation_string_contains(
 )
 @requires_params("column_name", "substring", types={"column_name": str, "substring": str})
 def create_expectation_string_not_contains(
-    column_name: str, substring: str
+    column_name: str, substring: str, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     substring = substring
@@ -60,6 +62,7 @@ def create_expectation_string_not_contains(
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name).contains(substring)),
         description=f"'{column_name}' does not contain '{substring}'",
         error_message=f"'{column_name}' contains '{substring}'.",
+        tags=tags,
     )
 
 
@@ -75,7 +78,7 @@ def create_expectation_string_not_contains(
 )
 @requires_params("column_name", "prefix", types={"column_name": str, "prefix": str})
 def create_expectation_string_starts_with(
-    column_name: str, prefix: str
+    column_name: str, prefix: str, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     prefix = prefix
@@ -86,6 +89,7 @@ def create_expectation_string_starts_with(
         fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).startswith(prefix)),
         description=f"'{column_name}' starts with '{prefix}'",
         error_message=f"'{column_name}' does not start with '{prefix}'.",
+        tags=tags,
     )
 
 
@@ -101,7 +105,7 @@ def create_expectation_string_starts_with(
 )
 @requires_params("column_name", "suffix", types={"column_name": str, "suffix": str})
 def create_expectation_string_ends_with(
-    column_name: str, suffix: str
+    column_name: str, suffix: str, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     suffix = suffix
@@ -112,6 +116,7 @@ def create_expectation_string_ends_with(
         fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).endswith(suffix)),
         description=f"'{column_name}' ends with '{suffix}'",
         error_message=f"'{column_name}' does not end with '{suffix}'.",
+        tags=tags,
     )
 
 
@@ -127,7 +132,7 @@ def create_expectation_string_ends_with(
 )
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
 def create_expectation_string_length_less_than(
-    column_name: str, length: int
+    column_name: str, length: int, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     length = length
@@ -138,6 +143,7 @@ def create_expectation_string_length_less_than(
         fn_violations_pyspark=lambda df: df.filter(F.length(column_name) >= length),
         description=f"'{column_name}' length is less than {length}",
         error_message=f"'{column_name}' length is not less than {length}.",
+        tags=tags,
     )
 
 
@@ -153,7 +159,7 @@ def create_expectation_string_length_less_than(
 )
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
 def create_expectation_string_length_greater_than(
-    column_name: str, length: int
+    column_name: str, length: int, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     length = length
@@ -164,6 +170,7 @@ def create_expectation_string_length_greater_than(
         fn_violations_pyspark=lambda df: df.filter(F.length(F.col(column_name)) <= length),
         description=f"'{column_name}' length is greater than {length}",
         error_message=f"'{column_name}' length is not greater than {length}.",
+        tags=tags,
     )
 
 
@@ -185,7 +192,7 @@ def create_expectation_string_length_greater_than(
     types={"column_name": str, "min_length": int, "max_length": int},
 )
 def create_expectation_string_length_between(
-    column_name: str, min_length: int, max_length: int
+    column_name: str, min_length: int, max_length: int, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     min_length = min_length
@@ -202,6 +209,7 @@ def create_expectation_string_length_between(
         ),
         description=f"'{column_name}' length is between {min_length} and {max_length}",
         error_message=f"'{column_name}' length is not between {min_length} and {max_length}.",
+        tags=tags,
     )
 
 
@@ -217,7 +225,7 @@ def create_expectation_string_length_between(
 )
 @requires_params("column_name", "length", types={"column_name": str, "length": int})
 def create_expectation_string_length_equals(
-    column_name: str, length: int
+    column_name: str, length: int, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     length = length
@@ -228,4 +236,5 @@ def create_expectation_string_length_equals(
         fn_violations_pyspark=lambda df: df.filter(F.length(F.col(column_name)) != length),
         description=f"'{column_name}' length equals {length}",
         error_message=f"'{column_name}' length is not equal to {length}.",
+        tags=tags,
     )

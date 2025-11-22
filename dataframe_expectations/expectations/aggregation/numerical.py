@@ -1,4 +1,4 @@
-from typing import Union, cast
+from typing import List, Optional, Union, cast
 
 import pandas as pd
 from pandas import DataFrame as PandasDataFrame
@@ -50,6 +50,7 @@ class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
         quantile: float,
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ):
         """
         Initialize the column quantile between expectation.
@@ -86,6 +87,7 @@ class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
             expectation_name="ExpectationColumnQuantileBetween",
             column_names=[column_name],
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -220,6 +222,7 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
         column_name: str,
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ):
         """
         Initialize the column mean between expectation.
@@ -238,6 +241,7 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
             expectation_name="ExpectationColumnMeanBetween",
             column_names=[column_name],
             description=description,
+            tags=tags,
         )
 
     def aggregate_and_validate_pandas(
@@ -346,6 +350,7 @@ def create_expectation_column_quantile_between(
     quantile: float,
     min_value: Union[int, float],
     max_value: Union[int, float],
+    tags: Optional[List[str]] = None,
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance.
@@ -354,6 +359,7 @@ def create_expectation_column_quantile_between(
     :param quantile: Quantile to compute (0.0 to 1.0).
     :param min_value: Minimum allowed value for the column quantile.
     :param max_value: Maximum allowed value for the column quantile.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance.
     """
     return ExpectationColumnQuantileBetween(
@@ -361,6 +367,7 @@ def create_expectation_column_quantile_between(
         quantile=quantile,
         min_value=min_value,
         max_value=max_value,
+        tags=tags,
     )
 
 
@@ -386,6 +393,7 @@ def create_expectation_column_max_to_be_between(
     column_name: str,
     min_value: Union[int, float],
     max_value: Union[int, float],
+    tags: Optional[List[str]] = None,
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance for maximum values (quantile=1.0).
@@ -393,6 +401,7 @@ def create_expectation_column_max_to_be_between(
     :param column_name: Name of the column to check.
     :param min_value: Minimum allowed value for the column maximum.
     :param max_value: Maximum allowed value for the column maximum.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance for maximum values.
     """
     return ExpectationColumnQuantileBetween(
@@ -400,6 +409,7 @@ def create_expectation_column_max_to_be_between(
         quantile=1.0,
         min_value=min_value,
         max_value=max_value,
+        tags=tags,
     )
 
 
@@ -424,6 +434,7 @@ def create_expectation_column_min_to_be_between(
     column_name: str,
     min_value: Union[int, float],
     max_value: Union[int, float],
+    tags: Optional[List[str]] = None,
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance for minimum values (quantile=0.0).
@@ -431,6 +442,7 @@ def create_expectation_column_min_to_be_between(
     :param column_name: Name of the column to check.
     :param min_value: Minimum allowed value for the column minimum.
     :param max_value: Maximum allowed value for the column minimum.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance for minimum values.
     """
     return ExpectationColumnQuantileBetween(
@@ -438,6 +450,7 @@ def create_expectation_column_min_to_be_between(
         quantile=0.0,
         min_value=min_value,
         max_value=max_value,
+        tags=tags,
     )
 
 
@@ -462,6 +475,7 @@ def create_expectation_column_mean_to_be_between(
     column_name: str,
     min_value: Union[int, float],
     max_value: Union[int, float],
+    tags: Optional[List[str]] = None,
 ) -> ExpectationColumnMeanBetween:
     """
     Create a custom ExpectationColumnMeanBetween instance for mean values.
@@ -470,6 +484,7 @@ def create_expectation_column_mean_to_be_between(
     :param column_name: Name of the column to check.
     :param min_value: Minimum allowed value for the column mean.
     :param max_value: Maximum allowed value for the column mean.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance for mean values.
     """
     # For mean, we need a separate class since it's not a quantile
@@ -477,6 +492,7 @@ def create_expectation_column_mean_to_be_between(
         column_name=column_name,
         min_value=min_value,
         max_value=max_value,
+        tags=tags,
     )
 
 
@@ -501,6 +517,7 @@ def create_expectation_column_median_to_be_between(
     column_name: str,
     min_value: Union[int, float],
     max_value: Union[int, float],
+    tags: Optional[List[str]] = None,
 ) -> ExpectationColumnQuantileBetween:
     """
     Create an ExpectationColumnQuantileBetween instance for median values (quantile=0.5).
@@ -508,6 +525,7 @@ def create_expectation_column_median_to_be_between(
     :param column_name: Name of the column to check.
     :param min_value: Minimum allowed value for the column median.
     :param max_value: Maximum allowed value for the column median.
+    :param tags: Optional tags as list of strings in "key:value" format.
     :return: A configured expectation instance for median values.
     """
     return ExpectationColumnQuantileBetween(
@@ -515,4 +533,5 @@ def create_expectation_column_median_to_be_between(
         quantile=0.5,
         min_value=min_value,
         max_value=max_value,
+        tags=tags,
     )

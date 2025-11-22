@@ -44,22 +44,26 @@ def transform_suite_to_stub() -> str:
 
     # Process imports
     for node in tree.body:
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            # Skip logger import
-            if isinstance(node, ast.ImportFrom) and node.module == 'dataframe_expectations.logging_utils':
+        match node:
+            case ast.ImportFrom(module='dataframe_expectations.logging_utils'):
+                # Skip logger import
                 continue
-            # Add Union to typing imports if not present
-            unparsed = ast.unparse(node)
-            if isinstance(node, ast.ImportFrom) and node.module == 'typing' and 'Union' not in unparsed:
-                unparsed = unparsed.replace('from typing import ', 'from typing import Union, ')
-            stub_lines.append(unparsed)
+            case ast.ImportFrom(module='typing') as import_node:
+                # Add Union to typing imports if not present
+                unparsed = ast.unparse(import_node)
+                if 'Union' not in unparsed:
+                    unparsed = unparsed.replace('from typing import ', 'from typing import Union, ')
+                stub_lines.append(unparsed)
+            case ast.Import() | ast.ImportFrom():
+                stub_lines.append(ast.unparse(node))
 
     stub_lines.append('')  # Empty line after imports
 
     # Process classes
     for node in tree.body:
-        if isinstance(node, ast.ClassDef):
-            stub_lines.append(format_class_stub(node))
+        match node:
+            case ast.ClassDef():
+                stub_lines.append(format_class_stub(node))
 
     return '\n'.join(stub_lines)
 
@@ -76,23 +80,22 @@ def format_class_stub(class_node: ast.ClassDef) -> str:
         lines.append(f'class {class_node.name}:')
 
     # Class docstring
-    if (class_node.body and
-        isinstance(class_node.body[0], ast.Expr) and
-        isinstance(class_node.body[0].value, ast.Constant) and
-        isinstance(class_node.body[0].value.value, str)):
-        docstring = class_node.body[0].value.value
-        lines.append(f'    """{docstring}"""')
-        body_start = 1
-    else:
-        body_start = 0
+    match class_node.body:
+        # Check for docstring in first statement
+        case [ast.Expr(value=ast.Constant(value=str() as docstring)), *_]:
+            lines.append(f'    """{docstring}"""')
+            body_start = 1
+        case _:
+            body_start = 0
 
     # Process methods and properties
     for item in class_node.body[body_start:]:
-        if isinstance(item, ast.FunctionDef):
-            lines.append(format_method_stub(item))
-        elif isinstance(item, ast.Assign):
-            # Keep class-level assignments
-            lines.append(f'    {ast.unparse(item)}')
+        match item:
+            case ast.FunctionDef():
+                lines.append(format_method_stub(item))
+            case ast.Assign():
+                # Keep class-level assignments
+                lines.append(f'    {ast.unparse(item)}')
 
     lines.append('')  # Empty line after class
     return '\n'.join(lines)
@@ -112,17 +115,15 @@ def format_method_stub(func_node: ast.FunctionDef) -> str:
     lines.append(f'    def {func_node.name}({args}){returns}:')
 
     # Method docstring
-    if (func_node.body and
-        isinstance(func_node.body[0], ast.Expr) and
-        isinstance(func_node.body[0].value, ast.Constant) and
-        isinstance(func_node.body[0].value.value, str)):
-        docstring = func_node.body[0].value.value
-        # Format docstring with proper indentation
-        docstring_lines = docstring.split('\n')
-        lines.append('        """')
-        for line in docstring_lines:
-            lines.append(f'        {line}' if line.strip() else '')
-        lines.append('        """')
+    match func_node.body:
+        # Check for docstring in first statement
+        case [ast.Expr(value=ast.Constant(value=str() as docstring)), *_]:
+            # Format docstring with proper indentation
+            docstring_lines = docstring.split('\n')
+            lines.append('        """')
+            for line in docstring_lines:
+                lines.append(f'        {line}' if line.strip() else '')
+            lines.append('        """')
 
     # Add ...
     lines.append('        ...')
@@ -175,6 +176,9 @@ def generate_stub_method(
         type_str = format_type_hint(param_type)
         param_list.append(f"{param}: {type_str}")
 
+    # Add tags parameter (always optional)
+    param_list.append("tags: Optional[List[str]] = None")
+
     params_signature = ",\n        ".join(param_list)
 
     # Build docstring
@@ -197,6 +201,10 @@ def generate_stub_method(
             param_doc = params_doc.get(param, '')
             docstring_lines.append(f'        :param {param}: {param_doc}')
         docstring_lines.append('')
+
+    # Add tags parameter documentation
+    docstring_lines.append('        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).')
+    docstring_lines.append('')
 
     # Add return documentation
     docstring_lines.append('        :return: An instance of DataFrameExpectationsSuite.')

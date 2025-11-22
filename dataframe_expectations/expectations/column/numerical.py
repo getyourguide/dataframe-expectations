@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from pyspark.sql import functions as F
 
 from dataframe_expectations.core.column_expectation import (
@@ -23,7 +25,7 @@ from dataframe_expectations.core.utils import requires_params
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
 def create_expectation_value_greater_than(
-    column_name: str, value: float
+    column_name: str, value: float, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     value = value
@@ -34,6 +36,7 @@ def create_expectation_value_greater_than(
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name) <= value),
         description=f"'{column_name}' is greater than {value}",
         error_message=f"'{column_name}' is not greater than {value}.",
+        tags=tags,
     )
 
 
@@ -49,7 +52,7 @@ def create_expectation_value_greater_than(
 )
 @requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
 def create_expectation_value_less_than(
-    column_name: str, value: float
+    column_name: str, value: float, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     value = value
@@ -60,6 +63,7 @@ def create_expectation_value_less_than(
         fn_violations_pyspark=lambda df: df.filter(F.col(column_name) >= value),
         description=f"'{column_name}' is less than {value}",
         error_message=f"'{column_name}' is not less than {value}.",
+        tags=tags,
     )
 
 
@@ -85,7 +89,7 @@ def create_expectation_value_less_than(
     },
 )
 def create_expectation_value_between(
-    column_name: str, min_value: float, max_value: float
+    column_name: str, min_value: float, max_value: float, tags: Optional[List[str]] = None
 ) -> DataFrameColumnExpectation:
     column_name = column_name
     min_value = min_value
@@ -101,4 +105,5 @@ def create_expectation_value_between(
         ),
         description=f"'{column_name}' is between {min_value} and {max_value}",
         error_message=f"'{column_name}' is not between {min_value} and {max_value}.",
+        tags=tags,
     )

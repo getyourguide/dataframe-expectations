@@ -3,14 +3,18 @@
 # DO NOT EDIT - Regenerate with: python scripts/generate_suite_stubs.py
 
 from functools import wraps
-from typing import Union, Callable, List, Optional, cast
-from dataframe_expectations.core.types import DataFrameLike
+from typing import Union, Any, Callable, Dict, List, Optional, cast
+from dataframe_expectations.core.types import DataFrameLike, TagMatchMode
+from dataframe_expectations.core.tagging import TagSet
 from dataframe_expectations.registry import DataFrameExpectationRegistry
+from dataframe_expectations.core.expectation import DataFrameExpectation
+import logging
 from dataframe_expectations.result_message import DataFrameExpectationFailureMessage, DataFrameExpectationSuccessMessage
+from dataframe_expectations.core.suite_result import SuiteExecutionResult
 
 class DataFrameExpectationsSuiteFailure(Exception):
     """Raised when one or more expectations in the suite fail."""
-    def __init__(self, total_expectations: int, failures: List[DataFrameExpectationFailureMessage], *args):
+    def __init__(self, total_expectations: int, failures: List[DataFrameExpectationFailureMessage], result: Optional[SuiteExecutionResult]=None, *args):
         ...
     def __str__(self):
         ...
@@ -18,41 +22,90 @@ class DataFrameExpectationsSuiteFailure(Exception):
 class DataFrameExpectationsSuiteRunner:
     """
     Immutable runner for executing a fixed set of expectations.
-
-    This class is created by DataFrameExpectationsSuite.build() and contains
-    a snapshot of expectations that won't change during execution.
+    This class is created by DataFrameExpectationsSuite.build() and
+    runs the expectations on provided DataFrames.
     """
-    def __init__(self, expectations: List):
+    @staticmethod
+    def _matches_tag_filter(expectation: Any, filter_tag_set: TagSet, tag_match_mode: TagMatchMode) -> bool:
         """
 
-                Initialize the runner with a list of expectations.
+                Check if an expectation matches the tag filter criteria.
 
-                :param expectations: List of expectation instances to run.
+                :param expectation: Expectation instance to check.
+                :param filter_tag_set: Tag filter to match against.
+                :param tag_match_mode: Match mode - TagMatchMode.ANY (OR) or TagMatchMode.ALL (AND).
+                :return: True if expectation matches filter, False otherwise.
+
+        """
+        ...
+    def __init__(self, expectations: List[Any], suite_name: Optional[str]=None, violation_sample_limit: int=5, tags: Optional[List[str]]=None, tag_match_mode: Optional[TagMatchMode]=None):
+        """
+
+                Initialize the runner with a list of expectations and metadata.
+
+                :param expectations: List of expectation instances.
+                :param suite_name: Optional name for the suite.
+                :param violation_sample_limit: Max number of violation rows to include in results.
+                :param tags: Optional tag filters as list of strings in "key:value" format.
+                            Example: ["priority:high", "priority:medium"]
+                            If None or empty, all expectations will run.
+                :param tag_match_mode: How to match tags - TagMatchMode.ANY (OR logic) or TagMatchMode.ALL (AND logic).
+                                      Required if tags are provided, must be None if tags are not provided.
+                                      - TagMatchMode.ANY: Expectation matches if it has ANY of the filter tags
+                                      - TagMatchMode.ALL: Expectation matches if it has ALL of the filter tags
+                :raises ValueError: If tag_match_mode is provided without tags, or if tags are provided without tag_match_mode,
+                                   or if tag filters result in zero expectations to run.
 
         """
         ...
     @property
-    def expectation_count(self) -> int:
+    def selected_expectations_count(self) -> int:
         """
-        Return the number of expectations in this runner.
+        Return the number of expectations that will run (after filtering).
         """
         ...
-    def list_expectations(self) -> List[str]:
+    @property
+    def total_expectations(self) -> int:
+        """
+        Return the total number of expectations before filtering.
+        """
+        ...
+    @property
+    def get_applied_tags(self) -> TagSet:
+        """
+        Return the applied tag filters for this runner.
+        """
+        ...
+    def list_all_expectations(self) -> List[str]:
         """
 
-                Return a list of expectation descriptions in this runner.
+                Return a list of all expectation descriptions before filtering.
 
-                :return: List of expectation descriptions as strings in the format:
+                :return: List of all expectation descriptions as strings in the format:
                          "ExpectationName (description)"
 
         """
         ...
-    def run(self, data_frame: DataFrameLike) -> None:
+    def list_selected_expectations(self) -> List[str]:
+        """
+
+                Return a list of selected expectation descriptions (after filtering).
+
+                :return: List of selected expectation descriptions as strings in the format:
+                         "ExpectationName (description)"
+
+        """
+        ...
+    def run(self, data_frame: DataFrameLike, raise_on_failure: bool=True, context: Optional[Dict[str, Any]]=None) -> SuiteExecutionResult:
         """
 
                 Run all expectations on the provided DataFrame with PySpark caching optimization.
 
                 :param data_frame: The DataFrame to validate.
+                :param raise_on_failure: If True (default), raises DataFrameExpectationsSuiteFailure on any failures.
+                                        If False, returns SuiteExecutionResult instead.
+                :param context: Optional runtime context metadata (e.g., {"job_id": "123", "env": "prod"}).
+                :return: None if raise_on_failure=True and all pass, SuiteExecutionResult if raise_on_failure=False.
 
         """
         ...
@@ -97,18 +150,41 @@ class DataFrameExpectationsSuite:
     immutable runner that can execute the expectations on DataFrames.
 
     Example:
-        suite = DataFrameExpectationsSuite()
-        suite.expect_value_greater_than(column_name="age", value=18)
-        suite.expect_value_less_than(column_name="salary", value=100000)
+        suite = DataFrameExpectationsSuite(suite_name="user_validation")
+        suite.expect_value_greater_than(
+            column_name="age",
+            value=18,
+            tags=["priority:high", "category:compliance"]
+        )
+        suite.expect_value_less_than(
+            column_name="salary",
+            value=100000,
+            tags=["priority:medium", "category:budget"]
+        )
+        suite.expect_min_rows(
+            min_rows=10,
+            tags=["priority:low", "category:data_quality"]
+        )
 
-        runner = suite.build()
-        runner.run(df1)
-        runner.run(df2)  # Same expectations, different DataFrame
+        # Build runner for all expectations (no filtering)
+        runner_all = suite.build()
+        runner_all.run(df)  # Runs all 3 expectations
+
+        # Build runner for high OR medium priority expectations (OR logic)
+        runner_any = suite.build(tags=["priority:high", "priority:medium"], tag_match_mode=TagMatchMode.ANY)
+        runner_any.run(df)  # Runs 2 expectations (age and salary checks)
+
+        # Build runner for expectations with both high priority AND compliance category (AND logic)
+        runner_and = suite.build(tags=["priority:high", "category:compliance"], tag_match_mode=TagMatchMode.ALL)
+        runner_and.run(df)  # Runs 1 expectation (age check - has both tags)
     """
-    def __init__(self):
+    def __init__(self, suite_name: Optional[str]=None, violation_sample_limit: int=5):
         """
 
                 Initialize the expectation suite builder.
+
+                :param suite_name: Optional name for the suite (useful for logging/reporting).
+                :param violation_sample_limit: Max number of violation rows to include in results (default 5).
 
         """
         ...
@@ -118,6 +194,7 @@ class DataFrameExpectationsSuite:
         column_name: str,
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the maximum value of a numeric column falls within a specified range
@@ -130,6 +207,8 @@ class DataFrameExpectationsSuite:
         :param min_value: The minimum allowed maximum value
         :param max_value: The maximum allowed maximum value
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -139,6 +218,7 @@ class DataFrameExpectationsSuite:
         column_name: str,
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the mean (average) of a numeric column falls within a specified range
@@ -151,6 +231,8 @@ class DataFrameExpectationsSuite:
         :param min_value: The minimum allowed mean value
         :param max_value: The maximum allowed mean value
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -160,6 +242,7 @@ class DataFrameExpectationsSuite:
         column_name: str,
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the median of a numeric column falls within a specified range
@@ -172,6 +255,8 @@ class DataFrameExpectationsSuite:
         :param min_value: The minimum allowed median value
         :param max_value: The maximum allowed median value
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -181,6 +266,7 @@ class DataFrameExpectationsSuite:
         column_name: str,
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the minimum value of a numeric column falls within a specified range
@@ -193,6 +279,8 @@ class DataFrameExpectationsSuite:
         :param min_value: The minimum allowed minimum value
         :param max_value: The maximum allowed minimum value
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -203,6 +291,7 @@ class DataFrameExpectationsSuite:
         quantile: Union[int, float],
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if a specific quantile of a numeric column falls within a specified range
@@ -216,6 +305,8 @@ class DataFrameExpectationsSuite:
         :param min_value: The minimum allowed value for the quantile
         :param max_value: The maximum allowed value for the quantile
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -225,6 +316,7 @@ class DataFrameExpectationsSuite:
         column_name: str,
         min_value: int,
         max_value: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if a column has a number of distinct values within a specified range
@@ -237,6 +329,8 @@ class DataFrameExpectationsSuite:
         :param min_value: The minimum number of distinct values (inclusive)
         :param max_value: The maximum number of distinct values (inclusive)
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -245,6 +339,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         expected_value: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if a column has exactly a specified number of distinct values
@@ -256,6 +351,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check for distinct values
         :param expected_value: The expected number of distinct values
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -264,6 +361,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         threshold: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if a column has at least a specified number of distinct values
@@ -275,6 +373,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check for distinct values
         :param threshold: The minimum number of distinct values (exclusive)
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -283,6 +383,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         threshold: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if a column has at most a specified number of distinct values
@@ -294,6 +395,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check for distinct values
         :param threshold: The maximum number of distinct values (exclusive)
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -302,6 +405,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         max_count: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the count of null/NaN values in a specific column is below a threshold
@@ -313,6 +417,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check for null count
         :param max_count: The maximum allowed count of null/NaN values
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -321,6 +427,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         max_percentage: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the percentage of null/NaN values in a specific column is below a threshold
@@ -332,6 +439,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check for null percentage
         :param max_percentage: The maximum allowed percentage of null/NaN values (0.0 to 100.0)
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -339,6 +448,7 @@ class DataFrameExpectationsSuite:
     def expect_max_rows(
         self,
         max_rows: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the DataFrame has at most a maximum number of rows
@@ -349,6 +459,8 @@ class DataFrameExpectationsSuite:
 
         :param max_rows: The maximum number of rows expected
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -356,6 +468,7 @@ class DataFrameExpectationsSuite:
     def expect_min_rows(
         self,
         min_rows: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the DataFrame has at least a minimum number of rows
@@ -366,6 +479,8 @@ class DataFrameExpectationsSuite:
 
         :param min_rows: The minimum number of rows expected
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -374,6 +489,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         substring: str,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a string column contain a specified substring
@@ -385,6 +501,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param substring: The substring to search for
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -393,6 +511,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         suffix: str,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a string column end with a specified suffix
@@ -404,6 +523,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param suffix: The suffix to search for
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -413,6 +534,7 @@ class DataFrameExpectationsSuite:
         column_name: str,
         min_length: int,
         max_length: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the length of the values in a string column is between two specified lengths
@@ -425,6 +547,8 @@ class DataFrameExpectationsSuite:
         :param min_length: The minimum length that the values should be
         :param max_length: The maximum length that the values should be
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -433,6 +557,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         length: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the length of the values in a string column equals a specified length
@@ -444,6 +569,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param length: The length that the values should equal
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -452,6 +579,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         length: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the length of the values in a string column is greater than a specified length
@@ -463,6 +591,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param length: The length that the values should be greater than
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -471,6 +601,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         length: int,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the length of the values in a string column is less than a specified length
@@ -482,6 +613,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param length: The length that the values should be less than
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -490,6 +623,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         substring: str,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a string column do not contain a specified substring
@@ -501,6 +635,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param substring: The substring to search for
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -509,6 +645,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         prefix: str,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a string column start with a specified prefix
@@ -520,6 +657,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param prefix: The prefix to search for
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -527,6 +666,7 @@ class DataFrameExpectationsSuite:
     def expect_unique_rows(
         self,
         column_names: list,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if all rows in the DataFrame are unique based on specified columns
@@ -537,6 +677,8 @@ class DataFrameExpectationsSuite:
 
         :param column_names: List of column names to check for uniqueness. Empty list checks all columns
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -546,6 +688,7 @@ class DataFrameExpectationsSuite:
         column_name: str,
         min_value: Union[int, float],
         max_value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are between two specified values
@@ -558,6 +701,8 @@ class DataFrameExpectationsSuite:
         :param min_value: The minimum value for the range
         :param max_value: The maximum value for the range
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -566,6 +711,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         value: object,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column equal a specified value
@@ -577,6 +723,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param value: The value to compare against
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -585,6 +733,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are greater than a specified value
@@ -596,6 +745,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param value: The value to compare against
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -604,6 +755,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         values: list,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are in a specified list of values
@@ -615,6 +767,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param values: The list of values to compare against
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -623,6 +777,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         value: Union[int, float],
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are less than a specified value
@@ -634,6 +789,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param value: The value to compare against
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -642,6 +799,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         value: object,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column do not equal a specified value
@@ -653,6 +811,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param value: The value to compare against
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -661,6 +821,7 @@ class DataFrameExpectationsSuite:
         self,
         column_name: str,
         values: list,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are not in a specified list of values
@@ -672,6 +833,8 @@ class DataFrameExpectationsSuite:
         :param column_name: The name of the column to check
         :param values: The list of values to compare against
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -679,6 +842,7 @@ class DataFrameExpectationsSuite:
     def expect_value_not_null(
         self,
         column_name: str,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are not null
@@ -689,6 +853,8 @@ class DataFrameExpectationsSuite:
 
         :param column_name: The name of the column to check
 
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
         :return: An instance of DataFrameExpectationsSuite.
         """
         ...
@@ -696,6 +862,7 @@ class DataFrameExpectationsSuite:
     def expect_value_null(
         self,
         column_name: str,
+        tags: Optional[List[str]] = None,
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are null
@@ -705,6 +872,8 @@ class DataFrameExpectationsSuite:
           subcategory: Any Value
 
         :param column_name: The name of the column to check
+
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
 
         :return: An instance of DataFrameExpectationsSuite.
         """
@@ -729,17 +898,25 @@ class DataFrameExpectationsSuite:
 
         """
         ...
-    def build(self) -> DataFrameExpectationsSuiteRunner:
+    def build(self, tags: Optional[List[str]]=None, tag_match_mode: Optional[TagMatchMode]=None) -> DataFrameExpectationsSuiteRunner:
         """
 
                 Build an immutable runner from the current expectations.
 
-                The runner contains a snapshot of expectations at the time of building.
+                This creates a snapshot of the current expectations in the suite.
                 You can continue to add more expectations to this suite and build
                 new runners without affecting previously built runners.
 
+                :param tags: Optional tag filters as list of strings in "key:value" format.
+                            Example: ["priority:high", "priority:medium"]
+                            If None or empty, all expectations will be included.
+                :param tag_match_mode: How to match tags - TagMatchMode.ANY (OR logic) or TagMatchMode.ALL (AND logic).
+                                      Required if tags are provided, must be None if tags are not provided.
+                                      - TagMatchMode.ANY: Include expectations with ANY of the filter tags
+                                      - TagMatchMode.ALL: Include expectations with ALL of the filter tags
                 :return: An immutable DataFrameExpectationsSuiteRunner instance.
-                :raises ValueError: If no expectations have been added.
+                :raises ValueError: If no expectations have been added, if tag_match_mode validation fails,
+                                   or if no expectations match the tag filters.
 
         """
         ...

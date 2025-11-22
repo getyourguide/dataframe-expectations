@@ -7,6 +7,7 @@ from dataframe_expectations.registry import (
 from dataframe_expectations.suite import (
     DataFrameExpectationsSuite,
     DataFrameExpectationsSuiteFailure,
+    SuiteExecutionResult,
 )
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
@@ -399,7 +400,13 @@ def test_expectation_basic_scenarios(
             column_name="col1", length=length
         )
         suite_result = expectations_suite.build().run(data_frame=data_frame)
-        assert suite_result is None, "Expected no exceptions to be raised"
+        assert suite_result is not None, "Expected SuiteExecutionResult"
+        assert isinstance(suite_result, SuiteExecutionResult), (
+            "Result should be SuiteExecutionResult"
+        )
+        assert suite_result.success, "Expected all expectations to pass"
+        assert suite_result.total_passed == 1, "Expected 1 passed expectation"
+        assert suite_result.total_failed == 0, "Expected 0 failed expectations"
     else:  # violations
         violations_df = create_dataframe(df_type, expected_violations, "col1", spark)
         expected_message = f"Found {len(expected_violations)} row(s) where 'col1' length is not less than {length}."
