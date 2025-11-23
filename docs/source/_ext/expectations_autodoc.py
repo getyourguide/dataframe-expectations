@@ -168,7 +168,7 @@ class ExpectationsDirective(SphinxDirective):
         return nodes_list
 
     def _generate_summary_table(self, expectations_by_category, method_details) -> List[Node]:
-        """Generate summary table nodes."""
+        """Generate summary as a two-level table"""
         nodes_list = []
 
         # Add section with title and proper ID
@@ -180,13 +180,17 @@ class ExpectationsDirective(SphinxDirective):
 
         # Create table
         table = nodes.table()
+        table['classes'] = ['summary-table']
         tgroup = nodes.tgroup(cols=3)
         table += tgroup
 
         # Add column specifications
-        for width in [30, 25, 45]:
-            colspec = nodes.colspec(colwidth=width)
-            tgroup += colspec
+        colspec1 = nodes.colspec(colwidth=25)
+        colspec2 = nodes.colspec(colwidth=20)
+        colspec3 = nodes.colspec(colwidth=55)
+        tgroup += colspec1
+        tgroup += colspec2
+        tgroup += colspec3
 
         # Add table head
         thead = nodes.thead()
@@ -197,48 +201,67 @@ class ExpectationsDirective(SphinxDirective):
 
         for header in ["Category", "Subcategory", "Expectations"]:
             entry = nodes.entry()
+            entry['classes'] = ['summary-table-header']
             row += entry
-            entry += nodes.paragraph("", header)
+            para = nodes.paragraph()
+            para += nodes.Text(header)
+            entry += para
 
         # Add table body
         tbody = nodes.tbody()
         tgroup += tbody
 
         for category in sorted(expectations_by_category.keys()):
-            for subcategory in sorted(expectations_by_category[category].keys()):
-                expectations = expectations_by_category[category][subcategory]
+            subcategories = expectations_by_category[category]
+
+            for idx, subcategory in enumerate(sorted(subcategories.keys())):
+                expectations = subcategories[subcategory]
 
                 row = nodes.row()
+                row['classes'] = ['summary-table-row']
                 tbody += row
 
-                # Category cell
+                # Category cell (only show on first subcategory)
                 entry = nodes.entry()
-                row += entry
-                entry += nodes.paragraph("", category)
+                if idx == 0:
+                    entry['morerows'] = len(subcategories) - 1  # Span multiple rows
+                    entry['classes'] = ['summary-category-cell']
+                    para = nodes.paragraph()
+                    para += nodes.Text(f"{category} ({sum(len(subcategories[s]) for s in subcategories)})")
+                    entry += para
+                    row += entry
 
                 # Subcategory cell
                 entry = nodes.entry()
+                entry['classes'] = ['summary-subcategory-cell']
+                para = nodes.paragraph()
+                para += nodes.Text(f"{subcategory} ({len(expectations)})")
+                entry += para
                 row += entry
-                entry += nodes.paragraph("", subcategory)
 
-                # Expectations cell
+                # Expectations cell with badges
                 entry = nodes.entry()
-                row += entry
+                entry['classes'] = ['summary-expectations-cell']
 
-                exp_para = nodes.paragraph()
-                for i, exp in enumerate(sorted(expectations)):
-                    if i > 0:
-                        exp_para += nodes.Text(", ")
+                badges_container = nodes.container()
+                badges_container['classes'] = ['expectation-badges']
 
-                    # Create clickable link to the card using raw HTML
-                    raw_link = nodes.raw(
-                        f'<a href="#card-{exp}" class="expectation-link">{exp}</a>',
-                        f'<a href="#card-{exp}" class="expectation-link">{exp}</a>',
+                for exp in sorted(expectations):
+                    # Get description for tooltip
+                    details = method_details[exp]
+                    clean_docstring = clean_docstring_from_metadata(details["docstring"])
+                    description = clean_docstring.split('\n')[0] if clean_docstring else ""
+
+                    # Create badge with link
+                    badge = nodes.raw(
+                        f'<a href="#card-{exp}" class="expectation-badge" title="{description}">{exp}</a>',
+                        f'<a href="#card-{exp}" class="expectation-badge" title="{description}">{exp}</a>',
                         format='html'
                     )
-                    exp_para += raw_link
+                    badges_container += badge
 
-                entry += exp_para
+                entry += badges_container
+                row += entry
 
         summary_section += table
         nodes_list.append(summary_section)

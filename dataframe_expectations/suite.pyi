@@ -118,7 +118,8 @@ class DataFrameExpectationsSuiteRunner:
                 by the decorated function. If validation fails, it raises
                 DataFrameExpectationsSuiteFailure.
 
-                Example:
+                Example::
+
                     runner = suite.build()
 
                     @runner.validate
@@ -149,7 +150,8 @@ class DataFrameExpectationsSuite:
     Use this class to add expectations, then call build() to create an
     immutable runner that can execute the expectations on DataFrames.
 
-    Example:
+    Example::
+
         suite = DataFrameExpectationsSuite(suite_name="user_validation")
         suite.expect_value_greater_than(
             column_name="age",
