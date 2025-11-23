@@ -254,7 +254,7 @@ To set up the development environment:
     # 5. Verify your setup
     uv run pytest tests/ -n auto --cov=dataframe_expectations
 
-    # 6. (Optional) Install pre-commit hooks
+    # 6. Install pre-commit hooks
     pre-commit install
     # This will automatically run checks before each commit
 
