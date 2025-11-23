@@ -29,28 +29,6 @@ pip install dataframe-expectations
 * pyspark >= 3.3.0
 * tabulate >= 0.8.9
 
-### Development setup
-
-To set up the development environment:
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/getyourguide/dataframe-expectations.git
-cd dataframe-expectations
-
-# 2. Install UV package manager
-pip install uv
-
-# 3. Install development dependencies (this will automatically create a virtual environment)
-uv sync --group dev
-
-# 4. (Optional) To explicitly activate the virtual environment:
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# 5. Run tests (this will run the tests in the virtual environment)
-uv run pytest tests/ --cov=dataframe_expectations
-```
-
 ### Quick Start
 
 #### Pandas Example
@@ -243,6 +221,32 @@ runner.run(df)
 # Run production-critical checks (AND logic - matches ALL tags)
 runner = suite.build(tags=["priority:high", "env:prod"], tag_match_mode=TagMatchMode.ALL)
 runner.run(df)
+```
+
+## Development Setup
+
+To set up the development environment:
+
+```bash
+# 1. Fork and clone the repository
+git clone https://github.com/getyourguide/dataframe-expectations.git
+cd dataframe-expectations
+
+# 2. Install UV package manager
+pip install uv
+
+# 3. Install development dependencies (this will automatically create a virtual environment)
+uv sync --group dev
+
+# 4. Activate the virtual environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# 5. Verify your setup
+uv run pytest tests/ -n auto --cov=dataframe_expectations
+
+# 6. Install pre-commit hooks
+pre-commit install
+# This will automatically run checks before each commit
 ```
 
 ## Contributing
