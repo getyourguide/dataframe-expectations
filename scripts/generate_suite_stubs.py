@@ -280,7 +280,7 @@ def update_pyi_file(dry_run: bool = False) -> bool:
         return False
 
     if dry_run:
-        print("❌ Stub file is out of date. Run without --check to update.")
+        print("❌ Stub file is out of date. Run uv run python scripts/generate_suite_stubs.py to update.")
         return True
 
     # Write the .pyi file
