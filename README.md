@@ -51,9 +51,9 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv run pytest tests/ --cov=dataframe_expectations
 ```
 
-### Using the library
+### Quick Start
 
-**Basic usage with Pandas:**
+#### Pandas Example
 ```python
 from dataframe_expectations.suite import DataFrameExpectationsSuite
 import pandas as pd
@@ -80,7 +80,7 @@ df = pd.DataFrame({
 runner.run(df)
 ```
 
-**PySpark example:**
+#### PySpark Example
 ```python
 from dataframe_expectations.suite import DataFrameExpectationsSuite
 from pyspark.sql import SparkSession
@@ -114,7 +114,22 @@ df = spark.createDataFrame(data)
 runner.run(df)
 ```
 
-**Decorator pattern for automatic validation:**
+### Validation Patterns
+
+#### Manual Validation
+Use `runner.run()` to explicitly validate DataFrames:
+
+```python
+# Run validation and raise exception on failure
+runner.run(df)
+
+# Run validation without raising exception
+result = runner.run(df, raise_on_failure=False)
+```
+
+#### Decorator-Based Validation
+Automatically validate function return values using decorators:
+
 ```python
 from dataframe_expectations.suite import DataFrameExpectationsSuite
 from pyspark.sql import SparkSession
@@ -159,7 +174,9 @@ def conditional_load(should_load: bool):
     return None  # No validation when None is returned
 ```
 
-**Output:**
+##### Validation Output
+When validation runs, you'll see output like this:
+
 ```python
 ========================== Running expectations suite ==========================
 ExpectationMinRows (DataFrame contains at least 3 rows) ... OK
@@ -182,10 +199,32 @@ Some examples of violations:
 | 15  | Bob  | 60000  |
 +-----+------+--------+
 ================================================================================
-
 ```
 
-**Tag-based filtering for selective execution:**
+#### Programmatic Result Inspection
+Get detailed validation results without raising exceptions:
+
+```python
+# Get detailed results without raising exceptions
+result = runner.run(df, raise_on_failure=False)
+
+# Inspect validation outcomes
+print(f"Total: {result.total_expectations}, Passed: {result.total_passed}, Failed: {result.total_failed}")
+print(f"Pass rate: {result.pass_rate:.2%}")
+print(f"Duration: {result.total_duration_seconds:.2f}s")
+print(f"Applied filters: {result.applied_filters}")
+
+# Access individual results
+for exp_result in result.results:
+    if exp_result.status == "failed":
+        print(f"Failed: {exp_result.description} - {exp_result.violation_count} violations")
+```
+
+### Advanced Features
+
+#### Tag-Based Filtering
+Filter which expectations to run using tags:
+
 ```python
 from dataframe_expectations import DataFrameExpectationsSuite, TagMatchMode
 
@@ -206,52 +245,20 @@ runner = suite.build(tags=["priority:high", "env:prod"], tag_match_mode=TagMatch
 runner.run(df)
 ```
 
-**Programmatic result inspection:**
-```python
-# Get detailed results without raising exceptions
-result = runner.run(df, raise_on_failure=False)
+## Contributing
 
-# Inspect validation outcomes
-print(f"Total: {result.total_expectations}, Passed: {result.total_passed}, Failed: {result.total_failed}")
-print(f"Pass rate: {result.pass_rate:.2%}")
-print(f"Duration: {result.total_duration_seconds:.2f}s")
-print(f"Applied filters: {result.applied_filters}")
+We welcome contributions! Whether you're adding new expectations, fixing bugs, or improving documentation, your help is appreciated.
 
-# Access individual results
-for exp_result in result.results:
-    if exp_result.status == "failed":
-        print(f"Failed: {exp_result.description} - {exp_result.violation_count} violations")
-```
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development setup instructions
+- How to add new expectations
+- Code style guidelines
+- Testing requirements
+- Pull request process
 
-### How to contribute?
-Contributions are welcome! You can enhance the library by adding new expectations, refining existing ones, or improving the testing framework.
+## Security
 
-### Versioning
-
-This project follows [Semantic Versioning](https://semver.org/) (SemVer) and uses [Release Please](https://github.com/googleapis/release-please) for automated version management.
-
-Versions are automatically determined based on [Conventional Commits](https://www.conventionalcommits.org/):
-
-- `feat:` - New feature → **MINOR** version bump (0.1.0 → 0.2.0)
-- `fix:` - Bug fix → **PATCH** version bump (0.1.0 → 0.1.1)
-- `feat!:` or `BREAKING CHANGE:` - Breaking change → **MAJOR** version bump (0.1.0 → 1.0.0)
-- `chore:`, `docs:`, `style:`, `refactor:`, `test:`, `ci:` - No version bump
-
-**Example commits:**
-```bash
-git commit -m "feat: add new expectation for null values"
-git commit -m "fix: correct validation logic in expect_value_greater_than"
-git commit -m "feat!: remove deprecated API methods"
-```
-
-When changes are pushed to the main branch, Release Please automatically:
-1. Creates or updates a Release PR with version bump and changelog
-2. When merged, creates a GitHub Release and publishes to PyPI
-
-No manual version updates needed - just use conventional commit messages!
-
-### Security
-For security issues please contact security@getyourguide.com.
+For security vulnerabilities, please see our [Security Policy](SECURITY.md) or contact security@getyourguide.com.
 
 ### Legal
 dataframe-expectations is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE.txt) for the full text.
