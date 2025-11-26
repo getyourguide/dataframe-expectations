@@ -31,20 +31,20 @@ extensions = [
 ]
 
 # Theme
-html_theme = 'pydata_sphinx_theme'
+html_theme = 'sphinx_book_theme'
 
-# PyData theme options for modern, full-width usage
+# Sphinx Book Theme options
 html_theme_options = {
-    "use_edit_page_button": False,
-    "navigation_depth": 3,
-    "show_prev_next": True,
-    "navbar_persistent": ["search-button"],
-    "navbar_center": ["navbar-nav"],
-    "navbar_end": [],
-    "sidebar_includehidden": True,
-    "primary_sidebar_end": ["page-toc"],
-    "secondary_sidebar_items": [],
-    "show_toc_level": 3,
+    "repository_url": "https://github.com/getyourguide/dataframe-expectations",
+    "use_repository_button": True,
+    "use_edit_button": False,
+    "use_issues_button": True,
+    "use_download_button": True,
+    "path_to_docs": "docs/source",
+    "show_navbar_depth": 2,
+    "show_toc_level": 2,
+    "home_page_in_toc": True,
+    "navigation_with_keys": True,
 }
 
 # Autodoc settings
@@ -75,7 +75,7 @@ html_css_files = [
 ]
 
 # Configure HTML title and layout
-html_title = f"{project} v{release} Documentation"
+html_title = f"{project} v{release}"
 html_short_title = project
 
 # PyData theme context

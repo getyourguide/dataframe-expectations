@@ -24,33 +24,30 @@ from dataframe_expectations.result_message import (
 
 class ExpectationUniqueRows(DataFrameAggregationExpectation):
     """
-    Expectation that checks if there are no duplicate rows for the given column names. If columns list is empty, checks for duplicates across all columns.
+    Expectation that checks if there are no duplicate rows for the given column names.
 
-    For example:
-    For column_names  ["col1", "col2"]
+    If columns list is empty, checks for duplicates across all columns.
 
-    Given the following DataFrame:
+    Example::
 
-    | col1 | col2 | col3 |
-    |------|------|------|
-    |  1   |  10  | 100  |
-    |  2   |  20  | 100  |
-    |  3   |  30  | 100  |
-    |  1   |  20  | 100  |
+        For column_names ["col1", "col2"], given a DataFrame with columns col1, col2, col3:
 
-    All rows are unique for columns ["col1", "col2"] and there will be no violations.
+        - If all rows have unique combinations of col1 and col2 values, there are no violations
+        - If any rows have identical col1 AND col2 values, those are violations
 
-    For the same columns_names and the following DataFrame:
+        Example passing case (all unique)::
 
-    | col1 | col2 | col3 |
-    |------|------|------|
-    |  1   |  10  | 100  |
-    |  2   |  20  | 100  |
-    |  3   |  30  | 100  |
-    |  1   |  10  | 100  |
+            col1=1, col2=10
+            col1=2, col2=20
+            col1=3, col2=30
+            col1=1, col2=20  # Different col2, so unique
 
-    There will be 1 violation because the first and last rows are duplicates for columns ["col1", "col2"].
+        Example failing case (duplicate found)::
 
+            col1=1, col2=10
+            col1=2, col2=20
+            col1=3, col2=30
+            col1=1, col2=10  # Duplicate of first row
     """
 
     def __init__(self, column_names: List[str], tags: Optional[List[str]] = None):
