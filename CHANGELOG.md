@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.0...v0.6.0) (2026-01-28)
+
+
+### Features
+
+* adding new numeric expectations ([2b07c7a](https://github.com/getyourguide/dataframe-expectations/commit/2b07c7a16d6866c488f0bfcb008bea2f8b8bc6e8))
+* adding new numeric expectations ([90f8cb7](https://github.com/getyourguide/dataframe-expectations/commit/90f8cb7f29ae52a244c9757d842d5b2d04feb04a))
+
+
+### Documentation
+
+* improved the API docs website ([df9f7b1](https://github.com/getyourguide/dataframe-expectations/commit/df9f7b19008189df2ea804885d90de84d16f9d61))
+* improved the API docs website ([966ea5a](https://github.com/getyourguide/dataframe-expectations/commit/966ea5a9ccaea76c383a9cedca2feadb1038ce7a))
+* minor corrections to readme ([15fa72d](https://github.com/getyourguide/dataframe-expectations/commit/15fa72d7d3b9a5aa3e245801d4c051a765afa598))
+* minor corrections to readme ([3358d23](https://github.com/getyourguide/dataframe-expectations/commit/3358d237fe3a34b959e9fb95cb3e3be8b81e4dd8))
+* partitioned readme ([8cf59b1](https://github.com/getyourguide/dataframe-expectations/commit/8cf59b15bfa709c6f00d7039615f0fd1d4e36f31))
+* partitioned readme ([30500e7](https://github.com/getyourguide/dataframe-expectations/commit/30500e798d94898dd02c72c905ed29740f0be963))
+
 ## [0.5.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.4.0...v0.5.0) (2025-11-22)
 
 
