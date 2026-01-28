@@ -753,6 +753,28 @@ class DataFrameExpectationsSuite:
         """
         ...
 
+    def expect_value_greater_than_equals(
+        self,
+        column_name: str,
+        value: Union[int, float],
+        tags: Optional[List[str]] = None,
+    ) -> DataFrameExpectationsSuite:
+        """
+        Check if the values in a column are greater than or equal to a specified value
+
+        Categories:
+          category: Column Expectations
+          subcategory: Numerical
+
+        :param column_name: The name of the column to check
+        :param value: The value to compare against
+
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
+        :return: An instance of DataFrameExpectationsSuite.
+        """
+        ...
+
     def expect_value_in(
         self,
         column_name: str,
@@ -783,6 +805,28 @@ class DataFrameExpectationsSuite:
     ) -> DataFrameExpectationsSuite:
         """
         Check if the values in a column are less than a specified value
+
+        Categories:
+          category: Column Expectations
+          subcategory: Numerical
+
+        :param column_name: The name of the column to check
+        :param value: The value to compare against
+
+        :param tags: Optional tags as list of strings in "key:value" format (e.g., ["priority:high", "env:test"]).
+
+        :return: An instance of DataFrameExpectationsSuite.
+        """
+        ...
+
+    def expect_value_less_than_equals(
+        self,
+        column_name: str,
+        value: Union[int, float],
+        tags: Optional[List[str]] = None,
+    ) -> DataFrameExpectationsSuite:
+        """
+        Check if the values in a column are less than or equal to a specified value
 
         Categories:
           category: Column Expectations
