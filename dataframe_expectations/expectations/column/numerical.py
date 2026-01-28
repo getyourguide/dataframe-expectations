@@ -68,6 +68,60 @@ def create_expectation_value_less_than(
 
 
 @register_expectation(
+    "ExpectationValueGreaterThanEquals",
+    pydoc="Check if the values in a column are greater than or equal to a specified value",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
+    params_doc={
+        "column_name": "The name of the column to check",
+        "value": "The value to compare against",
+    },
+)
+@requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
+def create_expectation_value_greater_than_equals(
+    column_name: str, value: float, tags: Optional[List[str]] = None
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    value = value
+    return DataFrameColumnExpectation(
+        expectation_name="ExpectationValueGreaterThanEquals",
+        column_name=column_name,
+        fn_violations_pandas=lambda df: df[df[column_name] < value],
+        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) < value),
+        description=f"'{column_name}' is greater than or equal to {value}",
+        error_message=f"'{column_name}' is not greater than or equal to {value}.",
+        tags=tags,
+    )
+
+
+@register_expectation(
+    "ExpectationValueLessThanEquals",
+    pydoc="Check if the values in a column are less than or equal to a specified value",
+    category=ExpectationCategory.COLUMN_EXPECTATIONS,
+    subcategory=ExpectationSubcategory.NUMERICAL,
+    params_doc={
+        "column_name": "The name of the column to check",
+        "value": "The value to compare against",
+    },
+)
+@requires_params("column_name", "value", types={"column_name": str, "value": (int, float)})
+def create_expectation_value_less_than_equals(
+    column_name: str, value: float, tags: Optional[List[str]] = None
+) -> DataFrameColumnExpectation:
+    column_name = column_name
+    value = value
+    return DataFrameColumnExpectation(
+        expectation_name="ExpectationValueLessThanEquals",
+        column_name=column_name,
+        fn_violations_pandas=lambda df: df[df[column_name] > value],
+        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) > value),
+        description=f"'{column_name}' is less than or equal to {value}",
+        error_message=f"'{column_name}' is not less than or equal to {value}.",
+        tags=tags,
+    )
+
+
+@register_expectation(
     "ExpectationValueBetween",
     pydoc="Check if the values in a column are between two specified values",
     category=ExpectationCategory.COLUMN_EXPECTATIONS,
