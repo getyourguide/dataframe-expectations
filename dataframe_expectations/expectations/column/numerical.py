@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pyspark.sql import functions as F
+from dataframe_expectations.core.pyspark_utils import get_pyspark_functions
 
 from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
@@ -11,6 +11,8 @@ from dataframe_expectations.core.types import (
 )
 from dataframe_expectations.registry import register_expectation
 from dataframe_expectations.core.utils import requires_params
+
+F = get_pyspark_functions()
 
 
 @register_expectation(

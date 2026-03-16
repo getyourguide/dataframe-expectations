@@ -5,7 +5,7 @@ from typing import Any, Dict, Union
 
 from pandas import DataFrame as PandasDataFrame
 from pydantic import BaseModel, ConfigDict, Field
-from pyspark.sql import DataFrame as PySparkDataFrame
+from dataframe_expectations.core.pyspark_utils import PySparkDataFrame
 
 # Type aliases
 DataFrameLike = Union[PySparkDataFrame, PandasDataFrame]
