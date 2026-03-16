@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.2](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.1...v0.5.2) (2026-03-16)
+
+
+### Bug Fixes
+
+* make PySpark an optional dependency to reduce installation overhead ([15d38ca](https://github.com/getyourguide/dataframe-expectations/commit/15d38cad8c377df231753166081d8f1476cae4bb))
+* make PySpark an optional dependency to reduce installation overhead ([8235ef4](https://github.com/getyourguide/dataframe-expectations/commit/8235ef4319c27a8b6d6f35c9996faa718657bad8))
+
 ## [0.5.1](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.0...v0.5.1) (2026-01-28)
 
 
