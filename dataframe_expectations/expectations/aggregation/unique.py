@@ -2,8 +2,7 @@ from typing import List, Optional, cast
 
 import pandas as pd
 from pandas import DataFrame as PandasDataFrame
-from pyspark.sql import DataFrame as PySparkDataFrame
-from pyspark.sql import functions as F
+from dataframe_expectations.core.pyspark_utils import PySparkDataFrame, get_pyspark_functions
 from dataframe_expectations.core.aggregation_expectation import (
     DataFrameAggregationExpectation,
 )
@@ -20,6 +19,8 @@ from dataframe_expectations.result_message import (
     DataFrameExpectationResultMessage,
     DataFrameExpectationSuccessMessage,
 )
+
+F = get_pyspark_functions()
 
 
 class ExpectationUniqueRows(DataFrameAggregationExpectation):
