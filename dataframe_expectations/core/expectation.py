@@ -1,21 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, cast
+from typing import Any, List, Optional, cast
 
 from pandas import DataFrame as PandasDataFrame
-from pyspark.sql import DataFrame as PySparkDataFrame
 
-# Import the connect DataFrame type for Spark Connect
-try:
-    from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
-except ImportError:
-    # Fallback for older PySpark versions that don't have connect
-    PySparkConnectDataFrame = None  # type: ignore[misc,assignment]
-
+from dataframe_expectations.core.pyspark_utils import is_pyspark_data_frame
 from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 from dataframe_expectations.core.tagging import TagSet
 from dataframe_expectations.result_message import (
     DataFrameExpectationResultMessage,
 )
+
+# Kept as module-level symbol for backward compatibility and test patching.
+try:
+    from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
+except ImportError:
+    PySparkConnectDataFrame = None  # type: ignore[misc,assignment]
 
 
 class DataFrameExpectation(ABC):
@@ -63,17 +62,16 @@ class DataFrameExpectation(ABC):
         """
         Infer the DataFrame type based on the provided DataFrame.
         """
-        match data_frame:
-            case PandasDataFrame():
-                return DataFrameType.PANDAS
-            case PySparkDataFrame():
-                return DataFrameType.PYSPARK
-            case _ if PySparkConnectDataFrame is not None and isinstance(
-                data_frame, PySparkConnectDataFrame
-            ):
-                return DataFrameType.PYSPARK
-            case _:
-                raise ValueError(f"Unsupported DataFrame type: {type(data_frame)}")
+        if isinstance(data_frame, PandasDataFrame):
+            return DataFrameType.PANDAS
+
+        if PySparkConnectDataFrame is not None and isinstance(data_frame, PySparkConnectDataFrame):
+            return DataFrameType.PYSPARK
+
+        if is_pyspark_data_frame(data_frame):
+            return DataFrameType.PYSPARK
+
+        raise ValueError(f"Unsupported DataFrame type: {type(data_frame)}")
 
     def validate(self, data_frame: DataFrameLike, **kwargs):
         """
@@ -121,7 +119,7 @@ class DataFrameExpectation(ABC):
             # Cast to PandasDataFrame since we know it's a Pandas DataFrame at this point
             return len(cast(PandasDataFrame, data_frame))
         elif data_frame_type == DataFrameType.PYSPARK:
-            # Cast to PySparkDataFrame since we know it's a PySpark DataFrame at this point
-            return cast(PySparkDataFrame, data_frame).count()
+            # PySpark DataFrames expose count(), including runtime-provided patched variants.
+            return cast(Any, data_frame).count()
         else:
             raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
