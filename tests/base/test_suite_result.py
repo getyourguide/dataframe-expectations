@@ -297,6 +297,7 @@ def test_serialize_pandas_violations():
     assert sample[0] == {"col1": 1}
 
 
+@pytest.mark.pyspark
 def test_serialize_pyspark_violations(spark):
     """Test serializing PySpark DataFrame violations."""
     violations_df = spark.createDataFrame([(i,) for i in range(1, 11)], ["col1"])

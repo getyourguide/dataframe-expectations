@@ -12,13 +12,13 @@ concurrency:
   cancel-in-progress: ${{ github.ref_name != github.event.repository.default_branch }}
 
 jobs:
-  test:
+  tests-without-pyspark:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
       fail-fast: false  # Don't cancel other jobs if one fails
-    name: Test (Python ${{ matrix.python-version }})
+    name: Tests Without PySpark (Python ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v4
       - name: Install Python and UV
@@ -31,7 +31,56 @@ jobs:
       - name: Run sanity check
         run: |
           uv run python scripts/sanity_checks.py
-      - name: Run tests
+      - name: Run tests without pyspark marker
+        run: |
+          uv run pytest tests/ -m "not pyspark" -n auto --tb=line --cov=dataframe_expectations
+
+  tests-with-pyspark-extra:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+      fail-fast: false  # Don't cancel other jobs if one fails
+    name: Tests With PySpark Extra (Python ${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python and UV
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies with pyspark extra
+        run: |
+          uv sync --group dev --extra pyspark
+      - name: Run sanity check
+        run: |
+          uv run python scripts/sanity_checks.py
+      - name: Run tests with pyspark marker
+        run: |
+          uv run pytest tests/ -n auto --tb=line --cov=dataframe_expectations
+
+  tests-with-external-pyspark:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+      fail-fast: false  # Don't cancel other jobs if one fails
+    name: Tests With External PySpark (Python ${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python and UV
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies without pyspark extra
+        run: |
+          uv sync --group dev
+      - name: Install pyspark as external dependency
+        run: |
+          uv pip install "pyspark>=3.3.0"
+      - name: Run sanity check
+        run: |
+          uv run python scripts/sanity_checks.py
+      - name: Run tests with pyspark marker
         run: |
           uv run pytest tests/ -n auto --tb=line --cov=dataframe_expectations
 
@@ -56,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.11"  # Use a single version for docs
-    needs: [test, lint]
+    needs: [tests-without-pyspark, tests-with-pyspark-extra, tests-with-external-pyspark, lint]
     permissions:
       contents: read
       pages: write

@@ -7,20 +7,21 @@ from dataframe_expectations.registry import (
 from dataframe_expectations.suite import (
     DataFrameExpectationsSuite,
     DataFrameExpectationsSuiteFailure,
-    SuiteExecutionResult,
 )
+from dataframe_expectations.core.suite_result import SuiteExecutionResult
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
     DataFrameExpectationSuccessMessage,
 )
 
 
-def create_dataframe(df_type, df_data, spark):
-    """Helper function to create pandas or pyspark DataFrame."""
-    if df_type == "pandas":
-        return pd.DataFrame(df_data)
+def create_pyspark_dataframe(df_data, spark):
+    """Helper function to create a PySpark DataFrame.
 
-    # PySpark
+    Args:
+        df_data: dict mapping column names to lists of values, or empty dict
+        spark: Spark session
+    """
     from pyspark.sql.types import (
         StructType,
         StructField,
@@ -53,7 +54,6 @@ def create_dataframe(df_type, df_data, spark):
     [
         # Exact count - 3 rows == 3 min
         ("pandas", {"col1": [1, 2, 3], "col2": ["a", "b", "c"]}, 3, "success", None),
-        ("pyspark", {"col1": [1, 2, 3], "col2": ["a", "b", "c"]}, 3, "success", None),
         # Above min - 5 rows > 3 min
         (
             "pandas",
@@ -62,32 +62,15 @@ def create_dataframe(df_type, df_data, spark):
             "success",
             None,
         ),
-        (
-            "pyspark",
-            {"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]},
-            3,
-            "success",
-            None,
-        ),
         # Single row - 1 row == 1 min
         ("pandas", {"col1": [42]}, 1, "success", None),
-        ("pyspark", {"col1": [42]}, 1, "success", None),
         # Zero min empty - 0 rows == 0 min
         ("pandas", {"col1": []}, 0, "success", None),
-        ("pyspark", {}, 0, "success", None),
         # Zero min with data - 3 rows >= 0 min
         ("pandas", {"col1": [1, 2, 3]}, 0, "success", None),
-        ("pyspark", {"col1": [1, 2, 3]}, 0, "success", None),
         # With nulls - 5 rows >= 3 min (nulls don't affect row count)
         (
             "pandas",
-            {"col1": [1, None, 3, None, 5], "col2": [None, "b", None, "d", None]},
-            3,
-            "success",
-            None,
-        ),
-        (
-            "pyspark",
             {"col1": [1, None, 3, None, 5], "col2": [None, "b", None, "d", None]},
             3,
             "success",
@@ -101,31 +84,15 @@ def create_dataframe(df_type, df_data, spark):
             "failure",
             "DataFrame has 3 rows, expected at least 5.",
         ),
-        (
-            "pyspark",
-            {"col1": [1, 2, 3], "col2": ["a", "b", "c"]},
-            5,
-            "failure",
-            "DataFrame has 3 rows, expected at least 5.",
-        ),
         # Empty needs min - 0 rows < 2 min
         ("pandas", {"col1": []}, 2, "failure", "DataFrame has 0 rows, expected at least 2."),
-        ("pyspark", {}, 2, "failure", "DataFrame has 0 rows, expected at least 2."),
         # Single row needs more - 1 row < 3 min
         ("pandas", {"col1": [1]}, 3, "failure", "DataFrame has 1 rows, expected at least 3."),
-        ("pyspark", {"col1": [1]}, 3, "failure", "DataFrame has 1 rows, expected at least 3."),
         # Large dataset success - 150 rows >= 100 min
         (
             "pandas",
             {"col1": list(range(150)), "col2": [f"value_{i}" for i in range(150)]},
             100,
-            "success",
-            None,
-        ),
-        (
-            "pyspark",
-            {"col1": list(range(75)), "col2": [f"value_{i}" for i in range(75)]},
-            50,
             "success",
             None,
         ),
@@ -137,28 +104,9 @@ def create_dataframe(df_type, df_data, spark):
             "failure",
             "DataFrame has 150 rows, expected at least 200.",
         ),
-        (
-            "pyspark",
-            {"col1": list(range(75)), "col2": [f"value_{i}" for i in range(75)]},
-            100,
-            "failure",
-            "DataFrame has 75 rows, expected at least 100.",
-        ),
         # Multiple columns - 4 rows >= 3 min
         (
             "pandas",
-            {
-                "col1": [1, 2, 3, 4],
-                "col2": ["a", "b", "c", "d"],
-                "col3": [1.1, 2.2, 3.3, 4.4],
-                "col4": [True, False, True, False],
-            },
-            3,
-            "success",
-            None,
-        ),
-        (
-            "pyspark",
             {
                 "col1": [1, 2, 3, 4],
                 "col2": ["a", "b", "c", "d"],
@@ -183,32 +131,11 @@ def create_dataframe(df_type, df_data, spark):
             "success",
             None,
         ),
-        (
-            "pyspark",
-            {
-                "int_col": [1, 2, 3, 4, 5],
-                "str_col": ["a", "b", "c", "d", "e"],
-                "float_col": [1.1, 2.2, 3.3, 4.4, 5.5],
-                "bool_col": [True, False, True, False, True],
-                "null_col": [None, None, None, None, None],
-            },
-            3,
-            "success",
-            None,
-        ),
         # Low min count - 3 rows >= 1 min
         ("pandas", {"col1": [1, 2, 3]}, 1, "success", None),
-        ("pyspark", {"col1": [1, 2, 3]}, 1, "success", None),
         # High min count - 3 rows < 1000000 min
         (
             "pandas",
-            {"col1": [1, 2, 3]},
-            1000000,
-            "failure",
-            "DataFrame has 3 rows, expected at least 1000000.",
-        ),
-        (
-            "pyspark",
             {"col1": [1, 2, 3]},
             1000000,
             "failure",
@@ -222,30 +149,13 @@ def create_dataframe(df_type, df_data, spark):
             "success",
             None,
         ),
-        (
-            "pyspark",
-            {"col1": [42, 42, 42, 42], "col2": ["same", "same", "same", "same"]},
-            3,
-            "success",
-            None,
-        ),
         # Boundary condition - 1 row == 1 min (edge case equals actual)
         ("pandas", {"col1": [1]}, 1, "success", None),
-        ("pyspark", {"col1": [1]}, 1, "success", None),
         # Progressive counts - 5 rows meets various minimums
         ("pandas", {"col1": [1, 2, 3, 4, 5]}, 5, "success", None),
-        ("pyspark", {"col1": [1, 2, 3, 4, 5]}, 5, "success", None),
         ("pandas", {"col1": [1, 2, 3, 4, 5]}, 4, "success", None),
-        ("pyspark", {"col1": [1, 2, 3, 4, 5]}, 4, "success", None),
         (
             "pandas",
-            {"col1": [1, 2, 3, 4, 5]},
-            6,
-            "failure",
-            "DataFrame has 5 rows, expected at least 6.",
-        ),
-        (
-            "pyspark",
             {"col1": [1, 2, 3, 4, 5]},
             6,
             "failure",
@@ -254,58 +164,38 @@ def create_dataframe(df_type, df_data, spark):
     ],
     ids=[
         "pandas_exact_count",
-        "pyspark_exact_count",
         "pandas_above_min",
-        "pyspark_above_min",
         "pandas_single_row",
-        "pyspark_single_row",
         "pandas_zero_min_empty",
-        "pyspark_zero_min_empty",
         "pandas_zero_min_with_data",
-        "pyspark_zero_min_with_data",
         "pandas_with_nulls",
-        "pyspark_with_nulls",
         "pandas_below_min",
-        "pyspark_below_min",
         "pandas_empty_needs_min",
-        "pyspark_empty_needs_min",
         "pandas_single_row_needs_more",
-        "pyspark_single_row_needs_more",
         "pandas_large_dataset",
-        "pyspark_large_dataset",
         "pandas_large_dataset_failure",
-        "pyspark_large_dataset_failure",
         "pandas_multiple_columns",
-        "pyspark_multiple_columns",
         "pandas_mixed_data_types",
-        "pyspark_mixed_data_types",
         "pandas_low_min_count",
-        "pyspark_low_min_count",
         "pandas_high_min_count",
-        "pyspark_high_min_count",
         "pandas_identical_values",
-        "pyspark_identical_values",
         "pandas_boundary_condition",
-        "pyspark_boundary_condition",
         "pandas_progressive_count_at_min",
-        "pyspark_progressive_count_at_min",
         "pandas_progressive_count_below_min",
-        "pyspark_progressive_count_below_min",
         "pandas_progressive_count_above_min",
-        "pyspark_progressive_count_above_min",
     ],
 )
-def test_expectation_basic_scenarios(
-    df_type, df_data, min_rows, expected_result, expected_message, spark
+def test_expectation_basic_scenarios_pandas(
+    df_type, df_data, min_rows, expected_result, expected_message
 ):
     """
-    Test the expectation for various scenarios across pandas and PySpark DataFrames.
+    Test the expectation for various scenarios across pandas DataFrames.
     Tests both direct expectation validation and suite-based validation.
     Covers: success cases (exact, above min, zero min), failures (below min, empty), edge cases,
     boundary conditions, large datasets, nulls, multiple columns, mixed data types, identical values,
     progressive counts, and dataframe structure variations.
     """
-    data_frame = create_dataframe(df_type, df_data, spark)
+    data_frame = pd.DataFrame(df_data)
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -322,7 +212,193 @@ def test_expectation_basic_scenarios(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=str(df_type),
+            data_frame_type=df_type,
+            message=expected_message,
+        )
+        assert str(result) == str(expected_failure_message), (
+            f"Expected failure message but got: {result}"
+        )
+
+    # Test 2: Suite-based validation
+    expectations_suite = DataFrameExpectationsSuite().expect_min_rows(min_rows=min_rows)
+
+    if expected_result == "success":
+        result = expectations_suite.build().run(data_frame=data_frame)
+        assert result is not None, "Expected SuiteExecutionResult"
+        assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
+        assert result.success, "Expected all expectations to pass"
+        assert result.total_passed == 1, "Expected 1 passed expectation"
+        assert result.total_failed == 0, "Expected 0 failed expectations"
+    else:  # failure
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
+            expectations_suite.build().run(data_frame=data_frame)
+
+
+@pytest.mark.pyspark
+@pytest.mark.parametrize(
+    "df_type, df_data, min_rows, expected_result, expected_message",
+    [
+        # Exact count - 3 rows == 3 min
+        ("pyspark", {"col1": [1, 2, 3], "col2": ["a", "b", "c"]}, 3, "success", None),
+        # Above min - 5 rows > 3 min
+        (
+            "pyspark",
+            {"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]},
+            3,
+            "success",
+            None,
+        ),
+        # Single row - 1 row == 1 min
+        ("pyspark", {"col1": [42]}, 1, "success", None),
+        # Zero min empty - 0 rows == 0 min
+        ("pyspark", {}, 0, "success", None),
+        # Zero min with data - 3 rows >= 0 min
+        ("pyspark", {"col1": [1, 2, 3]}, 0, "success", None),
+        # With nulls - 5 rows >= 3 min (nulls don't affect row count)
+        (
+            "pyspark",
+            {"col1": [1, None, 3, None, 5], "col2": [None, "b", None, "d", None]},
+            3,
+            "success",
+            None,
+        ),
+        # Below min - 3 rows < 5 min
+        (
+            "pyspark",
+            {"col1": [1, 2, 3], "col2": ["a", "b", "c"]},
+            5,
+            "failure",
+            "DataFrame has 3 rows, expected at least 5.",
+        ),
+        # Empty needs min - 0 rows < 2 min
+        ("pyspark", {}, 2, "failure", "DataFrame has 0 rows, expected at least 2."),
+        # Single row needs more - 1 row < 3 min
+        ("pyspark", {"col1": [1]}, 3, "failure", "DataFrame has 1 rows, expected at least 3."),
+        # Large dataset success - 75 rows >= 50 min
+        (
+            "pyspark",
+            {"col1": list(range(75)), "col2": [f"value_{i}" for i in range(75)]},
+            50,
+            "success",
+            None,
+        ),
+        # Large dataset failure - 75 rows < 100 min
+        (
+            "pyspark",
+            {"col1": list(range(75)), "col2": [f"value_{i}" for i in range(75)]},
+            100,
+            "failure",
+            "DataFrame has 75 rows, expected at least 100.",
+        ),
+        # Multiple columns - 4 rows >= 3 min
+        (
+            "pyspark",
+            {
+                "col1": [1, 2, 3, 4],
+                "col2": ["a", "b", "c", "d"],
+                "col3": [1.1, 2.2, 3.3, 4.4],
+                "col4": [True, False, True, False],
+            },
+            3,
+            "success",
+            None,
+        ),
+        # Mixed data types - 5 rows >= 3 min
+        (
+            "pyspark",
+            {
+                "int_col": [1, 2, 3, 4, 5],
+                "str_col": ["a", "b", "c", "d", "e"],
+                "float_col": [1.1, 2.2, 3.3, 4.4, 5.5],
+                "bool_col": [True, False, True, False, True],
+                "null_col": [None, None, None, None, None],
+            },
+            3,
+            "success",
+            None,
+        ),
+        # Low min count - 3 rows >= 1 min
+        ("pyspark", {"col1": [1, 2, 3]}, 1, "success", None),
+        # High min count - 3 rows < 1000000 min
+        (
+            "pyspark",
+            {"col1": [1, 2, 3]},
+            1000000,
+            "failure",
+            "DataFrame has 3 rows, expected at least 1000000.",
+        ),
+        # Identical values - 4 rows >= 3 min
+        (
+            "pyspark",
+            {"col1": [42, 42, 42, 42], "col2": ["same", "same", "same", "same"]},
+            3,
+            "success",
+            None,
+        ),
+        # Boundary condition - 1 row == 1 min (edge case equals actual)
+        ("pyspark", {"col1": [1]}, 1, "success", None),
+        # Progressive counts - 5 rows meets various minimums
+        ("pyspark", {"col1": [1, 2, 3, 4, 5]}, 5, "success", None),
+        ("pyspark", {"col1": [1, 2, 3, 4, 5]}, 4, "success", None),
+        (
+            "pyspark",
+            {"col1": [1, 2, 3, 4, 5]},
+            6,
+            "failure",
+            "DataFrame has 5 rows, expected at least 6.",
+        ),
+    ],
+    ids=[
+        "pyspark_exact_count",
+        "pyspark_above_min",
+        "pyspark_single_row",
+        "pyspark_zero_min_empty",
+        "pyspark_zero_min_with_data",
+        "pyspark_with_nulls",
+        "pyspark_below_min",
+        "pyspark_empty_needs_min",
+        "pyspark_single_row_needs_more",
+        "pyspark_large_dataset",
+        "pyspark_large_dataset_failure",
+        "pyspark_multiple_columns",
+        "pyspark_mixed_data_types",
+        "pyspark_low_min_count",
+        "pyspark_high_min_count",
+        "pyspark_identical_values",
+        "pyspark_boundary_condition",
+        "pyspark_progressive_count_at_min",
+        "pyspark_progressive_count_below_min",
+        "pyspark_progressive_count_above_min",
+    ],
+)
+def test_expectation_basic_scenarios_pyspark(
+    df_type, df_data, min_rows, expected_result, expected_message, spark
+):
+    """
+    Test the expectation for various scenarios across PySpark DataFrames.
+    Tests both direct expectation validation and suite-based validation.
+    Covers: success cases (exact, above min, zero min), failures (below min, empty), edge cases,
+    boundary conditions, large datasets, nulls, multiple columns, mixed data types, identical values,
+    progressive counts, and dataframe structure variations.
+    """
+    data_frame = create_pyspark_dataframe(df_data, spark)
+
+    # Test 1: Direct expectation validation
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationMinRows",
+        min_rows=min_rows,
+    )
+
+    result = expectation.validate(data_frame=data_frame)
+
+    if expected_result == "success":
+        assert str(result) == str(
+            DataFrameExpectationSuccessMessage(expectation_name="ExpectationMinRows")
+        ), f"Expected success message but got: {result}"
+    else:  # failure
+        expected_failure_message = DataFrameExpectationFailureMessage(
+            expectation_str=str(expectation),
+            data_frame_type=df_type,
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (

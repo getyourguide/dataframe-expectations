@@ -50,6 +50,7 @@ def test_validate_for_pandas_df(expectation):
     )
 
 
+@pytest.mark.pyspark
 def test_validate_for_pyspark_df(expectation, spark):
     """
     Test whether row_validation() and get_filter_fn() methods are called with the right parameters for PySpark.

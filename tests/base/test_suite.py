@@ -68,7 +68,7 @@ def test_invalid_data_frame_type():
         runner.run(data_frame=data_Frame)
 
 
-def test_suite_with_supported_dataframe_types(spark):
+def test_suite_with_supported_dataframe_pandas():
     """
     Test the ExpectationsSuite with all supported DataFrame types.
     """
@@ -83,6 +83,16 @@ def test_suite_with_supported_dataframe_types(spark):
     assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
     assert result.success, "Expected success for pandas DataFrame"
     assert result.dataframe_type == DataFrameType.PANDAS
+
+
+@pytest.mark.pyspark
+def test_suite_with_supported_dataframe_pyspark(spark):
+    """
+    Test the ExpectationsSuite with all supported DataFrame types.
+    """
+
+    suite = DataFrameExpectationsSuite().expect_min_rows(min_rows=1)
+    runner = suite.build()
 
     # Test with PySpark DataFrame
     spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
@@ -118,6 +128,7 @@ def test_suite_with_unsupported_dataframe_types():
         )
 
 
+@pytest.mark.pyspark
 def test_suite_with_pyspark_connect_dataframe():
     """
     Test the ExpectationsSuite with PySpark Connect DataFrame (if available).

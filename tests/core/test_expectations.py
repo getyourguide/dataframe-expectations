@@ -82,6 +82,14 @@ class MockConnectDataFrame:
         pass
 
 
+class FakeDataFrame:
+    def count(self):
+        return 5
+
+    def collect(self):
+        return []
+
+
 def test_data_frame_type_enum():
     """
     Test that the DataFrameType enum has the correct values.
@@ -137,6 +145,7 @@ def test_validate_pandas_called():
         expectation.validate(None)
 
 
+@pytest.mark.pyspark
 def test_validate_pyspark_called(spark):
     """
     Test that validate_pyspark method is called with right parameters.
@@ -155,7 +164,7 @@ def test_validate_pyspark_called(spark):
         expectation.validate(None)
 
 
-def test_num_data_frame_rows(spark):
+def test_num_data_frame_rows_pandas():
     """
     Test that the number of rows in a DataFrame are counted correctly.
     """
@@ -167,11 +176,6 @@ def test_num_data_frame_rows(spark):
     num_rows = expectation.num_data_frame_rows(pandas_df)
     assert num_rows == 3, f"Expected 3 rows for pandas DataFrame but got: {num_rows}"
 
-    # Mock a PySpark DataFrame
-    spark_df = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-    num_rows = expectation.num_data_frame_rows(spark_df)
-    assert num_rows == 3, f"Expected 3 rows for PySpark DataFrame but got: {num_rows}"
-
     # Test unsupported DataFrame type
     with pytest.raises(ValueError):
         expectation.num_data_frame_rows(None)
@@ -182,6 +186,29 @@ def test_num_data_frame_rows(spark):
     num_rows = expectation.num_data_frame_rows(empty_pandas_df)
     assert num_rows == 0, f"Expected 0 rows for empty pandas DataFrame but got: {num_rows}"
 
+    # Test unsupported DataFrame type
+    with pytest.raises(ValueError):
+        expectation.num_data_frame_rows(None)
+
+
+@pytest.mark.pyspark
+def test_num_data_frame_rows_pyspark(spark):
+    """
+    Test that the number of rows in a DataFrame are counted correctly.
+    """
+    expectation = MyTestExpectation()
+
+    # 1. Non empty DataFrames
+    # Mock a PySpark DataFrame
+    spark_df = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
+    num_rows = expectation.num_data_frame_rows(spark_df)
+    assert num_rows == 3, f"Expected 3 rows for PySpark DataFrame but got: {num_rows}"
+
+    # Test unsupported DataFrame type
+    with pytest.raises(ValueError):
+        expectation.num_data_frame_rows(None)
+
+    # 2. Empty DataFrames
     # Mock an empty PySpark DataFrame
     empty_spark_df = spark.createDataFrame([], "col1 INT, col2 STRING")
     num_rows = expectation.num_data_frame_rows(empty_spark_df)
@@ -192,7 +219,7 @@ def test_num_data_frame_rows(spark):
         expectation.num_data_frame_rows(None)
 
 
-def test_infer_data_frame_type(spark):
+def test_infer_data_frame_type_pandas():
     """
     Test that the DataFrame type is inferred correctly for all supported DataFrame types.
     """
@@ -205,18 +232,26 @@ def test_infer_data_frame_type(spark):
         f"Expected PANDAS type but got: {data_frame_type}"
     )
 
-    # Test PySpark DataFrame
-    spark_df = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-    data_frame_type = expectation.infer_data_frame_type(spark_df)
-    assert data_frame_type == DataFrameType.PYSPARK, (
-        f"Expected PYSPARK type but got: {data_frame_type}"
-    )
-
     # Test empty pandas DataFrame
     empty_pandas_df = pd.DataFrame(columns=["col1", "col2"])
     data_frame_type = expectation.infer_data_frame_type(empty_pandas_df)
     assert data_frame_type == DataFrameType.PANDAS, (
         f"Expected PANDAS type for empty DataFrame but got: {data_frame_type}"
+    )
+
+
+@pytest.mark.pyspark
+def test_infer_data_frame_type_pyspark(spark):
+    """
+    Test that the DataFrame type is inferred correctly for all supported DataFrame types.
+    """
+    expectation = MyTestExpectation()
+
+    # Test PySpark DataFrame
+    spark_df = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
+    data_frame_type = expectation.infer_data_frame_type(spark_df)
+    assert data_frame_type == DataFrameType.PYSPARK, (
+        f"Expected PYSPARK type but got: {data_frame_type}"
     )
 
     # Test empty PySpark DataFrame
@@ -226,52 +261,29 @@ def test_infer_data_frame_type(spark):
         f"Expected PYSPARK type for empty DataFrame but got: {data_frame_type}"
     )
 
-    # Test unsupported DataFrame types
-    with pytest.raises(ValueError) as context:
-        expectation.infer_data_frame_type(None)
-    assert "Unsupported DataFrame type" in str(context.value), (
-        f"Expected 'Unsupported DataFrame type' in error message but got: {str(context.value)}"
-    )
 
-    with pytest.raises(ValueError) as context:
-        expectation.infer_data_frame_type("not_a_dataframe")
-    assert "Unsupported DataFrame type" in str(context.value), (
-        f"Expected 'Unsupported DataFrame type' in error message but got: {str(context.value)}"
-    )
-
-    with pytest.raises(ValueError) as context:
-        expectation.infer_data_frame_type([1, 2, 3])
-    assert "Unsupported DataFrame type" in str(context.value), (
-        f"Expected 'Unsupported DataFrame type' in error message but got: {str(context.value)}"
-    )
-
-    with pytest.raises(ValueError) as context:
-        expectation.infer_data_frame_type({"col1": [1, 2, 3]})
-    assert "Unsupported DataFrame type" in str(context.value), (
-        f"Expected 'Unsupported DataFrame type' in error message but got: {str(context.value)}"
-    )
-
-    # Test with objects that might have similar attributes but aren't DataFrames
-    class FakeDataFrame:
-        def count(self):
-            return 5
-
-        def collect(self):
-            return []
-
-    fake_df = FakeDataFrame()
-    with pytest.raises(ValueError):
-        expectation.infer_data_frame_type(fake_df)
-
-    # Test with numeric types
-    with pytest.raises(ValueError):
-        expectation.infer_data_frame_type(42)
-
-    # Test with boolean
-    with pytest.raises(ValueError):
-        expectation.infer_data_frame_type(True)
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        None,
+        "not_a_dataframe",
+        [1, 2, 3],
+        {"col1": [1, 2, 3]},
+        FakeDataFrame(),
+        42,
+        True,
+    ],
+)
+def test_infer_data_frame_type_invalid(invalid_input):
+    """
+    Test that the DataFrame type is inferred correctly for all supported DataFrame types.
+    """
+    expectation = MyTestExpectation()
+    with pytest.raises(ValueError, match="Unsupported DataFrame type"):
+        expectation.infer_data_frame_type(invalid_input)
 
 
+@pytest.mark.pyspark
 def test_infer_data_frame_type_with_connect_dataframe_available():
     """
     Test that PySpark Connect DataFrame is correctly identified when available.
@@ -294,7 +306,7 @@ def test_infer_data_frame_type_with_connect_dataframe_available():
 
 
 @patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None)
-def test_infer_data_frame_type_without_connect_support(spark):
+def test_infer_data_frame_type_without_connect_support_pandas():
     """
     Test that the method works correctly when PySpark Connect is not available.
     """
@@ -307,6 +319,16 @@ def test_infer_data_frame_type_without_connect_support(spark):
         f"Expected PANDAS type but got: {data_frame_type}"
     )
 
+
+@pytest.mark.pyspark
+@patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None)
+def test_infer_data_frame_type_without_connect_support_pyspark(spark):
+    """
+    Test that the method works correctly when PySpark Connect is not available.
+    """
+    expectation = MyTestExpectation()
+
+    # Test that regular DataFrames still work when Connect is not available
     spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
     data_frame_type = expectation.infer_data_frame_type(spark_df)
     assert data_frame_type == DataFrameType.PYSPARK, (
@@ -314,7 +336,7 @@ def test_infer_data_frame_type_without_connect_support(spark):
     )
 
 
-def test_infer_data_frame_type_connect_import_behavior(spark):
+def test_infer_data_frame_type_connect_import_behavior_pandas():
     """
     Test that the Connect DataFrame import behavior works as expected.
     """
@@ -327,10 +349,6 @@ def test_infer_data_frame_type_connect_import_behavior(spark):
         result_type = expectation.infer_data_frame_type(pandas_df)
         assert result_type == DataFrameType.PANDAS, f"Expected PANDAS type but got: {result_type}"
 
-        spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
-        result_type = expectation.infer_data_frame_type(spark_df)
-        assert result_type == DataFrameType.PYSPARK, f"Expected PYSPARK type but got: {result_type}"
-
     # Test case 2: When PySparkConnectDataFrame is available (mocked)
     with patch(
         "dataframe_expectations.core.expectation.PySparkConnectDataFrame",
@@ -341,6 +359,34 @@ def test_infer_data_frame_type_connect_import_behavior(spark):
         result_type = expectation.infer_data_frame_type(pandas_df)
         assert result_type == DataFrameType.PANDAS, f"Expected PANDAS type but got: {result_type}"
 
+        # Mock Connect DataFrame should be identified as PYSPARK
+        mock_connect_df = MockConnectDataFrame()
+        result_type = expectation.infer_data_frame_type(mock_connect_df)
+        assert result_type == DataFrameType.PYSPARK, (
+            f"Expected PYSPARK type for Connect DataFrame but got: {result_type}"
+        )
+
+
+@pytest.mark.pyspark
+def test_infer_data_frame_type_connect_import_behavior_pyspark(spark):
+    """
+    Test that the Connect DataFrame import behavior works as expected.
+    """
+    expectation = MyTestExpectation()
+
+    # Test case 1: When PySparkConnectDataFrame is None (import failed)
+    with patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None):
+        # Should still work with regular DataFrames
+        spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
+        result_type = expectation.infer_data_frame_type(spark_df)
+        assert result_type == DataFrameType.PYSPARK, f"Expected PYSPARK type but got: {result_type}"
+
+    # Test case 2: When PySparkConnectDataFrame is available (mocked)
+    with patch(
+        "dataframe_expectations.core.expectation.PySparkConnectDataFrame",
+        MockConnectDataFrame,
+    ):
+        # Regular DataFrames should still work
         spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
         result_type = expectation.infer_data_frame_type(spark_df)
         assert result_type == DataFrameType.PYSPARK, f"Expected PYSPARK type but got: {result_type}"

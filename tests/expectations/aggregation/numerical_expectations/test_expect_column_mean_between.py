@@ -7,36 +7,33 @@ from dataframe_expectations.registry import (
 from dataframe_expectations.suite import (
     DataFrameExpectationsSuite,
     DataFrameExpectationsSuiteFailure,
-    SuiteExecutionResult,
 )
+from dataframe_expectations.core.suite_result import SuiteExecutionResult
 from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
     DataFrameExpectationSuccessMessage,
 )
 
 
-def create_dataframe(df_type, data, column_name, spark):
-    """Helper function to create pandas or pyspark DataFrame."""
-    if df_type == "pandas":
-        return pd.DataFrame({column_name: data})
-    else:  # pyspark
-        from pyspark.sql.types import DoubleType, StructField, StructType
+def create_pyspark_dataframe(data, column_name, spark):
+    """Helper function to create a PySpark DataFrame."""
+    from pyspark.sql.types import DoubleType, StructField, StructType
 
-        # Handle empty or all-null data with explicit schema
-        if not data or all(v is None for v in data):
-            schema = StructType([StructField(column_name, DoubleType(), True)])
-            return spark.createDataFrame([[v] for v in data], schema=schema)
+    # Handle empty or all-null data with explicit schema
+    if not data or all(v is None for v in data):
+        schema = StructType([StructField(column_name, DoubleType(), True)])
+        return spark.createDataFrame([[v] for v in data], schema=schema)
 
-        # Use explicit DoubleType schema if the data contains any float values
-        # This ensures consistent type handling for mixed int/float data
-        has_float = any(isinstance(v, float) for v in data if v is not None)
-        if has_float:
-            float_data = [[float(v) if v is not None else None] for v in data]
-            schema = StructType([StructField(column_name, DoubleType(), True)])
-            return spark.createDataFrame(float_data, schema=schema)
-        else:
-            # For pure integer data, let PySpark infer the schema
-            return spark.createDataFrame([[v] for v in data], schema=[column_name])
+    # Use explicit DoubleType schema if the data contains any float values
+    # This ensures consistent type handling for mixed int/float data
+    has_float = any(isinstance(v, float) for v in data if v is not None)
+    if has_float:
+        float_data = [[float(v) if v is not None else None] for v in data]
+        schema = StructType([StructField(column_name, DoubleType(), True)])
+        return spark.createDataFrame(float_data, schema=schema)
+    else:
+        # For pure integer data, let PySpark infer the schema
+        return spark.createDataFrame([[v] for v in data], schema=[column_name])
 
 
 def test_expectation_name():
@@ -72,45 +69,27 @@ def test_expectation_description():
     [
         # Basic success scenarios
         ("pandas", [20, 25, 30, 35], 25, 30, "success", None),  # mean = 27.5
-        ("pyspark", [20, 25, 30, 35], 25, 30, "success", None),  # mean = 27.5
         # Single row scenarios
         ("pandas", [25], 20, 30, "success", None),  # mean = 25
-        ("pyspark", [25], 20, 30, "success", None),  # mean = 25
         # Negative value scenarios
         ("pandas", [-20, -15, -10, -5], -15, -10, "success", None),  # mean = -12.5
-        ("pyspark", [-20, -15, -10, -5], -15, -10, "success", None),  # mean = -12.5
         # Float value scenarios
         ("pandas", [1.1, 2.5, 3.7, 3.8], 2.5, 3.0, "success", None),  # mean = 2.775
-        ("pyspark", [1.1, 2.5, 3.7, 3.8], 2.5, 3.0, "success", None),  # mean ≈ 2.775
         # Identical value scenarios
         ("pandas", [25, 25, 25, 25], 24, 26, "success", None),  # mean = 25
-        ("pyspark", [25, 25, 25, 25], 24, 26, "success", None),  # mean = 25
         # Mixed type scenarios
         ("pandas", [20, 25.5, 30, 37], 27, 29, "success", None),  # mean = 28.125
-        ("pyspark", [20, 25.5, 30, 37], 27, 29, "success", None),  # mean ≈ 28.125
         # Zero scenarios
         ("pandas", [-5, 0, 0, 5], -2, 2, "success", None),  # mean = 0
-        ("pyspark", [-5, 0, 0, 5], -2, 2, "success", None),  # mean = 0
         # Null scenarios
         ("pandas", [20, None, 30, None, 40], 25, 35, "success", None),  # mean = 30
-        ("pyspark", [20, None, 30, None, 40], 25, 35, "success", None),  # mean = 30
         # Boundary scenarios - exact min boundary (mean = 27.5)
         ("pandas", [20, 25, 30, 35], 27.5, 30, "success", None),
-        ("pyspark", [20, 25, 30, 35], 27.5, 30, "success", None),
         # Boundary scenarios - exact max boundary (mean = 27.5)
         ("pandas", [20, 25, 30, 35], 25, 27.5, "success", None),
-        ("pyspark", [20, 25, 30, 35], 25, 27.5, "success", None),
         # Failure scenarios - mean too low
         (
             "pandas",
-            [20, 25, 30, 35],
-            30,
-            35,
-            "failure",
-            "Column 'col1' mean value 27.5 is not between 30 and 35.",
-        ),
-        (
-            "pyspark",
             [20, 25, 30, 35],
             30,
             35,
@@ -126,14 +105,6 @@ def test_expectation_description():
             "failure",
             "Column 'col1' mean value 27.5 is not between 20 and 25.",
         ),
-        (
-            "pyspark",
-            [20, 25, 30, 35],
-            20,
-            25,
-            "failure",
-            "Column 'col1' mean value 27.5 is not between 20 and 25.",
-        ),
         # Failure scenarios - all nulls
         (
             "pandas",
@@ -143,74 +114,45 @@ def test_expectation_description():
             "failure",
             "Column 'col1' contains only null values.",
         ),
-        (
-            "pyspark",
-            [None, None, None],
-            25,
-            30,
-            "failure",
-            "Column 'col1' contains only null values.",
-        ),
         # Failure scenarios - empty
         ("pandas", [], 25, 30, "failure", "Column 'col1' contains only null values."),
-        ("pyspark", [], 25, 30, "failure", "Column 'col1' contains only null values."),
         # Outlier scenarios - high
         ("pandas", [1, 2, 3, 100], 20, 30, "success", None),  # mean = 26.5
-        ("pyspark", [1, 2, 3, 100], 20, 30, "success", None),  # mean = 26.5
         # Outlier scenarios - low
         ("pandas", [-100, 10, 20, 30], -15, -5, "success", None),  # mean = -10
-        ("pyspark", [-100, 10, 20, 30], -15, -5, "success", None),  # mean = -10
         # Outlier scenarios - extreme
         ("pandas", [1, 2, 3, 4, 5, 1000], 150, 200, "success", None),  # mean ≈ 169.17
-        ("pyspark", [1, 2, 3, 4, 5, 1000], 150, 200, "success", None),  # mean ≈ 169.17
     ],
     ids=[
         "pandas_basic_success",
-        "pyspark_basic_success",
         "pandas_single_row",
-        "pyspark_single_row",
         "pandas_negative_values",
-        "pyspark_negative_values",
         "pandas_float_values",
-        "pyspark_float_values",
         "pandas_identical_values",
-        "pyspark_identical_values",
         "pandas_mixed_types",
-        "pyspark_mixed_types",
         "pandas_with_zeros",
-        "pyspark_with_zeros",
         "pandas_with_nulls",
-        "pyspark_with_nulls",
         "pandas_boundary_exact_min",
-        "pyspark_boundary_exact_min",
         "pandas_boundary_exact_max",
-        "pyspark_boundary_exact_max",
         "pandas_mean_too_low",
-        "pyspark_mean_too_low",
         "pandas_mean_too_high",
-        "pyspark_mean_too_high",
         "pandas_all_nulls",
-        "pyspark_all_nulls",
         "pandas_empty",
-        "pyspark_empty",
         "pandas_outlier_high",
-        "pyspark_outlier_high",
         "pandas_outlier_low",
-        "pyspark_outlier_low",
         "pandas_outlier_extreme",
-        "pyspark_outlier_extreme",
     ],
 )
-def test_expectation_basic_scenarios(
-    df_type, data, min_value, max_value, expected_result, expected_message, spark
+def test_expectation_basic_scenarios_pandas(
+    df_type, data, min_value, max_value, expected_result, expected_message
 ):
     """
-    Test the expectation for various scenarios across pandas and PySpark DataFrames.
+    Test the expectation for various scenarios across pandas DataFrames.
     Tests both direct expectation validation and suite-based validation.
     Covers: success cases, boundary conditions, failures (mean out of range, nulls, empty),
     and various data types (integers, floats, negatives, nulls, mixed types, outliers).
     """
-    data_frame = create_dataframe(df_type, data, "col1", spark)
+    data_frame = pd.DataFrame({"col1": data})
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -253,19 +195,143 @@ def test_expectation_basic_scenarios(
             expectations_suite.build().run(data_frame=data_frame)
 
 
+@pytest.mark.pyspark
 @pytest.mark.parametrize(
-    "df_type",
-    ["pandas", "pyspark"],
-    ids=["pandas", "pyspark"],
+    "df_type, data, min_value, max_value, expected_result, expected_message",
+    [
+        # Basic success scenarios
+        ("pyspark", [20, 25, 30, 35], 25, 30, "success", None),  # mean = 27.5
+        # Single row scenarios
+        ("pyspark", [25], 20, 30, "success", None),  # mean = 25
+        # Negative value scenarios
+        ("pyspark", [-20, -15, -10, -5], -15, -10, "success", None),  # mean = -12.5
+        # Float value scenarios
+        ("pyspark", [1.1, 2.5, 3.7, 3.8], 2.5, 3.0, "success", None),  # mean ≈ 2.775
+        # Identical value scenarios
+        ("pyspark", [25, 25, 25, 25], 24, 26, "success", None),  # mean = 25
+        # Mixed type scenarios
+        ("pyspark", [20, 25.5, 30, 37], 27, 29, "success", None),  # mean ≈ 28.125
+        # Zero scenarios
+        ("pyspark", [-5, 0, 0, 5], -2, 2, "success", None),  # mean = 0
+        # Null scenarios
+        ("pyspark", [20, None, 30, None, 40], 25, 35, "success", None),  # mean = 30
+        # Boundary scenarios - exact min boundary (mean = 27.5)
+        ("pyspark", [20, 25, 30, 35], 27.5, 30, "success", None),
+        # Boundary scenarios - exact max boundary (mean = 27.5)
+        ("pyspark", [20, 25, 30, 35], 25, 27.5, "success", None),
+        # Failure scenarios - mean too low
+        (
+            "pyspark",
+            [20, 25, 30, 35],
+            30,
+            35,
+            "failure",
+            "Column 'col1' mean value 27.5 is not between 30 and 35.",
+        ),
+        # Failure scenarios - mean too high
+        (
+            "pyspark",
+            [20, 25, 30, 35],
+            20,
+            25,
+            "failure",
+            "Column 'col1' mean value 27.5 is not between 20 and 25.",
+        ),
+        # Failure scenarios - all nulls
+        (
+            "pyspark",
+            [None, None, None],
+            25,
+            30,
+            "failure",
+            "Column 'col1' contains only null values.",
+        ),
+        # Failure scenarios - empty
+        ("pyspark", [], 25, 30, "failure", "Column 'col1' contains only null values."),
+        # Outlier scenarios - high
+        ("pyspark", [1, 2, 3, 100], 20, 30, "success", None),  # mean = 26.5
+        # Outlier scenarios - low
+        ("pyspark", [-100, 10, 20, 30], -15, -5, "success", None),  # mean = -10
+        # Outlier scenarios - extreme
+        ("pyspark", [1, 2, 3, 4, 5, 1000], 150, 200, "success", None),  # mean ≈ 169.17
+    ],
+    ids=[
+        "pyspark_basic_success",
+        "pyspark_single_row",
+        "pyspark_negative_values",
+        "pyspark_float_values",
+        "pyspark_identical_values",
+        "pyspark_mixed_types",
+        "pyspark_with_zeros",
+        "pyspark_with_nulls",
+        "pyspark_boundary_exact_min",
+        "pyspark_boundary_exact_max",
+        "pyspark_mean_too_low",
+        "pyspark_mean_too_high",
+        "pyspark_all_nulls",
+        "pyspark_empty",
+        "pyspark_outlier_high",
+        "pyspark_outlier_low",
+        "pyspark_outlier_extreme",
+    ],
 )
-def test_column_missing_error(df_type, spark):
-    """Test that an error is raised when the specified column is missing in both pandas and PySpark."""
+def test_expectation_basic_scenarios_pyspark(
+    df_type, data, min_value, max_value, expected_result, expected_message, spark
+):
+    """
+    Test the expectation for various scenarios across PySpark DataFrames.
+    Tests both direct expectation validation and suite-based validation.
+    Covers: success cases, boundary conditions, failures (mean out of range, nulls, empty),
+    and various data types (integers, floats, negatives, nulls, mixed types, outliers).
+    """
+    data_frame = create_pyspark_dataframe(data, "col1", spark)
+
+    # Test 1: Direct expectation validation
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationColumnMeanBetween",
+        column_name="col1",
+        min_value=min_value,
+        max_value=max_value,
+    )
+
+    result = expectation.validate(data_frame=data_frame)
+
+    if expected_result == "success":
+        assert str(result) == str(
+            DataFrameExpectationSuccessMessage(expectation_name="ExpectationColumnMeanBetween")
+        ), f"Expected success message but got: {result}"
+    else:  # failure
+        expected_failure_message = DataFrameExpectationFailureMessage(
+            expectation_str=str(expectation),
+            data_frame_type=str(df_type),
+            message=expected_message,
+        )
+        assert str(result) == str(expected_failure_message), (
+            f"Expected failure message but got: {result}"
+        )
+
+    # Test 2: Suite-based validation
+    expectations_suite = DataFrameExpectationsSuite().expect_column_mean_between(
+        column_name="col1", min_value=min_value, max_value=max_value
+    )
+
+    if expected_result == "success":
+        result = expectations_suite.build().run(data_frame=data_frame)
+        assert result is not None, "Expected SuiteExecutionResult"
+        assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
+        assert result.success, "Expected all expectations to pass"
+        assert result.total_passed == 1, "Expected 1 passed expectation"
+        assert result.total_failed == 0, "Expected 0 failed expectations"
+    else:  # failure
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
+            expectations_suite.build().run(data_frame=data_frame)
+
+
+def test_column_missing_error_pandas():
+    """Test that an error is raised when the specified column is missing in pandas."""
     expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
 
-    if df_type == "pandas":
-        data_frame = pd.DataFrame({"col1": [20, 25, 30, 35]})
-    else:  # pyspark
-        data_frame = spark.createDataFrame([(20,), (25,), (30,), (35,)], ["col1"])
+    data_frame = pd.DataFrame({"col1": [20, 25, 30, 35]})
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -277,7 +343,37 @@ def test_column_missing_error(df_type, spark):
     result = expectation.validate(data_frame=data_frame)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=str(df_type),
+        data_frame_type="pandas",
+        message=expected_message,
+    )
+    assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
+
+    # Test 2: Suite-based validation
+    expectations_suite = DataFrameExpectationsSuite().expect_column_mean_between(
+        column_name="nonexistent_col", min_value=25, max_value=30
+    )
+    with pytest.raises(DataFrameExpectationsSuiteFailure):
+        expectations_suite.build().run(data_frame=data_frame)
+
+
+@pytest.mark.pyspark
+def test_column_missing_error_pyspark(spark):
+    """Test that an error is raised when the specified column is missing in PySpark."""
+    expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
+
+    data_frame = spark.createDataFrame([(20,), (25,), (30,), (35,)], ["col1"])
+
+    # Test 1: Direct expectation validation
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationColumnMeanBetween",
+        column_name="nonexistent_col",
+        min_value=25,
+        max_value=30,
+    )
+    result = expectation.validate(data_frame=data_frame)
+    expected_failure = DataFrameExpectationFailureMessage(
+        expectation_str=str(expectation),
+        data_frame_type="pyspark",
         message=expected_message,
     )
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
