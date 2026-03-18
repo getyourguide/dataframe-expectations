@@ -16,18 +16,26 @@ standardized solution for this use case. As a result, any contributions made her
 📚 **[View Documentation](https://code.getyourguide.com/dataframe-expectations/)** | 📋 **[List of Expectations](https://code.getyourguide.com/dataframe-expectations/expectations.html)**
 
 
-### Installation:
+### Installation
+
 ```bash
+# pandas only (PySpark not required)
 pip install dataframe-expectations
+
+# with PySpark support
+pip install dataframe-expectations[pyspark]
 ```
+
+> **Using a managed PySpark environment?** (Databricks, EMR, etc.)
+> PySpark is already available in your runtime — install without the extra to avoid reinstalling it.
 
 ### Requirements
 
 * Python 3.10+
 * pandas >= 1.5.0
 * pydantic >= 2.12.4
-* pyspark >= 3.3.0
 * tabulate >= 0.8.9
+* pyspark >= 3.3.0 *(optional — install with `[pyspark]` extra or provide your own)*
 
 ### Quick Start
 
