@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 import pandas as pd
 
 from dataframe_expectations.registry import (
@@ -88,10 +89,10 @@ def test_expectation_name():
             [4, 5],
             "Found 2 row(s) where 'col1' is not less than 4.",
         ),
-        # Boundary conditions - just below threshold - pandas
+        # Boundary conditions - just below threshold
         ("pandas", [1, 2, 3], 4, "success", None, None),
         ("pandas", [1.5, 1.8, 1.9], 2.0, "success", None, None),
-        # Boundary conditions - at threshold (violation) - pandas
+        # Boundary conditions - at threshold (violation)
         (
             "pandas",
             [2, 3, 4],
@@ -108,7 +109,7 @@ def test_expectation_name():
             [5, 5, 5],
             "Found 3 row(s) where 'col1' is not less than 5.",
         ),
-        # Boundary conditions - just above threshold - pandas
+        # Boundary conditions - just above threshold
         (
             "pandas",
             [3, 4, 5],
@@ -179,9 +180,9 @@ def test_expectation_name():
             [0, 1],
             "Found 2 row(s) where 'col1' is not less than 0.",
         ),
-        # Zero in data - success - pandas
+        # Zero in data - success
         ("pandas", [-2, -1, 0], 1, "success", None, None),
-        # Zero in data - violations - pandas
+        # Zero in data - violations
         (
             "pandas",
             [0, 1, 2],
@@ -391,10 +392,10 @@ def test_expectation_basic_scenarios_pandas(
             [4, 5],
             "Found 2 row(s) where 'col1' is not less than 4.",
         ),
-        # Boundary conditions - just below threshold - pandas
+        # Boundary conditions - just below threshold
         ("pyspark", [1, 2, 3], 4, "success", None, None),
         ("pyspark", [1.5, 1.8, 1.9], 2.0, "success", None, None),
-        # Boundary conditions - at threshold (violation) - pandas
+        # Boundary conditions - at threshold (violation)
         (
             "pyspark",
             [2, 3, 4],
@@ -411,7 +412,7 @@ def test_expectation_basic_scenarios_pandas(
             [5, 5, 5],
             "Found 3 row(s) where 'col1' is not less than 5.",
         ),
-        # Boundary conditions - just above threshold - pandas
+        # Boundary conditions - just above threshold
         (
             "pyspark",
             [3, 4, 5],
@@ -482,9 +483,9 @@ def test_expectation_basic_scenarios_pandas(
             [0, 1],
             "Found 2 row(s) where 'col1' is not less than 0.",
         ),
-        # Zero in data - success - pandas
+        # Zero in data - success
         ("pyspark", [-2, -1, 0], 1, "success", None, None),
-        # Zero in data - violations - pandas
+        # Zero in data - violations
         (
             "pyspark",
             [0, 1, 2],
@@ -725,8 +726,6 @@ def test_column_missing_error_pyspark(spark):
 
 def test_large_dataset_performance():
     """Test the expectation with a larger dataset to ensure performance."""
-    import numpy as np
-
     # Create a larger dataset with values between 10 and 100
     large_data = np.random.uniform(10, 100, 10000).tolist()
     data_frame = pd.DataFrame({"col1": large_data})

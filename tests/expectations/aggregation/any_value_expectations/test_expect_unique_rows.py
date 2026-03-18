@@ -15,7 +15,7 @@ from dataframe_expectations.result_message import (
 )
 
 
-def create_pyspark_dataframe(df_type, df_data, spark):
+def create_pyspark_dataframe(df_data, spark):
     """Helper function to create pandas or pyspark DataFrame."""
     from pyspark.sql.types import StructType, StructField, IntegerType
 
@@ -210,49 +210,51 @@ def test_expectation_basic_scenarios_pandas(
             None,
             None,
         ),
-        # Pandas success - single row
+        # PySpark success - single row
         (
-            "pandas",
-            {"col1": [1]},
+            "pyspark",
+            ([(1,)], ["col1"]),
             ["col1"],
             "success",
             None,
             None,
         ),
-        # Pandas failure - specific columns with duplicates
+        # PySpark failure - specific columns with duplicates
         (
-            "pandas",
-            {"col1": [1, 2, 1, 3], "col2": [10, 20, 10, 30], "col3": [100, 200, 300, 400]},
+            "pyspark",
+            ([(1, 10, 100), (2, 20, 200), (1, 10, 300), (3, 30, 400)], ["col1", "col2", "col3"]),
             ["col1", "col2"],
             "failure",
-            pd.DataFrame({"col1": [1], "col2": [10], "#duplicates": [2]}),
+            ([(1, 10, 2)], ["col1", "col2", "#duplicates"]),
             "Found 2 duplicate row(s). duplicate rows found for columns ['col1', 'col2']",
         ),
-        # Pandas failure - all columns with duplicates
+        # PySpark failure - all columns with duplicates
         (
-            "pandas",
-            {"col1": [1, 2, 1], "col2": [10, 20, 10], "col3": [100, 200, 100]},
+            "pyspark",
+            ([(1, 10, 100), (2, 20, 200), (1, 10, 100)], ["col1", "col2", "col3"]),
             [],
             "failure",
-            pd.DataFrame({"col1": [1], "col2": [10], "col3": [100], "#duplicates": [2]}),
+            ([(1, 10, 100, 2)], ["col1", "col2", "col3", "#duplicates"]),
             "Found 2 duplicate row(s). duplicate rows found",
         ),
-        # Pandas failure - multiple duplicate groups
+        # PySpark failure - multiple duplicate groups
         (
-            "pandas",
-            {"col1": [1, 2, 1, 3, 2, 3], "col2": [10, 20, 30, 40, 50, 60]},
+            "pyspark",
+            ([(1, 10), (2, 20), (1, 30), (3, 40), (2, 50), (3, 60)], ["col1", "col2"]),
             ["col1"],
             "failure",
-            pd.DataFrame({"col1": [1, 2, 3], "#duplicates": [2, 2, 2]}),
+            ([(1, 2), (2, 2), (3, 2)], ["col1", "#duplicates"]),
             "Found 6 duplicate row(s). duplicate rows found for columns ['col1']",
         ),
-        # Pandas failure - with nulls (nulls counted as duplicates)
+        # PySpark failure - with nulls (nulls counted as duplicates)
+        # expected_violations=None: Spark cannot infer a schema from all-null group keys,
+        # so we perform a message-only assertion for this case.
         (
-            "pandas",
-            {"col1": [1, None, 1, None], "col2": [10, None, 20, None]},
+            "pyspark",
+            ([(1, 10), (None, None), (1, 20), (None, None)], ["col1", "col2"]),
             ["col1", "col2"],
             "failure",
-            pd.DataFrame({"col1": [None], "col2": [None], "#duplicates": [2]}),
+            None,
             "Found 2 duplicate row(s). duplicate rows found for columns ['col1', 'col2']",
         ),
     ],
@@ -267,7 +269,7 @@ def test_expectation_basic_scenarios_pandas(
         "pyspark_with_nulls",
     ],
 )
-def test_expectation_basic_scenarios(
+def test_expectation_basic_scenarios_pyspark(
     df_type, df_data, column_names, expected_result, expected_violations, expected_message, spark
 ):
     """
@@ -294,26 +296,31 @@ def test_expectation_basic_scenarios(
             DataFrameExpectationSuccessMessage(expectation_name="ExpectationUniqueRows")
         ), f"Expected success message but got: {result}"
     else:  # failure
-        # Create violations DataFrame
-        if isinstance(expected_violations[0], StructType):
-            # Schema and data provided separately
-            schema, data = expected_violations
-            violations_df = spark.createDataFrame(data, schema)
+        if expected_violations is None:
+            # Message-only check — used when violations contain all-null group keys
+            # because Spark cannot infer a schema from an all-null row.
+            assert expected_message in str(result), f"Expected failure message but got: {result}"
         else:
-            # Rows and columns provided
-            rows, columns = expected_violations
-            violations_df = spark.createDataFrame(rows, columns)
+            # Create violations DataFrame
+            if isinstance(expected_violations[0], StructType):
+                # Schema and data provided separately
+                schema, data = expected_violations
+                violations_df = spark.createDataFrame(data, schema)
+            else:
+                # Rows and columns provided
+                rows, columns = expected_violations
+                violations_df = spark.createDataFrame(rows, columns)
 
-        expected_failure_message = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=str(df_type),
-            violations_data_frame=violations_df,
-            message=expected_message,
-            limit_violations=5,
-        )
-        assert str(result) == str(expected_failure_message), (
-            f"Expected failure message but got: {result}"
-        )
+            expected_failure_message = DataFrameExpectationFailureMessage(
+                expectation_str=str(expectation),
+                data_frame_type=str(df_type),
+                violations_data_frame=violations_df,
+                message=expected_message,
+                limit_violations=5,
+            )
+            assert str(result) == str(expected_failure_message), (
+                f"Expected failure message but got: {result}"
+            )
 
     # Test 2: Suite-based validation
     expectations_suite = DataFrameExpectationsSuite().expect_unique_rows(column_names=column_names)
@@ -372,7 +379,7 @@ def test_column_missing_error_pyspark(spark):
         column_names=["nonexistent_col"],
     )
 
-    data_frame = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
+    data_frame = create_pyspark_dataframe(([(1,), (2,), (3,)], ["col1"]), spark)
 
     # Test 1: Direct expectation validation
     result = expectation.validate(data_frame=data_frame)

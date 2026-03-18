@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 import pandas as pd
 
 from dataframe_expectations.registry import (
@@ -419,8 +420,6 @@ def test_precision_handling():
 
 def test_large_dataset_performance():
     """Test the expectation with a larger dataset to ensure performance."""
-    import numpy as np
-
     # Create a larger dataset with mean around 50
     large_data = np.random.normal(50, 10, 1000).tolist()
     data_frame = pd.DataFrame({"col1": large_data})

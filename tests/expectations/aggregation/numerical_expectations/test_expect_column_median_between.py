@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 import pandas as pd
 
 from dataframe_expectations.registry import (
@@ -448,8 +449,6 @@ def test_precision_handling():
 
     for data, description in precision_tests:
         data_frame = pd.DataFrame({"col1": data})
-        import numpy as np
-
         calculated_median = np.median(data)
 
         # Use a small range around the calculated median
@@ -470,8 +469,6 @@ def test_precision_handling():
 
 def test_large_dataset_performance():
     """Test the expectation with a larger dataset to ensure performance."""
-    import numpy as np
-
     # Create a larger dataset with median around 50
     large_data = np.random.normal(50, 10, 1001).tolist()  # Use odd count for deterministic median
     data_frame = pd.DataFrame({"col1": large_data})

@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 import pandas as pd
 
 from dataframe_expectations.registry import (
@@ -417,8 +418,6 @@ def test_column_missing_error_pyspark(spark):
 
 def test_large_dataset_performance():
     """Test the expectation with a larger dataset to ensure performance."""
-    import numpy as np
-
     # Create a larger dataset with minimum around 10
     large_data = np.random.uniform(10, 60, 1000).tolist()
     data_frame = pd.DataFrame({"col1": large_data})

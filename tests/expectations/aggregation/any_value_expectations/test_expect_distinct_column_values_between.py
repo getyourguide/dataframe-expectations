@@ -17,10 +17,9 @@ from dataframe_expectations.result_message import (
 
 
 def create_pyspark_dataframe(data, column_name, spark, data_type="long"):
-    """Helper function to create pandas or pyspark DataFrame.
+    """Helper function to create a PySpark DataFrame.
 
     Args:
-        df_type: "pandas" or "pyspark"
         data: List of values for the column
         column_name: Name of the column
         spark: Spark session (required for pyspark)

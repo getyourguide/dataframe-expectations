@@ -714,7 +714,7 @@ def test_column_missing_error_pandas():
 def test_column_missing_error_pyspark(spark):
     """Test that a missing column returns the appropriate error message."""
     # Create DataFrame with a different column name (col2 instead of col1)
-    df = create_pyspark_dataframe("pyspark", [None, None, None], "col2", spark, "long")
+    df = create_pyspark_dataframe([None, None, None], "col2", spark, "long")
 
     # Test through registry - should return failure message about missing column
     expectation = DataFrameExpectationRegistry.get_expectation(

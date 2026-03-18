@@ -718,7 +718,7 @@ def test_column_missing_error_pandas():
 @pytest.mark.pyspark
 def test_column_missing_error_pyspark(spark):
     """Test missing column error for both pandas and PySpark DataFrames."""
-    df = create_pyspark_dataframe([(4,), (5,), (6,)], "col1", spark)
+    df = create_pyspark_dataframe([4, 5, 6], "col1", spark)
 
     expected_message = "Column 'nonexistent_col' does not exist in the DataFrame."
 

@@ -20,6 +20,7 @@ pyspark = [
 ]
 
 [tool.pytest.ini_options]
+addopts = "--strict-markers"
 markers = [
     "pyspark: marks tests as requiring PySpark (deselect with '-m \"not pyspark\"')",
     "pandas: marks tests as standard pandas logic"

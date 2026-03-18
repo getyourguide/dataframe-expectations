@@ -313,7 +313,7 @@ def test_expectation_basic_scenarios_pyspark(
     Covers: success cases, failures (exceeds max), edge cases (empty, zero max, single row),
     boundary conditions, large datasets, nulls, multiple columns, mixed data types, and identical values.
     """
-    data_frame = create_pyspark_dataframe(df_type, df_data, spark)
+    data_frame = create_pyspark_dataframe(df_data, spark)
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
