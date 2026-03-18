@@ -1,12 +1,12 @@
 import pytest
-from pyspark.sql import SparkSession
 import pandas as pd
 import pandas.testing as pdt
 
 
 @pytest.fixture(scope="module")
-def spark() -> SparkSession:
-    """create a spark session we can reuse for every test"""
+def spark():
+    """Create a Spark session reused for every test in the module."""
+    from pyspark.sql import SparkSession
 
     return SparkSession.builder.master("local").appName("Test").getOrCreate()
 

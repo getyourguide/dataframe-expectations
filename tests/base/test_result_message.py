@@ -43,6 +43,7 @@ def test_data_frame_to_str_pandas():
     )
 
 
+@pytest.mark.pyspark
 def test_dataframe_to_str_pyspark(spark):
     """
     Test the dataframe_to_str method with a mock PySpark DataFrame.

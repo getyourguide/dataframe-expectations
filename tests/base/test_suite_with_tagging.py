@@ -266,6 +266,7 @@ def test_result_applied_filters():
     assert result.tag_match_mode == "any"
 
 
+@pytest.mark.pyspark
 def test_pyspark_caching_enabled(spark):
     """Test that PySpark DataFrame is cached during execution."""
     suite = DataFrameExpectationsSuite()
@@ -288,6 +289,7 @@ def test_pyspark_caching_enabled(spark):
     assert not df.is_cached
 
 
+@pytest.mark.pyspark
 def test_pyspark_already_cached(spark):
     """Test behavior when PySpark DataFrame is already cached."""
     suite = DataFrameExpectationsSuite()

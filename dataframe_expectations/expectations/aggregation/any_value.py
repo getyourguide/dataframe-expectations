@@ -20,6 +20,9 @@ from dataframe_expectations.result_message import (
     DataFrameExpectationSuccessMessage,
 )
 
+# F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
+# or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
+# occurs at module load / test collection time.
 F = get_pyspark_functions()
 
 

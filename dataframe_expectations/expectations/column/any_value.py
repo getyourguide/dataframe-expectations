@@ -12,6 +12,9 @@ from dataframe_expectations.core.types import (
 from dataframe_expectations.registry import register_expectation
 from dataframe_expectations.core.utils import requires_params
 
+# F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
+# or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
+# occurs at module load / test collection time.
 F = get_pyspark_functions()
 
 
