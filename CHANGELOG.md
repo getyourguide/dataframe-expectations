@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.2...v0.6.0) (2026-03-18)
+
+
+### Features
+
+* make pyspark optional dependency ([ef847ed](https://github.com/getyourguide/dataframe-expectations/commit/ef847edf52379a2177658a4208b08edf3ebba7ea))
+* refactor tests, make pyspark optional, update CI ([27e864b](https://github.com/getyourguide/dataframe-expectations/commit/27e864bbc8900ddd2987e7373df82f5b125be745))
+
 ## [0.5.2](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.1...v0.5.2) (2026-03-16)
 
 
