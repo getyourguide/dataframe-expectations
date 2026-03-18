@@ -6,9 +6,23 @@ Welcome to DataFrame Expectations! This guide will help you get up and running q
 Installation
 ------------
 
+Install without PySpark (pandas only):
+
 .. code-block:: bash
 
    pip install dataframe-expectations
+
+Install with PySpark support:
+
+.. code-block:: bash
+
+   pip install dataframe-expectations[pyspark]
+
+.. note::
+
+   If you are running in a managed PySpark environment (Databricks, EMR, etc.), PySpark is
+   already available in your runtime. Install without the ``[pyspark]`` extra to avoid
+   reinstalling it as a package dependency.
 
 Requirements
 ------------
@@ -16,8 +30,8 @@ Requirements
 * Python 3.10+
 * pandas >= 1.5.0
 * pydantic >= 2.12.4
-* pyspark >= 3.3.0
 * tabulate >= 0.8.9
+* pyspark >= 3.3.0 *(optional — install with* ``[pyspark]`` *extra or provide your own)*
 
 Quick Start
 -----------

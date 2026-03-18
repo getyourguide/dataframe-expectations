@@ -1,12 +1,59 @@
 # Changelog
 
+## [0.6.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.2...v0.6.0) (2026-03-18)
+
+
+### Features
+
+* **PySpark is now an optional dependency** ([27e864b](https://github.com/getyourguide/dataframe-expectations/commit/27e864bbc8900ddd2987e7373df82f5b125be745))
+
+  Users running PySpark in managed environments (Databricks, EMR, etc.) typically have PySpark
+  pre-installed and cannot or do not want the library to reinstall it. PySpark is now optional
+  and must be explicitly requested:
+
+  ```
+  pip install dataframe-expectations           # pandas only
+  pip install dataframe-expectations[pyspark]  # includes pyspark
+  ```
+
+  `pandas`, `pydantic`, and `tabulate` remain hard dependencies. Importing `dataframe_expectations`
+  no longer touches PySpark at all when it isn't installed — all PySpark imports are deferred
+  behind `@lru_cache` helpers that return a proxy raising a clear `ImportError` only when a
+  PySpark code path is actually executed.
+
+* **PySpark tests isolated by marker** ([ef847ed](https://github.com/getyourguide/dataframe-expectations/commit/ef847edf52379a2177658a4208b08edf3ebba7ea))
+
+  All PySpark test cases are decorated with `@pytest.mark.pyspark` and separated into their own
+  parametrize blocks. `--strict-markers` is now enforced so unregistered markers cause an
+  immediate failure. Tests can be run without PySpark present:
+
+  ```
+  pytest -m "not pyspark"   # no PySpark required
+  pytest -m pyspark          # requires PySpark
+  ```
+
+* **CI updated to cover three install scenarios**
+
+  | Job | How PySpark is present | Tests run |
+  |---|---|---|
+  | `tests-without-pyspark` | Not installed | `-m "not pyspark"` |
+  | `tests-with-pyspark-extra` | `pip install .[pyspark]` | All |
+  | `tests-with-external-pyspark` | Pre-installed externally | All |
+
+  The `tests-with-external-pyspark` job specifically validates that the library works correctly
+  when PySpark is already present in the environment and was not installed by this package.
+
 ## [0.5.2](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.1...v0.5.2) (2026-03-16)
 
 
 ### Bug Fixes
 
-* make PySpark an optional dependency to reduce installation overhead ([15d38ca](https://github.com/getyourguide/dataframe-expectations/commit/15d38cad8c377df231753166081d8f1476cae4bb))
-* make PySpark an optional dependency to reduce installation overhead ([8235ef4](https://github.com/getyourguide/dataframe-expectations/commit/8235ef4319c27a8b6d6f35c9996faa718657bad8))
+* **Reduce installation overhead by deferring PySpark imports** ([15d38ca](https://github.com/getyourguide/dataframe-expectations/commit/15d38cad8c377df231753166081d8f1476cae4bb))
+
+  PySpark imports were moved behind lazy `@lru_cache` helpers in `pyspark_utils.py` so that
+  importing `dataframe_expectations` no longer triggers a PySpark import in environments where
+  PySpark is not needed. A `_MissingPySparkFunctions` proxy is returned when PySpark is absent,
+  raising a clear `ImportError` only at the point of use rather than at import time.
 
 ## [0.5.1](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.0...v0.5.1) (2026-01-28)
 
