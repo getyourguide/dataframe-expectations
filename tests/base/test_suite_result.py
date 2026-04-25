@@ -10,7 +10,6 @@ from dataframe_expectations.core.suite_result import (
 )
 from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.core.tagging import TagSet
-import pandas as pd
 
 
 @pytest.mark.parametrize(
@@ -285,24 +284,12 @@ def test_expectation_lists(sample_results):
     assert all(r.status == ExpectationStatus.SKIPPED for r in result.skipped_expectations)
 
 
-def test_serialize_pandas_violations():
-    """Test serializing pandas DataFrame violations."""
-    violations_df = pd.DataFrame({"col1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
+def test_serialize_violations_dataframe(dataframe_factory):
+    """Test serializing DataFrame violations for all supported libraries."""
+    df_lib, make_df = dataframe_factory
+    violations_df = make_df({"col1": (list(range(1, 11)), "long")})
 
-    count, sample = serialize_violations(violations_df, DataFrameType.PANDAS, limit=5)
-
-    assert count == 10
-    assert sample is not None
-    assert len(sample) == 5
-    assert sample[0] == {"col1": 1}
-
-
-@pytest.mark.pyspark
-def test_serialize_pyspark_violations(spark):
-    """Test serializing PySpark DataFrame violations."""
-    violations_df = spark.createDataFrame([(i,) for i in range(1, 11)], ["col1"])
-
-    count, sample = serialize_violations(violations_df, DataFrameType.PYSPARK, limit=5)
+    count, sample = serialize_violations(violations_df, df_lib, limit=5)
 
     assert count == 10
     assert sample is not None
@@ -327,11 +314,12 @@ def test_serialize_none_violations():
         (100, 10),  # More than available
     ],
 )
-def test_serialize_with_different_limits(limit, expected_len):
+def test_serialize_with_different_limits(limit, expected_len, dataframe_factory):
     """Test serializing with different limit values."""
-    violations_df = pd.DataFrame({"col1": list(range(10))})
+    df_lib, make_df = dataframe_factory
+    violations_df = make_df({"col1": (list(range(10)), "long")})
 
-    count, sample = serialize_violations(violations_df, DataFrameType.PANDAS, limit=limit)
+    count, sample = serialize_violations(violations_df, df_lib, limit=limit)
 
     assert count == 10
     assert sample is not None

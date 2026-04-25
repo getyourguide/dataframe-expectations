@@ -68,21 +68,21 @@ def test_invalid_data_frame_type():
         runner.run(data_frame=data_Frame)
 
 
-def test_suite_with_supported_dataframe_pandas():
+def test_suite_with_supported_dataframe(dataframe_factory):
     """
     Test the ExpectationsSuite with all supported DataFrame types.
     """
+    df_lib, make_df = dataframe_factory
 
     suite = DataFrameExpectationsSuite().expect_min_rows(min_rows=1)
     runner = suite.build()
 
-    # Test with pandas DataFrame
-    pandas_df = pd.DataFrame({"col1": [1, 2, 3]})
-    result = runner.run(data_frame=pandas_df)
-    assert result is not None, "Expected SuiteExecutionResult for pandas DataFrame"
+    df = make_df({"col1": ([1, 2, 3], "long")})
+    result = runner.run(data_frame=df)
+    assert result is not None, f"Expected SuiteExecutionResult for {df_lib} DataFrame"
     assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
-    assert result.success, "Expected success for pandas DataFrame"
-    assert result.dataframe_type == DataFrameType.PANDAS
+    assert result.success, f"Expected success for {df_lib} DataFrame"
+    assert result.dataframe_type == df_lib
 
 
 @pytest.mark.pyspark

@@ -1,61 +1,11 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-import pandas as pd
-
 from dataframe_expectations.core.column_expectation import DataFrameColumnExpectation
 from dataframe_expectations.core.types import DataFrameLike, DataFrameType
 from dataframe_expectations.core.expectation import DataFrameExpectation
 from dataframe_expectations.core.tagging import TagSet
-from dataframe_expectations.expectations.column.numerical import (
-    create_expectation_value_greater_than,
-    create_expectation_value_less_than,
-    create_expectation_value_between,
-)
-from dataframe_expectations.expectations.column.any_value import (
-    create_expectation_value_equals,
-    create_expectation_value_not_equals,
-    create_expectation_value_null,
-    create_expectation_value_not_null,
-    create_expectation_value_in,
-    create_expectation_value_not_in,
-)
-from dataframe_expectations.expectations.column.string import (
-    create_expectation_string_contains,
-    create_expectation_string_length_equals,
-    create_expectation_string_length_between,
-)
-from dataframe_expectations.expectations.aggregation.any_value import (
-    ExpectationMinRows,
-    ExpectationMaxRows,
-    ExpectationMaxNullPercentage,
-    ExpectationMaxNullCount,
-    create_expectation_max_null_count,
-    create_expectation_max_null_percentage,
-    create_expectation_max_rows,
-    create_expectation_min_rows,
-)
-from dataframe_expectations.expectations.aggregation.numerical import (
-    ExpectationColumnQuantileBetween,
-    ExpectationColumnMeanBetween,
-    create_expectation_column_max_to_be_between,
-    create_expectation_column_median_to_be_between,
-    create_expectation_column_min_to_be_between,
-    create_expectation_column_quantile_between,
-    create_expectation_column_mean_to_be_between,
-)
-from dataframe_expectations.expectations.aggregation.unique import (
-    ExpectationUniqueRows,
-    ExpectationDistinctColumnValuesEquals,
-    ExpectationDistinctColumnValuesLessThan,
-    ExpectationDistinctColumnValuesGreaterThan,
-    ExpectationDistinctColumnValuesBetween,
-    create_expectation_distinct_column_values_equals,
-    create_expectation_unique,
-    create_expectation_distinct_column_values_less_than,
-    create_expectation_distinct_column_values_greater_than,
-    create_expectation_distinct_column_values_between,
-)
+from dataframe_expectations.registry import DataFrameExpectationRegistry
 
 
 class MyTestExpectation(DataFrameExpectation):
@@ -91,9 +41,7 @@ class FakeDataFrame:
 
 
 def test_data_frame_type_enum():
-    """
-    Test that the DataFrameType enum has the correct values.
-    """
+    """DataFrameType enum has the correct string values and supports direct string comparison."""
     assert DataFrameType.PANDAS.value == "pandas", (
         f"Expected 'pandas' but got: {DataFrameType.PANDAS.value}"
     )
@@ -109,9 +57,7 @@ def test_data_frame_type_enum():
 
 
 def test_get_expectation_name():
-    """
-    Test that the expectation name is the class name.
-    """
+    """get_expectation_name() returns the class name."""
     expectation = MyTestExpectation()
     assert expectation.get_expectation_name() == "MyTestExpectation", (
         f"Expected 'MyTestExpectation' but got: {expectation.get_expectation_name()}"
@@ -119,146 +65,73 @@ def test_get_expectation_name():
 
 
 def test_validate_unsupported_dataframe_type():
-    """
-    Test that an error is raised for unsupported DataFrame types.
-    """
+    """validate() raises ValueError for unsupported DataFrame types."""
     expectation = MyTestExpectation()
     with pytest.raises(ValueError):
         expectation.validate(None)
 
 
-def test_validate_pandas_called():
-    """
-    Test that validate_pandas method is called and with right parameters.
-    """
+def test_validate_called(dataframe_factory):
+    """validate() dispatches to validate_pandas or validate_pyspark depending on the DataFrame type."""
+    df_lib, make_df = dataframe_factory
     expectation = MyTestExpectation()
 
-    # Mock the validate_pandas method
-    expectation.validate_pandas = MagicMock(return_value="mock_result")
+    match df_lib:
+        case DataFrameType.PANDAS:
+            expectation.validate_pandas = MagicMock(return_value="mock_result")
+        case DataFrameType.PYSPARK:
+            expectation.validate_pyspark = MagicMock(return_value="mock_result")
 
-    # Assert that validate_pandas was called with the correct arguments
-    data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
+    data_frame = make_df({"col1": ([1, 2, 3], "long"), "col2": (["a", "b", "c"], "string")})
     _ = expectation.validate(data_frame=data_frame)
-    expectation.validate_pandas.assert_called_once_with(data_frame=data_frame)
+
+    match df_lib:
+        case DataFrameType.PANDAS:
+            expectation.validate_pandas.assert_called_once_with(data_frame=data_frame)
+        case DataFrameType.PYSPARK:
+            expectation.validate_pyspark.assert_called_once_with(data_frame=data_frame)
 
     with pytest.raises(ValueError):
         expectation.validate(None)
 
 
-@pytest.mark.pyspark
-def test_validate_pyspark_called(spark):
-    """
-    Test that validate_pyspark method is called with right parameters.
-    """
+def test_num_data_frame_rows(dataframe_factory):
+    """num_data_frame_rows() returns the correct row count for both empty and non-empty DataFrames."""
+    df_lib, make_df = dataframe_factory
     expectation = MyTestExpectation()
 
-    # Mock the validate_pyspark method
-    expectation.validate_pyspark = MagicMock(return_value="mock_result")
+    # 1. Non-empty DataFrame
+    data_frame = make_df({"col1": ([1, 2, 3], "long"), "col2": (["a", "b", "c"], "string")})
+    num_rows = expectation.num_data_frame_rows(data_frame)
+    assert num_rows == 3, f"Expected 3 rows but got: {num_rows}"
 
-    # Assert that validate_pyspark was called with the correct arguments
-    data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-    _ = expectation.validate(data_frame=data_frame)
-    expectation.validate_pyspark.assert_called_once_with(data_frame=data_frame)
-
-    with pytest.raises(ValueError):
-        expectation.validate(None)
-
-
-def test_num_data_frame_rows_pandas():
-    """
-    Test that the number of rows in a DataFrame are counted correctly.
-    """
-    expectation = MyTestExpectation()
-
-    # 1. Non empty DataFrames
-    # Mock a pandas DataFrame
-    pandas_df = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
-    num_rows = expectation.num_data_frame_rows(pandas_df)
-    assert num_rows == 3, f"Expected 3 rows for pandas DataFrame but got: {num_rows}"
-
-    # Test unsupported DataFrame type
     with pytest.raises(ValueError):
         expectation.num_data_frame_rows(None)
 
-    # 2. Empty DataFrames
-    # Mock an empty pandas DataFrame
-    empty_pandas_df = pd.DataFrame(columns=["col1", "col2"])
-    num_rows = expectation.num_data_frame_rows(empty_pandas_df)
-    assert num_rows == 0, f"Expected 0 rows for empty pandas DataFrame but got: {num_rows}"
+    # 2. Empty DataFrame
+    empty_df = make_df({"col1": ([], "long"), "col2": ([], "string")})
+    num_rows = expectation.num_data_frame_rows(empty_df)
+    assert num_rows == 0, f"Expected 0 rows for empty DataFrame but got: {num_rows}"
 
-    # Test unsupported DataFrame type
     with pytest.raises(ValueError):
         expectation.num_data_frame_rows(None)
 
 
-@pytest.mark.pyspark
-def test_num_data_frame_rows_pyspark(spark):
-    """
-    Test that the number of rows in a DataFrame are counted correctly.
-    """
+def test_infer_data_frame_type(dataframe_factory):
+    """infer_data_frame_type() correctly identifies the library for both empty and non-empty DataFrames."""
+    df_lib, make_df = dataframe_factory
     expectation = MyTestExpectation()
 
-    # 1. Non empty DataFrames
-    # Mock a PySpark DataFrame
-    spark_df = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-    num_rows = expectation.num_data_frame_rows(spark_df)
-    assert num_rows == 3, f"Expected 3 rows for PySpark DataFrame but got: {num_rows}"
+    # Non-empty DataFrame
+    data_frame = make_df({"col1": ([1, 2, 3], "long"), "col2": (["a", "b", "c"], "string")})
+    data_frame_type = expectation.infer_data_frame_type(data_frame)
+    assert data_frame_type == df_lib, f"Expected {df_lib} type but got: {data_frame_type}"
 
-    # Test unsupported DataFrame type
-    with pytest.raises(ValueError):
-        expectation.num_data_frame_rows(None)
-
-    # 2. Empty DataFrames
-    # Mock an empty PySpark DataFrame
-    empty_spark_df = spark.createDataFrame([], "col1 INT, col2 STRING")
-    num_rows = expectation.num_data_frame_rows(empty_spark_df)
-    assert num_rows == 0, f"Expected 0 rows for empty PySpark DataFrame but got: {num_rows}"
-
-    # Test unsupported DataFrame type
-    with pytest.raises(ValueError):
-        expectation.num_data_frame_rows(None)
-
-
-def test_infer_data_frame_type_pandas():
-    """
-    Test that the DataFrame type is inferred correctly for all supported DataFrame types.
-    """
-    expectation = MyTestExpectation()
-
-    # Test pandas DataFrame
-    pandas_df = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
-    data_frame_type = expectation.infer_data_frame_type(pandas_df)
-    assert data_frame_type == DataFrameType.PANDAS, (
-        f"Expected PANDAS type but got: {data_frame_type}"
-    )
-
-    # Test empty pandas DataFrame
-    empty_pandas_df = pd.DataFrame(columns=["col1", "col2"])
-    data_frame_type = expectation.infer_data_frame_type(empty_pandas_df)
-    assert data_frame_type == DataFrameType.PANDAS, (
-        f"Expected PANDAS type for empty DataFrame but got: {data_frame_type}"
-    )
-
-
-@pytest.mark.pyspark
-def test_infer_data_frame_type_pyspark(spark):
-    """
-    Test that the DataFrame type is inferred correctly for all supported DataFrame types.
-    """
-    expectation = MyTestExpectation()
-
-    # Test PySpark DataFrame
-    spark_df = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-    data_frame_type = expectation.infer_data_frame_type(spark_df)
-    assert data_frame_type == DataFrameType.PYSPARK, (
-        f"Expected PYSPARK type but got: {data_frame_type}"
-    )
-
-    # Test empty PySpark DataFrame
-    empty_spark_df = spark.createDataFrame([], "col1 INT, col2 STRING")
-    data_frame_type = expectation.infer_data_frame_type(empty_spark_df)
-    assert data_frame_type == DataFrameType.PYSPARK, (
-        f"Expected PYSPARK type for empty DataFrame but got: {data_frame_type}"
+    # Empty DataFrame
+    empty_df = make_df({"col1": ([], "long"), "col2": ([], "string")})
+    data_frame_type = expectation.infer_data_frame_type(empty_df)
+    assert data_frame_type == df_lib, (
+        f"Expected {df_lib} type for empty DataFrame but got: {data_frame_type}"
     )
 
 
@@ -275,9 +148,7 @@ def test_infer_data_frame_type_pyspark(spark):
     ],
 )
 def test_infer_data_frame_type_invalid(invalid_input):
-    """
-    Test that the DataFrame type is inferred correctly for all supported DataFrame types.
-    """
+    """infer_data_frame_type() raises ValueError for non-DataFrame inputs."""
     expectation = MyTestExpectation()
     with pytest.raises(ValueError, match="Unsupported DataFrame type"):
         expectation.infer_data_frame_type(invalid_input)
@@ -285,9 +156,7 @@ def test_infer_data_frame_type_invalid(invalid_input):
 
 @pytest.mark.pyspark
 def test_infer_data_frame_type_with_connect_dataframe_available():
-    """
-    Test that PySpark Connect DataFrame is correctly identified when available.
-    """
+    """PySpark Connect DataFrame is identified as PYSPARK when the Connect module is available."""
     expectation = MyTestExpectation()
 
     # Patch the PySparkConnectDataFrame import to be our mock class
@@ -306,90 +175,35 @@ def test_infer_data_frame_type_with_connect_dataframe_available():
 
 
 @patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None)
-def test_infer_data_frame_type_without_connect_support_pandas():
-    """
-    Test that the method works correctly when PySpark Connect is not available.
-    """
+def test_infer_data_frame_type_without_connect_support(dataframe_factory):
+    """infer_data_frame_type() still works correctly when PySpark Connect is unavailable."""
+    df_lib, make_df = dataframe_factory
     expectation = MyTestExpectation()
 
-    # Test that regular DataFrames still work when Connect is not available
-    pandas_df = pd.DataFrame({"col1": [1, 2, 3]})
-    data_frame_type = expectation.infer_data_frame_type(pandas_df)
-    assert data_frame_type == DataFrameType.PANDAS, (
-        f"Expected PANDAS type but got: {data_frame_type}"
-    )
+    data_frame = make_df({"col1": ([1, 2, 3], "long")})
+    data_frame_type = expectation.infer_data_frame_type(data_frame)
+    assert data_frame_type == df_lib, f"Expected {df_lib} type but got: {data_frame_type}"
 
 
-@pytest.mark.pyspark
-@patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None)
-def test_infer_data_frame_type_without_connect_support_pyspark(spark):
-    """
-    Test that the method works correctly when PySpark Connect is not available.
-    """
-    expectation = MyTestExpectation()
-
-    # Test that regular DataFrames still work when Connect is not available
-    spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
-    data_frame_type = expectation.infer_data_frame_type(spark_df)
-    assert data_frame_type == DataFrameType.PYSPARK, (
-        f"Expected PYSPARK type but got: {data_frame_type}"
-    )
-
-
-def test_infer_data_frame_type_connect_import_behavior_pandas():
-    """
-    Test that the Connect DataFrame import behavior works as expected.
-    """
+def test_infer_data_frame_type_connect_import_behavior(dataframe_factory):
+    """infer_data_frame_type() handles both presence and absence of the PySpark Connect module."""
+    df_lib, make_df = dataframe_factory
     expectation = MyTestExpectation()
 
     # Test case 1: When PySparkConnectDataFrame is None (import failed)
     with patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None):
-        # Should still work with regular DataFrames
-        pandas_df = pd.DataFrame({"col1": [1, 2, 3]})
-        result_type = expectation.infer_data_frame_type(pandas_df)
-        assert result_type == DataFrameType.PANDAS, f"Expected PANDAS type but got: {result_type}"
+        data_frame = make_df({"col1": ([1, 2, 3], "long")})
+        result_type = expectation.infer_data_frame_type(data_frame)
+        assert result_type == df_lib, f"Expected {df_lib} type but got: {result_type}"
 
     # Test case 2: When PySparkConnectDataFrame is available (mocked)
     with patch(
         "dataframe_expectations.core.expectation.PySparkConnectDataFrame",
         MockConnectDataFrame,
     ):
-        # Regular DataFrames should still work
-        pandas_df = pd.DataFrame({"col1": [1, 2, 3]})
-        result_type = expectation.infer_data_frame_type(pandas_df)
-        assert result_type == DataFrameType.PANDAS, f"Expected PANDAS type but got: {result_type}"
-
-        # Mock Connect DataFrame should be identified as PYSPARK
-        mock_connect_df = MockConnectDataFrame()
-        result_type = expectation.infer_data_frame_type(mock_connect_df)
-        assert result_type == DataFrameType.PYSPARK, (
-            f"Expected PYSPARK type for Connect DataFrame but got: {result_type}"
-        )
-
-
-@pytest.mark.pyspark
-def test_infer_data_frame_type_connect_import_behavior_pyspark(spark):
-    """
-    Test that the Connect DataFrame import behavior works as expected.
-    """
-    expectation = MyTestExpectation()
-
-    # Test case 1: When PySparkConnectDataFrame is None (import failed)
-    with patch("dataframe_expectations.core.expectation.PySparkConnectDataFrame", None):
-        # Should still work with regular DataFrames
-        spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
-        result_type = expectation.infer_data_frame_type(spark_df)
-        assert result_type == DataFrameType.PYSPARK, f"Expected PYSPARK type but got: {result_type}"
-
-    # Test case 2: When PySparkConnectDataFrame is available (mocked)
-    with patch(
-        "dataframe_expectations.core.expectation.PySparkConnectDataFrame",
-        MockConnectDataFrame,
-    ):
-        # Regular DataFrames should still work
-        spark_df = spark.createDataFrame([(1,), (2,), (3,)], ["col1"])
-        result_type = expectation.infer_data_frame_type(spark_df)
-        assert result_type == DataFrameType.PYSPARK, f"Expected PYSPARK type but got: {result_type}"
+        data_frame = make_df({"col1": ([1, 2, 3], "long")})
+        result_type = expectation.infer_data_frame_type(data_frame)
+        assert result_type == df_lib, f"Expected {df_lib} type but got: {result_type}"
 
         # Mock Connect DataFrame should be identified as PYSPARK
         mock_connect_df = MockConnectDataFrame()
@@ -451,108 +265,62 @@ def test_tags_with_invalid_format():
         MyTestExpectation(tags=["invalid-tag-no-colon"])
 
 
-@pytest.mark.parametrize(
-    "factory_fn, kwargs",
-    [
-        (
-            DataFrameColumnExpectation,
-            {
-                "expectation_name": "TestColumn",
-                "column_name": "test",
-                "fn_violations_pandas": lambda df: df,
-                "fn_violations_pyspark": lambda df: df,
-                "description": "Test",
-                "error_message": "Error",
-            },
-        ),
-        # Column expectations (factory-created)
-        (create_expectation_value_greater_than, {"column_name": "col", "value": 10}),
-        (create_expectation_value_less_than, {"column_name": "col", "value": 10}),
-        (create_expectation_value_between, {"column_name": "col", "min_value": 1, "max_value": 10}),
-        (create_expectation_value_equals, {"column_name": "col", "value": 10}),
-        (create_expectation_value_not_equals, {"column_name": "col", "value": 10}),
-        (create_expectation_value_null, {"column_name": "col"}),
-        (create_expectation_value_not_null, {"column_name": "col"}),
-        (create_expectation_value_in, {"column_name": "col", "values": [1, 2, 3]}),
-        (create_expectation_value_not_in, {"column_name": "col", "values": [1, 2, 3]}),
-        (create_expectation_string_contains, {"column_name": "col", "substring": "test"}),
-        (create_expectation_string_length_equals, {"column_name": "col", "length": 5}),
-        (
-            create_expectation_string_length_between,
-            {"column_name": "col", "min_length": 1, "max_length": 10},
-        ),
-        # Aggregation expectations (class-based)
-        (ExpectationMinRows, {"min_rows": 10}),
-        (ExpectationMaxRows, {"max_rows": 100}),
-        (ExpectationMaxNullPercentage, {"column_name": "col", "max_percentage": 0.1}),
-        (ExpectationMaxNullCount, {"column_name": "col", "max_count": 10}),
-        (
-            ExpectationColumnQuantileBetween,
-            {"column_name": "col", "quantile": 0.5, "min_value": 1, "max_value": 10},
-        ),
-        (ExpectationColumnMeanBetween, {"column_name": "col", "min_value": 1, "max_value": 10}),
-        (ExpectationUniqueRows, {"column_names": ["col1", "col2"]}),
-        (ExpectationDistinctColumnValuesEquals, {"column_name": "col", "expected_value": 10}),
-        (ExpectationDistinctColumnValuesLessThan, {"column_name": "col", "threshold": 10}),
-        (ExpectationDistinctColumnValuesGreaterThan, {"column_name": "col", "threshold": 10}),
-        (
-            ExpectationDistinctColumnValuesBetween,
-            {"column_name": "col", "min_value": 1, "max_value": 10},
-        ),
-        # Aggregation expectations (factory-created)
-        (create_expectation_min_rows, {"min_rows": 10}),
-        (create_expectation_max_rows, {"max_rows": 100}),
-        (create_expectation_max_null_percentage, {"column_name": "col", "max_percentage": 0.1}),
-        (create_expectation_max_null_count, {"column_name": "col", "max_count": 10}),
-        (
-            create_expectation_column_quantile_between,
-            {"column_name": "col", "quantile": 0.5, "min_value": 1, "max_value": 10},
-        ),
-        (
-            create_expectation_column_max_to_be_between,
-            {"column_name": "col", "min_value": 1, "max_value": 10},
-        ),
-        (
-            create_expectation_column_min_to_be_between,
-            {"column_name": "col", "min_value": 1, "max_value": 10},
-        ),
-        (
-            create_expectation_column_mean_to_be_between,
-            {"column_name": "col", "min_value": 1, "max_value": 10},
-        ),
-        (
-            create_expectation_column_median_to_be_between,
-            {"column_name": "col", "min_value": 1, "max_value": 10},
-        ),
-        (create_expectation_unique, {"column_names": ["col1", "col2"]}),
-        (
-            create_expectation_distinct_column_values_equals,
-            {"column_name": "col", "expected_value": 10},
-        ),
-        (
-            create_expectation_distinct_column_values_less_than,
-            {"column_name": "col", "threshold": 10},
-        ),
-        (
-            create_expectation_distinct_column_values_greater_than,
-            {"column_name": "col", "threshold": 10},
-        ),
-        (
-            create_expectation_distinct_column_values_between,
-            {"column_name": "col", "min_value": 1, "max_value": 10},
-        ),
-    ],
-)
-def test_tags_sent_to_base_class(factory_fn, kwargs):
-    """
-    Test that tags are properly propagated to all expectation classes.
+def test_tags_sent_to_base_class_direct():
+    """Tags propagate correctly when DataFrameColumnExpectation is instantiated directly.
 
-    Covers all direct and indirect children of DataFrameExpectation:
-    - DataFrameColumnExpectation (direct child)
-    - DataFrameAggregationExpectation (direct child)
-    - All factory-created column expectations
-    - All class-based aggregation expectations
+    DataFrameColumnExpectation is not registered in the registry (it is a base class for
+    factory-created column expectations), so it is not covered by test_tags_sent_to_base_class.
+    Aggregation expectations are covered by test_tags_sent_to_base_class via the registry.
     """
     test_tags = ["priority:high", "env:test"]
-    expectation = factory_fn(**kwargs, tags=test_tags)
+    expectation = DataFrameColumnExpectation(
+        expectation_name="TestColumn",
+        column_name="test",
+        fn_violations_pandas=lambda df: df,
+        fn_violations_pyspark=lambda df: df,
+        description="Test",
+        error_message="Error",
+        tags=test_tags,
+    )
+    assert len(expectation.get_tags()) == 2
+
+
+# Maps Python types to sensible dummy values for constructing expectations in tests.
+_TYPE_DEFAULTS: dict = {str: "col", int: 10, float: 0.5, list: ["col1", "col2"]}
+
+
+def _build_kwargs(metadata) -> dict:
+    def _dummy(param: str):
+        raw = metadata.param_types.get(param, int)
+        types = raw if isinstance(raw, tuple) else (raw,)
+        # prefer float over int when both are valid (e.g. quantile, max_percentage)
+        typ = float if float in types else types[0]
+        return _TYPE_DEFAULTS.get(typ, 10)
+
+    return {p: _dummy(p) for p in metadata.params}
+
+
+DataFrameExpectationRegistry._ensure_loaded()
+
+
+@pytest.fixture(
+    params=[
+        pytest.param((factory, _build_kwargs(metadata)), id=metadata.expectation_name)
+        for _, (factory, metadata) in DataFrameExpectationRegistry._registry.items()
+    ]
+)
+def registry_expectation(request):
+    return request.param
+
+
+def test_tags_sent_to_base_class(registry_expectation):
+    """Every registered expectation correctly propagates tags to the base class.
+
+    New expectations are picked up automatically from the registry —
+    no manual list to maintain. If _build_kwargs fails, add the new
+    param type to _TYPE_DEFAULTS.
+    """
+    factory, kwargs = registry_expectation
+    test_tags = ["priority:high", "env:test"]
+    expectation = factory(**kwargs, tags=test_tags)
     assert len(expectation.get_tags()) == 2
