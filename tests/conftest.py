@@ -46,8 +46,11 @@ def arrow_to_df(table: pa.Table, df_lib: DataFrameType, spark: Any = None) -> An
                 raise ValueError("A Spark session is required for df_lib=DataFrameType.PYSPARK")
             from pyspark.sql.pandas.types import from_arrow_schema
 
+            pdf = table.to_pandas(integer_object_nulls=True)
+            # Replace NaN with None so PySpark sees proper SQL NULLs
+            pdf = pdf.replace({float("nan"): None})
             return spark.createDataFrame(
-                table.to_pandas(integer_object_nulls=True),
+                pdf,
                 schema=from_arrow_schema(table.schema),
             )
         case _:
