@@ -1,5 +1,4 @@
 import pytest
-import pandas as pd
 
 from dataframe_expectations.registry import (
     DataFrameExpectationRegistry,
@@ -15,89 +14,60 @@ from dataframe_expectations.result_message import (
 )
 
 
-def create_pyspark_dataframe(df_data, spark):
-    """Helper function to create a PySpark DataFrame."""
-    # PySpark
-    from pyspark.sql.types import (
-        StructType,
-        StructField,
-        IntegerType,
-        StringType,
-        DoubleType,
-        BooleanType,
-    )
-
-    if not df_data:
-        return spark.createDataFrame([], StructType([StructField("col1", IntegerType(), True)]))
-
-    type_map = {str: StringType(), float: DoubleType(), bool: BooleanType()}
-
-    def infer_type(values):
-        """Infer PySpark type from first non-None value, default to IntegerType."""
-        sample = next((v for v in values if v is not None), None)
-        return type_map.get(type(sample), IntegerType())
-
-    columns = list(df_data.keys())
-    schema = StructType([StructField(col, infer_type(df_data[col]), True) for col in columns])
-    # Transform from column-oriented {col1: [v1, v2], col2: [v3, v4]} to row-oriented [(v1, v3), (v2, v4)]
-    rows = list(zip(*[df_data[col] for col in columns]))
-
-    return spark.createDataFrame(rows, schema)
-
-
 @pytest.mark.parametrize(
-    "df_type, df_data, max_rows, expected_result, expected_message",
+    "df_data, max_rows, expected_result, expected_message",
     [
         # Exact count - 3 rows == 3 max
-        ("pandas", {"col1": [1, 2, 3], "col2": ["a", "b", "c"]}, 3, "success", None),
+        ({"col1": ([1, 2, 3], "long"), "col2": (["a", "b", "c"], "string")}, 3, "success", None),
         # Below max - 5 rows < 10 max
         (
-            "pandas",
-            {"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]},
+            {"col1": ([1, 2, 3, 4, 5], "long"), "col2": (["a", "b", "c", "d", "e"], "string")},
             10,
             "success",
             None,
         ),
         # Single row - 1 row == 1 max
-        ("pandas", {"col1": [42]}, 1, "success", None),
+        ({"col1": ([42], "long")}, 1, "success", None),
         # Empty DataFrame - 0 rows <= 5 max
-        ("pandas", {"col1": []}, 5, "success", None),
+        ({"col1": ([], "long")}, 5, "success", None),
         # Exceeds max - 5 rows > 3 max
         (
-            "pandas",
-            {"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]},
+            {"col1": ([1, 2, 3, 4, 5], "long"), "col2": (["a", "b", "c", "d", "e"], "string")},
             3,
             "failure",
             "DataFrame has 5 rows, expected at most 3.",
         ),
         # Zero max with data - 1 row > 0 max
-        ("pandas", {"col1": [1]}, 0, "failure", "DataFrame has 1 rows, expected at most 0."),
+        ({"col1": ([1], "long")}, 0, "failure", "DataFrame has 1 rows, expected at most 0."),
         # Zero max empty - 0 rows == 0 max
-        ("pandas", {"col1": []}, 0, "success", None),
+        ({"col1": ([], "long")}, 0, "success", None),
         # Large dataset - 150 rows > 100 max
         (
-            "pandas",
-            {"col1": list(range(150)), "col2": [f"value_{i}" for i in range(150)]},
+            {
+                "col1": (list(range(150)), "long"),
+                "col2": ([f"value_{i}" for i in range(150)], "string"),
+            },
             100,
             "failure",
             "DataFrame has 150 rows, expected at most 100.",
         ),
         # With nulls - 5 rows > 4 max (nulls don't affect row count)
         (
-            "pandas",
-            {"col1": [1, None, 3, None, 5], "col2": [None, "b", None, "d", None]},
+            {
+                "col1": ([1, None, 3, None, 5], "long"),
+                "col2": ([None, "b", None, "d", None], "string"),
+            },
             4,
             "failure",
             "DataFrame has 5 rows, expected at most 4.",
         ),
         # Multiple columns - 4 rows > 3 max
         (
-            "pandas",
             {
-                "col1": [1, 2, 3, 4],
-                "col2": ["a", "b", "c", "d"],
-                "col3": [1.1, 2.2, 3.3, 4.4],
-                "col4": [True, False, True, False],
+                "col1": ([1, 2, 3, 4], "long"),
+                "col2": (["a", "b", "c", "d"], "string"),
+                "col3": ([1.1, 2.2, 3.3, 4.4], "double"),
+                "col4": ([True, False, True, False], "boolean"),
             },
             3,
             "failure",
@@ -105,207 +75,54 @@ def create_pyspark_dataframe(df_data, spark):
         ),
         # Mixed data types - 5 rows <= 10 max
         (
-            "pandas",
             {
-                "int_col": [1, 2, 3, 4, 5],
-                "str_col": ["a", "b", "c", "d", "e"],
-                "float_col": [1.1, 2.2, 3.3, 4.4, 5.5],
-                "bool_col": [True, False, True, False, True],
-                "null_col": [None, None, None, None, None],
+                "int_col": ([1, 2, 3, 4, 5], "long"),
+                "str_col": (["a", "b", "c", "d", "e"], "string"),
+                "float_col": ([1.1, 2.2, 3.3, 4.4, 5.5], "double"),
+                "bool_col": ([True, False, True, False, True], "boolean"),
+                "null_col": ([None, None, None, None, None], "long"),
             },
             10,
             "success",
             None,
         ),
         # High max rows - 3 rows << 1000000 max
-        ("pandas", {"col1": [1, 2, 3]}, 1000000, "success", None),
+        ({"col1": ([1, 2, 3], "long")}, 1000000, "success", None),
         # Boundary condition 1 - 1 row == 1 max
-        ("pandas", {"col1": [1]}, 1, "success", None),
+        ({"col1": ([1], "long")}, 1, "success", None),
         # Boundary condition 2 - 2 rows > 1 max
-        ("pandas", {"col1": [1, 2]}, 1, "failure", "DataFrame has 2 rows, expected at most 1."),
+        ({"col1": ([1, 2], "long")}, 1, "failure", "DataFrame has 2 rows, expected at most 1."),
         # Identical values - 4 rows > 3 max
         (
-            "pandas",
-            {"col1": [42, 42, 42, 42], "col2": ["same", "same", "same", "same"]},
+            {
+                "col1": ([42, 42, 42, 42], "long"),
+                "col2": (["same", "same", "same", "same"], "string"),
+            },
             3,
             "failure",
             "DataFrame has 4 rows, expected at most 3.",
         ),
     ],
     ids=[
-        "pandas_exact_count",
-        "pandas_below_max",
-        "pandas_single_row",
-        "pandas_empty",
-        "pandas_exceeds_max",
-        "pandas_zero_max_with_data",
-        "pandas_zero_max_empty",
-        "pandas_large_dataset",
-        "pandas_with_nulls",
-        "pandas_multiple_columns",
-        "pandas_mixed_data_types",
-        "pandas_high_max_rows",
-        "pandas_boundary_condition_1",
-        "pandas_boundary_condition_2",
-        "pandas_identical_values",
+        "exact_count",
+        "below_max",
+        "single_row",
+        "empty",
+        "exceeds_max",
+        "zero_max_with_data",
+        "zero_max_empty",
+        "large_dataset",
+        "with_nulls",
+        "multiple_columns",
+        "mixed_data_types",
+        "high_max_rows",
+        "boundary_condition_1",
+        "boundary_condition_2",
+        "identical_values",
     ],
 )
-def test_expectation_basic_scenarios_pandas(
-    df_type, df_data, max_rows, expected_result, expected_message
-):
-    """
-    Test the expectation for various scenarios across pandas DataFrames.
-    Tests both direct expectation validation and suite-based validation.
-    Covers: success cases, failures (exceeds max), edge cases (empty, zero max, single row),
-    boundary conditions, large datasets, nulls, multiple columns, mixed data types, and identical values.
-    """
-    data_frame = pd.DataFrame(df_data, columns=["col1"])
-
-    # Test 1: Direct expectation validation
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationMaxRows",
-        max_rows=max_rows,
-    )
-
-    result = expectation.validate(data_frame=data_frame)
-
-    if expected_result == "success":
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxRows")
-        ), f"Expected success message but got: {result}"
-    else:  # failure
-        expected_failure_message = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=str(df_type),
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure_message), (
-            f"Expected failure message but got: {result}"
-        )
-
-    # Test 2: Suite-based validation
-    expectations_suite = DataFrameExpectationsSuite().expect_max_rows(max_rows=max_rows)
-
-    if expected_result == "success":
-        result = expectations_suite.build().run(data_frame=data_frame)
-        assert result is not None, "Expected SuiteExecutionResult"
-        assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
-        assert result.success, "Expected all expectations to pass"
-        assert result.total_passed == 1, "Expected 1 passed expectation"
-        assert result.total_failed == 0, "Expected 0 failed expectations"
-    else:  # failure
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            expectations_suite.build().run(data_frame=data_frame)
-
-
-@pytest.mark.pyspark
-@pytest.mark.parametrize(
-    "df_type, df_data, max_rows, expected_result, expected_message",
-    [
-        # Exact count - 3 rows == 3 max
-        ("pyspark", {"col1": [1, 2, 3], "col2": ["a", "b", "c"]}, 3, "success", None),
-        # Below max - 5 rows < 10 max
-        (
-            "pyspark",
-            {"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]},
-            10,
-            "success",
-            None,
-        ),
-        # Single row - 1 row == 1 max
-        ("pyspark", {"col1": [42]}, 1, "success", None),
-        # Empty DataFrame - 0 rows <= 5 max
-        ("pyspark", {}, 5, "success", None),
-        # Exceeds max - 5 rows > 3 max
-        (
-            "pyspark",
-            {"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]},
-            3,
-            "failure",
-            "DataFrame has 5 rows, expected at most 3.",
-        ),
-        # Zero max with data - 1 row > 0 max
-        ("pyspark", {"col1": [1]}, 0, "failure", "DataFrame has 1 rows, expected at most 0."),
-        # Zero max empty - 0 rows == 0 max
-        ("pyspark", {}, 0, "success", None),
-        # Large dataset - 150 rows > 100 max
-        (
-            "pyspark",
-            {"col1": list(range(75)), "col2": [f"value_{i}" for i in range(75)]},
-            50,
-            "failure",
-            "DataFrame has 75 rows, expected at most 50.",
-        ),
-        # With nulls - 5 rows > 4 max (nulls don't affect row count)
-        (
-            "pyspark",
-            {"col1": [1, None, 3, None, 5], "col2": [None, "b", None, "d", None]},
-            4,
-            "failure",
-            "DataFrame has 5 rows, expected at most 4.",
-        ),
-        # Multiple columns - 4 rows > 3 max
-        (
-            "pyspark",
-            {
-                "col1": [1, 2, 3, 4],
-                "col2": ["a", "b", "c", "d"],
-                "col3": [1.1, 2.2, 3.3, 4.4],
-                "col4": [True, False, True, False],
-            },
-            3,
-            "failure",
-            "DataFrame has 4 rows, expected at most 3.",
-        ),
-        # Mixed data types - 5 rows <= 10 max
-        (
-            "pyspark",
-            {
-                "int_col": [1, 2, 3, 4, 5],
-                "str_col": ["a", "b", "c", "d", "e"],
-                "float_col": [1.1, 2.2, 3.3, 4.4, 5.5],
-                "bool_col": [True, False, True, False, True],
-                "null_col": [None, None, None, None, None],
-            },
-            10,
-            "success",
-            None,
-        ),
-        # High max rows - 3 rows << 1000000 max
-        ("pyspark", {"col1": [1, 2, 3]}, 1000000, "success", None),
-        # Boundary condition 1 - 1 row == 1 max
-        ("pyspark", {"col1": [1]}, 1, "success", None),
-        # Boundary condition 2 - 2 rows > 1 max
-        ("pyspark", {"col1": [1, 2]}, 1, "failure", "DataFrame has 2 rows, expected at most 1."),
-        # Identical values - 4 rows > 3 max
-        (
-            "pyspark",
-            {"col1": [42, 42, 42, 42], "col2": ["same", "same", "same", "same"]},
-            3,
-            "failure",
-            "DataFrame has 4 rows, expected at most 3.",
-        ),
-    ],
-    ids=[
-        "pyspark_exact_count",
-        "pyspark_below_max",
-        "pyspark_single_row",
-        "pyspark_empty",
-        "pyspark_exceeds_max",
-        "pyspark_zero_max_with_data",
-        "pyspark_zero_max_empty",
-        "pyspark_large_dataset",
-        "pyspark_with_nulls",
-        "pyspark_multiple_columns",
-        "pyspark_mixed_data_types",
-        "pyspark_high_max_rows",
-        "pyspark_boundary_condition_1",
-        "pyspark_boundary_condition_2",
-        "pyspark_identical_values",
-    ],
-)
-def test_expectation_basic_scenarios_pyspark(
-    df_type, df_data, max_rows, expected_result, expected_message, spark
+def test_expectation_basic_scenarios(
+    dataframe_factory, df_data, max_rows, expected_result, expected_message
 ):
     """
     Test the expectation for various scenarios across pandas and PySpark DataFrames.
@@ -313,7 +130,8 @@ def test_expectation_basic_scenarios_pyspark(
     Covers: success cases, failures (exceeds max), edge cases (empty, zero max, single row),
     boundary conditions, large datasets, nulls, multiple columns, mixed data types, and identical values.
     """
-    data_frame = create_pyspark_dataframe(df_data, spark)
+    df_lib, make_df = dataframe_factory
+    data_frame = make_df(df_data)
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -330,7 +148,7 @@ def test_expectation_basic_scenarios_pyspark(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=str(df_type),
+            data_frame_type=df_lib.value,
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (
@@ -365,14 +183,15 @@ def test_invalid_parameters():
     )
 
 
-def test_large_dataset_performance():
+def test_large_dataset_performance(dataframe_factory):
     """Test the expectation with a larger dataset to ensure reasonable performance."""
+    df_lib, make_df = dataframe_factory
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationMaxRows",
         max_rows=1500,
     )
     # Create a DataFrame with 1000 rows
-    data_frame = pd.DataFrame({"col1": list(range(1000))})
+    data_frame = make_df({"col1": (list(range(1000)), "long")})
     result = expectation.validate(data_frame=data_frame)
     assert str(result) == str(
         DataFrameExpectationSuccessMessage(expectation_name="ExpectationMaxRows")
