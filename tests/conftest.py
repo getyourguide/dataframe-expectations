@@ -40,15 +40,24 @@ def arrow_to_df(table: pa.Table, df_lib: DataFrameType, spark: Any = None) -> An
     """
     match df_lib:
         case DataFrameType.PANDAS:
-            return table.to_pandas()
+            # Use nullable dtypes so int columns with None stay as Int64
+            # instead of converting to float64
+            return table.to_pandas(types_mapper=pd.ArrowDtype)
         case DataFrameType.PYSPARK:
             if spark is None:
                 raise ValueError("A Spark session is required for df_lib=DataFrameType.PYSPARK")
             from pyspark.sql.pandas.types import from_arrow_schema
 
             pdf = table.to_pandas(integer_object_nulls=True)
-            # Replace NaN with None so PySpark sees proper SQL NULLs
-            pdf = pdf.replace({float("nan"): None})
+
+            # Replace NaN with None in numeric columns so PySpark sees proper SQL NULLs.
+            # IMPORTANT: Only apply to numeric columns. Calling pdf.replace() on the
+            # whole DataFrame converts datetime64 columns to object dtype containing
+            # pd.Timestamp objects, which PySpark rejects.
+            for col in pdf.columns:
+                if pd.api.types.is_numeric_dtype(pdf[col]):
+                    pdf[col] = pdf[col].replace({float("nan"): None})
+
             return spark.createDataFrame(
                 pdf,
                 schema=from_arrow_schema(table.schema),
@@ -120,9 +129,9 @@ def dataframe_factory(request):
     """Fixture parametrized over every supported DataFrame library.
 
     Yields ``(df_lib, factory)`` where ``df_lib`` is a ``DataFrameType`` enum
-    value and ``factory(data, column_name, arrow_type)`` creates a DataFrame in
-    that library.  To add polars support, append ``DataFrameType.POLARS`` to
-    the ``params`` list above.
+    value and ``factory(columns)`` creates a DataFrame in that library.
+    To add polars support, append ``DataFrameType.POLARS`` to the ``params``
+    list above.
 
     Usage::
 
