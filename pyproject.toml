@@ -29,6 +29,7 @@ markers = [
 [dependency-groups]
 dev = [
     "numpy>=1.21.0",
+    "pyarrow>=10.0.0",
     "pytest>=7.0.0",
     "pytest-xdist>=3.0.0",
     "pre-commit>=2.20.0",
