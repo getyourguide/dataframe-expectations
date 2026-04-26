@@ -164,7 +164,7 @@ def test_expectation_basic_scenarios(
 
             expected_failure_message = DataFrameExpectationFailureMessage(
                 expectation_str=str(expectation),
-                data_frame_type=df_lib.value,
+                data_frame_type=df_lib,
                 violations_data_frame=violations_df,
                 message=expected_message,
                 limit_violations=5,
@@ -205,7 +205,7 @@ def test_column_missing_error(dataframe_factory):
     result = expectation.validate(data_frame=data_frame)
     expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=df_lib.value,
+        data_frame_type=df_lib,
         message="Column 'nonexistent_col' does not exist in the DataFrame.",
     )
     assert str(result) == str(expected_failure_message), (

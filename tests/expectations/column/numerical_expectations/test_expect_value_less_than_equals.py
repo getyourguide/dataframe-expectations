@@ -14,6 +14,7 @@ from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
     DataFrameExpectationSuccessMessage,
 )
+from dataframe_expectations.core.types import DataFrameType
 
 
 def create_pyspark_dataframe(data, column_name, spark, data_type="long"):
@@ -307,7 +308,7 @@ def test_expectation_basic_scenarios_pandas(
         expected_violations_df = pd.DataFrame({"col1": expected_violations})
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=str(df_type),
+            data_frame_type=DataFrameType(df_type),
             violations_data_frame=expected_violations_df,
             message=expected_message,
             limit_violations=5,
@@ -588,7 +589,7 @@ def test_expectation_basic_scenarios_pyspark(
         )
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=str(df_type),
+            data_frame_type=DataFrameType(df_type),
             violations_data_frame=expected_violations_df,
             message=expected_message,
             limit_violations=5,
@@ -628,7 +629,7 @@ def test_column_missing_error_pandas():
     result = expectation.validate(data_frame=data_frame)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type="pandas",
+        data_frame_type=DataFrameType.PANDAS,
         message=expected_message,
     )
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
@@ -655,7 +656,7 @@ def test_column_missing_error_pyspark(spark):
     result = expectation.validate(data_frame=data_frame)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type="pyspark",
+        data_frame_type=DataFrameType.PYSPARK,
         message=expected_message,
     )
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"

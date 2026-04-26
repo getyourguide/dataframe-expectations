@@ -151,7 +151,7 @@ def test_expectation_basic_scenarios(
     else:  # failure
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=df_lib.value,
+            data_frame_type=df_lib,
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (
@@ -192,7 +192,7 @@ def test_column_missing_error(dataframe_factory):
     result = expectation.validate(data_frame=data_frame)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=df_lib.value,
+        data_frame_type=df_lib,
         message=expected_message,
     )
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"

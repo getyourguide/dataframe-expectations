@@ -264,7 +264,7 @@ def test_expectation_basic_scenarios(
             expected_violations_df = make_df({"col1": (expected_violations, data_type)})
             expected_failure = DataFrameExpectationFailureMessage(
                 expectation_str=str(expectation),
-                data_frame_type=df_lib.value,
+                data_frame_type=df_lib,
                 violations_data_frame=expected_violations_df,
                 message=expected_message,
                 limit_violations=5,
@@ -306,7 +306,7 @@ def test_column_missing_error(dataframe_factory):
     result = expectation.validate(data_frame=df)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=df_lib.value,
+        data_frame_type=df_lib,
         message=expected_message,
     )
     assert str(result) == str(expected_failure)

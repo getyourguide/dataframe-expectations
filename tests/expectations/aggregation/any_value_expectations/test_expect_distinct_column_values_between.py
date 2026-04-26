@@ -125,7 +125,7 @@ def test_expectation_basic_scenarios(
     else:
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=str(df_lib.value),
+            data_frame_type=df_lib,
             message=expected_message,
         )
         assert str(result) == str(expected_failure_message), (

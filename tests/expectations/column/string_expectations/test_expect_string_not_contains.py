@@ -13,6 +13,7 @@ from dataframe_expectations.result_message import (
     DataFrameExpectationFailureMessage,
     DataFrameExpectationSuccessMessage,
 )
+from dataframe_expectations.core.types import DataFrameType
 
 
 def create_pyspark_dataframe(data, column_name, spark):
@@ -230,7 +231,7 @@ def test_expectation_basic_scenarios_pandas(
         assert str(result) == str(
             DataFrameExpectationFailureMessage(
                 expectation_str=str(expectation),
-                data_frame_type=str(df_type),
+                data_frame_type=DataFrameType(df_type),
                 violations_data_frame=violations_df,
                 message=expected_message,
                 limit_violations=5,
@@ -445,7 +446,7 @@ def test_expectation_basic_scenarios_pyspark(
         assert str(result) == str(
             DataFrameExpectationFailureMessage(
                 expectation_str=str(expectation),
-                data_frame_type=str(df_type),
+                data_frame_type=DataFrameType(df_type),
                 violations_data_frame=violations_df,
                 message=expected_message,
                 limit_violations=5,
@@ -473,7 +474,7 @@ def test_column_missing_error_pandas():
 
     expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type="pandas",
+        data_frame_type=DataFrameType.PANDAS,
         message="Column 'col1' does not exist in the DataFrame.",
     )
     assert str(result) == str(expected_failure_message), (
@@ -502,7 +503,7 @@ def test_column_missing_error_pyspark(spark):
 
     expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type="pyspark",
+        data_frame_type=DataFrameType.PYSPARK,
         message="Column 'col1' does not exist in the DataFrame.",
     )
     assert str(result) == str(expected_failure_message), (
