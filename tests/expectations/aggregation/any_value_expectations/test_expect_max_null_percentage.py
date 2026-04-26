@@ -14,6 +14,18 @@ from dataframe_expectations.result_message import (
 )
 
 
+def test_expectation_name():
+    """Test that the expectation name is correctly returned."""
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationMaxNullPercentage",
+        column_name="col1",
+        max_percentage=10.0,
+    )
+    assert expectation.get_expectation_name() == "ExpectationMaxNullPercentage", (
+        f"Expected 'ExpectationMaxNullPercentage' but got: {expectation.get_expectation_name()}"
+    )
+
+
 @pytest.mark.parametrize(
     "df_data, column_name, max_percentage, expected_result, expected_message",
     [

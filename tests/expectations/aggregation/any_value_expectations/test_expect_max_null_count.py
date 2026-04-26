@@ -14,6 +14,18 @@ from dataframe_expectations.result_message import (
 )
 
 
+def test_expectation_name():
+    """Test that the expectation name is correctly returned."""
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationMaxNullCount",
+        column_name="col1",
+        max_count=5,
+    )
+    assert expectation.get_expectation_name() == "ExpectationMaxNullCount", (
+        f"Expected 'ExpectationMaxNullCount' but got: {expectation.get_expectation_name()}"
+    )
+
+
 @pytest.mark.parametrize(
     "df_data, column_name, max_count, expected_result, expected_message",
     [

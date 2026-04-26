@@ -14,6 +14,17 @@ from dataframe_expectations.result_message import (
 )
 
 
+def test_expectation_name():
+    """Test that the expectation name is correctly returned."""
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationMinRows",
+        min_rows=10,
+    )
+    assert expectation.get_expectation_name() == "ExpectationMinRows", (
+        f"Expected 'ExpectationMinRows' but got: {expectation.get_expectation_name()}"
+    )
+
+
 @pytest.mark.parametrize(
     "df_data, min_rows, expected_result, expected_message",
     [

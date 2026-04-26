@@ -15,6 +15,7 @@ from dataframe_expectations.result_message import (
 
 
 def test_expectation_name():
+    """Test that the expectation name is correctly returned."""
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringStartsWith",
         column_name="col1",
@@ -34,7 +35,7 @@ def test_expectation_name():
         (
             ["bar", "baz", "qux"],
             "foo",
-            "violations",
+            "failure",
             ["bar", "baz", "qux"],
         ),
         # Exact match success
@@ -43,21 +44,21 @@ def test_expectation_name():
         (
             ["foo", "bar", "baz"],
             "foo",
-            "violations",
+            "failure",
             ["bar", "baz"],
         ),
         # Empty strings
         (
             ["", "", ""],
             "foo",
-            "violations",
+            "failure",
             ["", "", ""],
         ),
         # Whitespace only violations
         (
             ["   ", "  ", " "],
             "foo",
-            "violations",
+            "failure",
             ["   ", "  ", " "],
         ),
         # Whitespace in text success
@@ -71,21 +72,21 @@ def test_expectation_name():
         (
             ["bar foo", "baz foo", "qux foo"],
             "foo",
-            "violations",
+            "failure",
             ["bar foo", "baz foo", "qux foo"],
         ),
         # Special char at violations
         (
             ["@foo", "#foo", "$foo"],
             "@",
-            "violations",
+            "failure",
             ["#foo", "$foo"],
         ),
         # Special char in prefix violations
         (
             ["foo@bar", "foo#baz", "foo$qux"],
             "foo@",
-            "violations",
+            "failure",
             ["foo#baz", "foo$qux"],
         ),
         # Numbers success
@@ -94,7 +95,7 @@ def test_expectation_name():
         (
             ["1foo", "2foo", "3foo"],
             "foo",
-            "violations",
+            "failure",
             ["1foo", "2foo", "3foo"],
         ),
         # Long string success
@@ -108,14 +109,14 @@ def test_expectation_name():
         (
             ["a" * 100, "b" * 100, "c" * 100],
             "foo",
-            "violations",
+            "failure",
             ["a" * 100, "b" * 100, "c" * 100],
         ),
         # Mixed violations
         (
             ["foobar", "bar", "foo123"],
             "foo",
-            "violations",
+            "failure",
             ["bar"],
         ),
     ],
@@ -170,7 +171,7 @@ def test_expectation_basic_scenarios(
         assert suite_result.success, "Expected all expectations to pass"
         assert suite_result.total_passed == 1, "Expected 1 passed expectation"
         assert suite_result.total_failed == 0, "Expected 0 failed expectations"
-    else:  # violations
+    else:  # failure
         violations_df = make_df({"col1": (expected_violations, "string")})
         expected_message = (
             f"Found {len(expected_violations)} row(s) where 'col1' does not start with '{prefix}'."

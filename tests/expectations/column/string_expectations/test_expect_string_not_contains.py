@@ -15,6 +15,7 @@ from dataframe_expectations.result_message import (
 
 
 def test_expectation_name():
+    """Test that the expectation name is correctly returned."""
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationStringNotContains",
         column_name="col1",
@@ -35,21 +36,21 @@ def test_expectation_name():
         # Success different substring
         (["hello", "world", "python"], "java", "success", None),
         # Basic violations
-        (["foobar", "bar", "foo"], "foo", "violations", ["foobar", "foo"]),
+        (["foobar", "bar", "foo"], "foo", "failure", ["foobar", "foo"]),
         # All violations
         (
             ["testing", "test", "attest"],
             "test",
-            "violations",
+            "failure",
             ["testing", "test", "attest"],
         ),
         # Mixed violations
-        (["good", "bad", "badge"], "bad", "violations", ["bad", "badge"]),
+        (["good", "bad", "badge"], "bad", "failure", ["bad", "badge"]),
         # Substring at beginning
         (
             ["prefix_test", "prefix_demo", "other"],
             "prefix",
-            "violations",
+            "failure",
             ["prefix_test", "prefix_demo"],
         ),
         # No substring at beginning
@@ -58,7 +59,7 @@ def test_expectation_name():
         (
             ["test_suffix", "demo_suffix", "other"],
             "suffix",
-            "violations",
+            "failure",
             ["test_suffix", "demo_suffix"],
         ),
         # No substring at end
@@ -67,7 +68,7 @@ def test_expectation_name():
         (
             ["pre_mid_post", "another_mid_test", "nomatch"],
             "mid",
-            "violations",
+            "failure",
             ["pre_mid_post", "another_mid_test"],
         ),
         # No substring in middle
@@ -75,32 +76,32 @@ def test_expectation_name():
         # Case sensitive success
         (["FOO", "Foo", "fOo"], "foo", "success", None),
         # Case sensitive violations
-        (["foo", "FOO", "test"], "FOO", "violations", ["FOO"]),
+        (["foo", "FOO", "test"], "FOO", "failure", ["FOO"]),
         # Empty string success
         (["", "", ""], "foo", "success", None),
         # Empty string with violation
-        (["", "foo", ""], "foo", "violations", ["foo"]),
+        (["", "foo", ""], "foo", "failure", ["foo"]),
         # Whitespace only success
         (["   ", "  ", " "], "test", "success", None),
         # Whitespace in text violations
         (
             ["test with spaces", "test", "no match"],
             "test",
-            "violations",
+            "failure",
             ["test with spaces", "test"],
         ),
         # Whitespace around violations
         (
             ["   test   ", "test", "clean"],
             "test",
-            "violations",
+            "failure",
             ["   test   ", "test"],
         ),
         # Special char at violations
         (
             ["test@email", "user@domain", "plain"],
             "@",
-            "violations",
+            "failure",
             ["test@email", "user@domain"],
         ),
         # Special char at success
@@ -109,35 +110,35 @@ def test_expectation_name():
         (
             ["test#tag", "demo#hash", "plain"],
             "#",
-            "violations",
+            "failure",
             ["test#tag", "demo#hash"],
         ),
         # Numbers violations
         (
             ["version123", "test456", "plain"],
             "123",
-            "violations",
+            "failure",
             ["version123"],
         ),
         # Numbers no match
         (["v1.0", "v2.1", "v3.5"], "123", "success", None),
         # Numbers exact match
-        (["test", "demo", "123"], "123", "violations", ["123"]),
+        (["test", "demo", "123"], "123", "failure", ["123"]),
         # Single char success
         (["a", "b", "c"], "x", "success", None),
         # Single char violation
-        (["a", "b", "c"], "a", "violations", ["a"]),
+        (["a", "b", "c"], "a", "failure", ["a"]),
         # Long string success
         (["a" * 100, "b" * 100, "c" * 100], "x", "success", None),
         # Long string with substring
         (
             ["a" * 50 + "test" + "b" * 50, "clean" * 20, "other"],
             "test",
-            "violations",
+            "failure",
             ["a" * 50 + "test" + "b" * 50],
         ),
         # Exact match
-        (["test", "demo", "exam"], "test", "violations", ["test"]),
+        (["test", "demo", "exam"], "test", "failure", ["test"]),
         # No exact match
         (["test", "demo", "exam"], "testing", "success", None),
     ],
@@ -208,7 +209,7 @@ def test_expectation_basic_scenarios(
         assert suite_result.success, "Expected all expectations to pass"
         assert suite_result.total_passed == 1, "Expected 1 passed expectation"
         assert suite_result.total_failed == 0, "Expected 0 failed expectations"
-    else:  # violations
+    else:  # failure
         violations_df = make_df({"col1": (expected_violations, "string")})
         expected_message = (
             f"Found {len(expected_violations)} row(s) where 'col1' contains '{substring}'."

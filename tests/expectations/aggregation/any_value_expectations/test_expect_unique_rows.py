@@ -218,3 +218,21 @@ def test_column_missing_error(dataframe_factory):
     )
     with pytest.raises(DataFrameExpectationsSuiteFailure):
         expectations_suite.build().run(data_frame=data_frame)
+
+
+def test_large_dataset_performance(dataframe_factory):
+    """
+    Test the expectation with a larger dataset to ensure reasonable performance.
+    """
+    df_lib, make_df = dataframe_factory
+
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationUniqueRows",
+        column_names=["col1"],
+    )
+    # Create a DataFrame with unique values
+    data_frame = make_df({"col1": (list(range(10000)), "long")})
+    result = expectation.validate(data_frame=data_frame)
+    assert isinstance(result, DataFrameExpectationSuccessMessage), (
+        f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"
+    )
