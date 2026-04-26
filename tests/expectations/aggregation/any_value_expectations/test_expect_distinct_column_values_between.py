@@ -201,10 +201,12 @@ def test_invalid_parameters(min_value, max_value, expected_error_message):
     )
 
 
-def test_large_dataset_performance():
+def test_large_dataset_performance(dataframe_factory):
     """
     Test the expectation with a larger dataset to ensure reasonable performance.
     """
+    df_lib, make_df = dataframe_factory
+
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesBetween",
         column_name="col1",
@@ -212,7 +214,9 @@ def test_large_dataset_performance():
         max_value=1100,
     )
     # Create a DataFrame with exactly 1000 distinct values
-    data_frame = pd.DataFrame({"col1": list(range(1000)) * 5})  # 5000 rows, 1000 distinct values
+    data_frame = make_df(
+        {"col1": (list(range(1000)) * 5, "long")}
+    )  # 5000 rows, 1000 distinct values
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(result, DataFrameExpectationSuccessMessage), (
         f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"

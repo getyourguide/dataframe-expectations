@@ -320,11 +320,13 @@ def test_column_missing_error(dataframe_factory):
         expectations_suite.build().run(data_frame=data_frame)
 
 
-def test_large_dataset_performance():
+def test_large_dataset_performance(dataframe_factory):
     """Test the expectation with a larger dataset to ensure performance."""
+    df_lib, make_df = dataframe_factory
+
     # Create a larger dataset with values between 10 and 100
     large_data = np.random.uniform(10, 100, 10000).tolist()
-    data_frame = pd.DataFrame({"col1": large_data})
+    data_frame = make_df({"col1": (large_data, "double")})
 
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueGreaterThanEquals",
