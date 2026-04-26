@@ -16,35 +16,6 @@ from dataframe_expectations.result_message import (
 from dataframe_expectations.core.suite_result import SuiteExecutionResult
 
 
-def create_pyspark_dataframe(data, column_name, spark, data_type="long"):
-    """Helper function to create a PySpark DataFrame.
-
-    Args:
-        data: List of values for the column
-        column_name: Name of the column
-        spark: Spark session (required for pyspark)
-        data_type: Data type for the column - "long", "double"
-    """
-    from pyspark.sql.types import (
-        StructType,
-        StructField,
-        LongType,
-        DoubleType,
-    )
-
-    type_mapping = {
-        "long": LongType(),
-        "double": DoubleType(),
-    }
-
-    # Convert integers to floats when using double type to avoid type mismatch
-    if data_type == "double":
-        data = [float(val) if val is not None else None for val in data]
-
-    schema = StructType([StructField(column_name, type_mapping[data_type], True)])
-    return spark.createDataFrame([(val,) for val in data], schema)
-
-
 def test_expectation_name():
     """Test that the expectation name is correctly returned."""
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -58,18 +29,17 @@ def test_expectation_name():
 
 
 @pytest.mark.parametrize(
-    "df_type, data, threshold, expected_result, expected_violations, expected_message",
+    "data, threshold, expected_result, expected_violations, expected_message",
     [
         # Basic success scenarios
-        ("pandas", [3, 4, 5], 2, "success", None, None),
-        ("pandas", [4, 5, 6], 3, "success", None, None),
-        ("pandas", [10, 20, 30], 5, "success", None, None),
+        ([3, 4, 5], 2, "success", None, None),
+        ([4, 5, 6], 3, "success", None, None),
+        ([10, 20, 30], 5, "success", None, None),
         # Success at threshold (key difference from greater than)
-        ("pandas", [3, 4, 5], 3, "success", None, None),
-        ("pandas", [5, 5, 5], 5, "success", None, None),
+        ([3, 4, 5], 3, "success", None, None),
+        ([5, 5, 5], 5, "success", None, None),
         # Basic violation scenarios
         (
-            "pandas",
             [1, 2, 3],
             4,
             "failure",
@@ -77,7 +47,6 @@ def test_expectation_name():
             "Found 3 row(s) where 'col1' is not greater than or equal to 4.",
         ),
         (
-            "pandas",
             [2, 3, 4, 5],
             5,
             "failure",
@@ -85,11 +54,10 @@ def test_expectation_name():
             "Found 3 row(s) where 'col1' is not greater than or equal to 5.",
         ),
         # Boundary conditions - at threshold (success for >=)
-        ("pandas", [2, 3, 4], 2, "success", None, None),
-        ("pandas", [5, 6, 7], 5, "success", None, None),
+        ([2, 3, 4], 2, "success", None, None),
+        ([5, 6, 7], 5, "success", None, None),
         # Boundary conditions - just below threshold (violation)
         (
-            "pandas",
             [1, 2, 3],
             2,
             "failure",
@@ -97,7 +65,6 @@ def test_expectation_name():
             "Found 1 row(s) where 'col1' is not greater than or equal to 2.",
         ),
         (
-            "pandas",
             [1.9, 2, 3],
             2,
             "failure",
@@ -105,14 +72,13 @@ def test_expectation_name():
             "Found 1 row(s) where 'col1' is not greater than or equal to 2.",
         ),
         # Negative values - success
-        ("pandas", [0, 1, 2], -1, "success", None, None),
-        ("pandas", [-2, -1, 0], -3, "success", None, None),
-        ("pandas", [-5, -3, 0], -10, "success", None, None),
+        ([0, 1, 2], -1, "success", None, None),
+        ([-2, -1, 0], -3, "success", None, None),
+        ([-5, -3, 0], -10, "success", None, None),
         # Negative values - success at threshold
-        ("pandas", [-2, -1, 0], -2, "success", None, None),
+        ([-2, -1, 0], -2, "success", None, None),
         # Negative values - violations
         (
-            "pandas",
             [-3, -2, -1],
             -1,
             "failure",
@@ -120,7 +86,6 @@ def test_expectation_name():
             "Found 2 row(s) where 'col1' is not greater than or equal to -1.",
         ),
         (
-            "pandas",
             [-5, -4, -3],
             -2,
             "failure",
@@ -128,12 +93,11 @@ def test_expectation_name():
             "Found 3 row(s) where 'col1' is not greater than or equal to -2.",
         ),
         # Float values - success
-        ("pandas", [2.5, 3.7, 4.2], 2.0, "success", None, None),
-        ("pandas", [3.0, 4.5, 5.9], 3.0, "success", None, None),
-        ("pandas", [10.0, 10.2, 10.3], 10.0, "success", None, None),
+        ([2.5, 3.7, 4.2], 2.0, "success", None, None),
+        ([3.0, 4.5, 5.9], 3.0, "success", None, None),
+        ([10.0, 10.2, 10.3], 10.0, "success", None, None),
         # Float values - violations
         (
-            "pandas",
             [2.0, 2.5, 3.0],
             2.6,
             "failure",
@@ -141,7 +105,6 @@ def test_expectation_name():
             "Found 2 row(s) where 'col1' is not greater than or equal to 2.6.",
         ),
         (
-            "pandas",
             [1.5, 2.5, 3.5],
             3.1,
             "failure",
@@ -149,11 +112,10 @@ def test_expectation_name():
             "Found 2 row(s) where 'col1' is not greater than or equal to 3.1.",
         ),
         # Zero as threshold - success
-        ("pandas", [0, 1, 2], 0, "success", None, None),
-        ("pandas", [0.0, 0.5, 1.0], 0, "success", None, None),
+        ([0, 1, 2], 0, "success", None, None),
+        ([0.0, 0.5, 1.0], 0, "success", None, None),
         # Zero as threshold - violations
         (
-            "pandas",
             [-2, -1, 0],
             1,
             "failure",
@@ -161,7 +123,6 @@ def test_expectation_name():
             "Found 3 row(s) where 'col1' is not greater than or equal to 1.",
         ),
         (
-            "pandas",
             [-1, 0, 1],
             1,
             "failure",
@@ -169,12 +130,11 @@ def test_expectation_name():
             "Found 2 row(s) where 'col1' is not greater than or equal to 1.",
         ),
         # Single value - success
-        ("pandas", [5], 4, "success", None, None),
-        ("pandas", [5], 5, "success", None, None),
-        ("pandas", [10], 0, "success", None, None),
+        ([5], 4, "success", None, None),
+        ([5], 5, "success", None, None),
+        ([10], 0, "success", None, None),
         # Single value - violation
         (
-            "pandas",
             [3],
             4,
             "failure",
@@ -182,7 +142,6 @@ def test_expectation_name():
             "Found 1 row(s) where 'col1' is not greater than or equal to 4.",
         ),
         (
-            "pandas",
             [2],
             5,
             "failure",
@@ -190,11 +149,10 @@ def test_expectation_name():
             "Found 1 row(s) where 'col1' is not greater than or equal to 5.",
         ),
         # All values equal to threshold (success for >=)
-        ("pandas", [5, 5, 5, 5], 5, "success", None, None),
+        ([5, 5, 5, 5], 5, "success", None, None),
         # Mixed integers and floats
-        ("pandas", [3, 3.5, 4, 4.5], 3, "success", None, None),
+        ([3, 3.5, 4, 4.5], 3, "success", None, None),
         (
-            "pandas",
             [2, 2.5, 3, 3.5],
             3.1,
             "failure",
@@ -202,9 +160,8 @@ def test_expectation_name():
             "Found 3 row(s) where 'col1' is not greater than or equal to 3.1.",
         ),
         # Large values
-        ("pandas", [1000, 2000, 3000], 1000, "success", None, None),
+        ([1000, 2000, 3000], 1000, "success", None, None),
         (
-            "pandas",
             [1000, 1500, 2000],
             2001,
             "failure",
@@ -213,7 +170,6 @@ def test_expectation_name():
         ),
         # All values below threshold
         (
-            "pandas",
             [1, 2, 3],
             5,
             "failure",
@@ -221,285 +177,10 @@ def test_expectation_name():
             "Found 3 row(s) where 'col1' is not greater than or equal to 5.",
         ),
         # With nulls - success (nulls are ignored)
-        ("pandas", [3, None, 4, None, 5], 3, "success", None, None),
-        ("pandas", [10, None, 20, None], 5, "success", None, None),
+        ([3, None, 4, None, 5], 3, "success", None, None),
+        ([10, None, 20, None], 5, "success", None, None),
         # With nulls - violations
         (
-            "pandas",
-            [2.0, None, 3.0, 4.0],
-            3,
-            "failure",
-            [2.0],
-            "Found 1 row(s) where 'col1' is not greater than or equal to 3.",
-        ),
-    ],
-    ids=[
-        "pandas_basic_success",
-        "pandas_success_different_data",
-        "pandas_success_large_values",
-        "pandas_success_at_threshold",
-        "pandas_success_all_equal_threshold",
-        "pandas_basic_violations",
-        "pandas_partial_violations",
-        "pandas_boundary_at_threshold_success",
-        "pandas_boundary_at_threshold_success_2",
-        "pandas_boundary_below_threshold",
-        "pandas_boundary_below_threshold_float",
-        "pandas_negative_success",
-        "pandas_negative_range_success",
-        "pandas_negative_large_success",
-        "pandas_negative_at_threshold_success",
-        "pandas_negative_violations",
-        "pandas_negative_all_violations",
-        "pandas_float_success",
-        "pandas_float_at_threshold_success",
-        "pandas_float_precise_success",
-        "pandas_float_violations",
-        "pandas_float_mixed_violations",
-        "pandas_zero_threshold_success",
-        "pandas_zero_threshold_float_success",
-        "pandas_zero_threshold_violations",
-        "pandas_zero_threshold_mixed_violations",
-        "pandas_single_value_success",
-        "pandas_single_value_at_threshold_success",
-        "pandas_single_value_large_success",
-        "pandas_single_value_violation",
-        "pandas_single_value_below_violation",
-        "pandas_all_equal_threshold_success",
-        "pandas_mixed_types_success",
-        "pandas_mixed_types_violations",
-        "pandas_large_values_success",
-        "pandas_large_values_violations",
-        "pandas_all_below_threshold",
-        "pandas_with_nulls_success",
-        "pandas_with_nulls_large_success",
-        "pandas_with_nulls_violations",
-    ],
-)
-def test_expectation_basic_scenarios_pandas(
-    df_type, data, threshold, expected_result, expected_violations, expected_message
-):
-    """
-    Test the expectation for various scenarios across pandas DataFrames.
-    Tests both direct expectation validation and suite-based validation.
-    Covers: success cases, boundary conditions (including equals), violations, negative values,
-    floats, zero values, single values, mixed types, large values, and nulls.
-    """
-    data_frame = pd.DataFrame({"col1": data})
-
-    # Test 1: Direct expectation validation
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationValueGreaterThanEquals",
-        column_name="col1",
-        value=threshold,
-    )
-
-    result = expectation.validate(data_frame=data_frame)
-
-    if expected_result == "success":
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(expectation_name="ExpectationValueGreaterThanEquals")
-        ), f"Expected success message but got: {result}"
-    else:  # failure
-        expected_violations_df = pd.DataFrame({"col1": expected_violations})
-        expected_failure_message = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=str(df_type),
-            violations_data_frame=expected_violations_df,
-            message=expected_message,
-            limit_violations=5,
-        )
-        assert str(result) == str(expected_failure_message), (
-            f"Expected failure message but got: {result}"
-        )
-
-    # Test 2: Suite-based validation
-    expectations_suite = DataFrameExpectationsSuite().expect_value_greater_than_equals(
-        column_name="col1", value=threshold
-    )
-
-    if expected_result == "success":
-        result = expectations_suite.build().run(data_frame=data_frame)
-        assert result is not None, "Expected SuiteExecutionResult"
-        assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
-        assert result.success, "Expected all expectations to pass"
-        assert result.total_passed == 1, "Expected 1 passed expectation"
-        assert result.total_failed == 0, "Expected 0 failed expectations"
-    else:  # failure
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            expectations_suite.build().run(data_frame=data_frame)
-
-
-@pytest.mark.pyspark
-@pytest.mark.parametrize(
-    "df_type, data, threshold, expected_result, expected_violations, expected_message",
-    [
-        # Basic success scenarios
-        ("pyspark", [3, 4, 5], 2, "success", None, None),
-        ("pyspark", [4, 5, 6], 3, "success", None, None),
-        ("pyspark", [10, 20, 30], 5, "success", None, None),
-        # Success at threshold (key difference from greater than)
-        ("pyspark", [3, 4, 5], 3, "success", None, None),
-        ("pyspark", [5, 5, 5], 5, "success", None, None),
-        # Basic violation scenarios
-        (
-            "pyspark",
-            [1, 2, 3],
-            4,
-            "failure",
-            [1, 2, 3],
-            "Found 3 row(s) where 'col1' is not greater than or equal to 4.",
-        ),
-        (
-            "pyspark",
-            [2, 3, 4, 5],
-            5,
-            "failure",
-            [2, 3, 4],
-            "Found 3 row(s) where 'col1' is not greater than or equal to 5.",
-        ),
-        # Boundary conditions - at threshold (success for >=)
-        ("pyspark", [2, 3, 4], 2, "success", None, None),
-        ("pyspark", [5, 6, 7], 5, "success", None, None),
-        # Boundary conditions - just below threshold (violation)
-        (
-            "pyspark",
-            [1, 2, 3],
-            2,
-            "failure",
-            [1],
-            "Found 1 row(s) where 'col1' is not greater than or equal to 2.",
-        ),
-        (
-            "pyspark",
-            [1.9, 2, 3],
-            2,
-            "failure",
-            [1.9],
-            "Found 1 row(s) where 'col1' is not greater than or equal to 2.",
-        ),
-        # Negative values - success
-        ("pyspark", [0, 1, 2], -1, "success", None, None),
-        ("pyspark", [-2, -1, 0], -3, "success", None, None),
-        ("pyspark", [-5, -3, 0], -10, "success", None, None),
-        # Negative values - success at threshold
-        ("pyspark", [-2, -1, 0], -2, "success", None, None),
-        # Negative values - violations
-        (
-            "pyspark",
-            [-3, -2, -1],
-            -1,
-            "failure",
-            [-3, -2],
-            "Found 2 row(s) where 'col1' is not greater than or equal to -1.",
-        ),
-        (
-            "pyspark",
-            [-5, -4, -3],
-            -2,
-            "failure",
-            [-5, -4, -3],
-            "Found 3 row(s) where 'col1' is not greater than or equal to -2.",
-        ),
-        # Float values - success
-        ("pyspark", [2.5, 3.7, 4.2], 2.0, "success", None, None),
-        ("pyspark", [3.0, 4.5, 5.9], 3.0, "success", None, None),
-        ("pyspark", [10.0, 10.2, 10.3], 10.0, "success", None, None),
-        # Float values - violations
-        (
-            "pyspark",
-            [2.0, 2.5, 3.0],
-            2.6,
-            "failure",
-            [2.0, 2.5],
-            "Found 2 row(s) where 'col1' is not greater than or equal to 2.6.",
-        ),
-        (
-            "pyspark",
-            [1.5, 2.5, 3.5],
-            3.1,
-            "failure",
-            [1.5, 2.5],
-            "Found 2 row(s) where 'col1' is not greater than or equal to 3.1.",
-        ),
-        # Zero as threshold - success
-        ("pyspark", [0, 1, 2], 0, "success", None, None),
-        ("pyspark", [0.0, 0.5, 1.0], 0, "success", None, None),
-        # Zero as threshold - violations
-        (
-            "pyspark",
-            [-2, -1, 0],
-            1,
-            "failure",
-            [-2, -1, 0],
-            "Found 3 row(s) where 'col1' is not greater than or equal to 1.",
-        ),
-        (
-            "pyspark",
-            [-1, 0, 1],
-            1,
-            "failure",
-            [-1, 0],
-            "Found 2 row(s) where 'col1' is not greater than or equal to 1.",
-        ),
-        # Single value - success
-        ("pyspark", [5], 4, "success", None, None),
-        ("pyspark", [5], 5, "success", None, None),
-        ("pyspark", [10], 0, "success", None, None),
-        # Single value - violation
-        (
-            "pyspark",
-            [3],
-            4,
-            "failure",
-            [3],
-            "Found 1 row(s) where 'col1' is not greater than or equal to 4.",
-        ),
-        (
-            "pyspark",
-            [2],
-            5,
-            "failure",
-            [2],
-            "Found 1 row(s) where 'col1' is not greater than or equal to 5.",
-        ),
-        # All values equal to threshold (success for >=)
-        ("pyspark", [5, 5, 5, 5], 5, "success", None, None),
-        # Mixed integers and floats
-        ("pyspark", [3, 3.5, 4, 4.5], 3, "success", None, None),
-        (
-            "pyspark",
-            [2, 2.5, 3, 3.5],
-            3.1,
-            "failure",
-            [2, 2.5, 3],
-            "Found 3 row(s) where 'col1' is not greater than or equal to 3.1.",
-        ),
-        # Large values
-        ("pyspark", [1000, 2000, 3000], 1000, "success", None, None),
-        (
-            "pyspark",
-            [1000, 1500, 2000],
-            2001,
-            "failure",
-            [1000, 1500, 2000],
-            "Found 3 row(s) where 'col1' is not greater than or equal to 2001.",
-        ),
-        # All values below threshold
-        (
-            "pyspark",
-            [1, 2, 3],
-            5,
-            "failure",
-            [1, 2, 3],
-            "Found 3 row(s) where 'col1' is not greater than or equal to 5.",
-        ),
-        # With nulls - success (nulls are ignored)
-        ("pyspark", [3, None, 4, None, 5], 3, "success", None, None),
-        ("pyspark", [10, None, 20, None], 5, "success", None, None),
-        # With nulls - violations
-        (
-            "pyspark",
             [2, None, 3, 4],
             3,
             "failure",
@@ -508,61 +189,64 @@ def test_expectation_basic_scenarios_pandas(
         ),
     ],
     ids=[
-        "pyspark_basic_success",
-        "pyspark_success_different_data",
-        "pyspark_success_large_values",
-        "pyspark_success_at_threshold",
-        "pyspark_success_all_equal_threshold",
-        "pyspark_basic_violations",
-        "pyspark_partial_violations",
-        "pyspark_boundary_at_threshold_success",
-        "pyspark_boundary_at_threshold_success_2",
-        "pyspark_boundary_below_threshold",
-        "pyspark_boundary_below_threshold_float",
-        "pyspark_negative_success",
-        "pyspark_negative_range_success",
-        "pyspark_negative_large_success",
-        "pyspark_negative_at_threshold_success",
-        "pyspark_negative_violations",
-        "pyspark_negative_all_violations",
-        "pyspark_float_success",
-        "pyspark_float_at_threshold_success",
-        "pyspark_float_precise_success",
-        "pyspark_float_violations",
-        "pyspark_float_mixed_violations",
-        "pyspark_zero_threshold_success",
-        "pyspark_zero_threshold_float_success",
-        "pyspark_zero_threshold_violations",
-        "pyspark_zero_threshold_mixed_violations",
-        "pyspark_single_value_success",
-        "pyspark_single_value_at_threshold_success",
-        "pyspark_single_value_large_success",
-        "pyspark_single_value_violation",
-        "pyspark_single_value_below_violation",
-        "pyspark_all_equal_threshold_success",
-        "pyspark_mixed_types_success",
-        "pyspark_mixed_types_violations",
-        "pyspark_large_values_success",
-        "pyspark_large_values_violations",
-        "pyspark_all_below_threshold",
-        "pyspark_with_nulls_success",
-        "pyspark_with_nulls_large_success",
-        "pyspark_with_nulls_violations",
+        "basic_success",
+        "success_different_data",
+        "success_large_values",
+        "success_at_threshold",
+        "success_all_equal_threshold",
+        "basic_violations",
+        "partial_violations",
+        "boundary_at_threshold_success",
+        "boundary_at_threshold_success_2",
+        "boundary_below_threshold",
+        "boundary_below_threshold_float",
+        "negative_success",
+        "negative_range_success",
+        "negative_large_success",
+        "negative_at_threshold_success",
+        "negative_violations",
+        "negative_all_violations",
+        "float_success",
+        "float_at_threshold_success",
+        "float_precise_success",
+        "float_violations",
+        "float_mixed_violations",
+        "zero_threshold_success",
+        "zero_threshold_float_success",
+        "zero_threshold_violations",
+        "zero_threshold_mixed_violations",
+        "single_value_success",
+        "single_value_at_threshold_success",
+        "single_value_large_success",
+        "single_value_violation",
+        "single_value_below_violation",
+        "all_equal_threshold_success",
+        "mixed_types_success",
+        "mixed_types_violations",
+        "large_values_success",
+        "large_values_violations",
+        "all_below_threshold",
+        "with_nulls_success",
+        "with_nulls_large_success",
+        "with_nulls_violations",
     ],
 )
-def test_expectation_basic_scenarios_pyspark(
-    df_type, data, threshold, expected_result, expected_violations, expected_message, spark
+def test_expectation_basic_scenarios(
+    dataframe_factory, data, threshold, expected_result, expected_violations, expected_message
 ):
     """
-    Test the expectation for various scenarios across PySpark DataFrames.
+    Test the expectation for various scenarios across pandas and PySpark DataFrames.
     Tests both direct expectation validation and suite-based validation.
     Covers: success cases, boundary conditions (including equals), violations, negative values,
     floats, zero values, single values, mixed types, large values, and nulls.
     """
-    # Determine data type based on whether we have float values (excluding None)
+    df_lib, make_df = dataframe_factory
+
+    # Determine arrow type based on data
     has_float = any(isinstance(val, float) for val in data if val is not None)
-    data_type = "double" if has_float else "long"
-    data_frame = create_pyspark_dataframe(data, "col1", spark, data_type)
+    arrow_type = "double" if has_float else "long"
+
+    data_frame = make_df({"col1": (data, arrow_type)})
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -578,12 +262,10 @@ def test_expectation_basic_scenarios_pyspark(
             DataFrameExpectationSuccessMessage(expectation_name="ExpectationValueGreaterThanEquals")
         ), f"Expected success message but got: {result}"
     else:  # failure
-        expected_violations_df = create_pyspark_dataframe(
-            expected_violations, "col1", spark, data_type
-        )
+        expected_violations_df = make_df({"col1": (expected_violations, arrow_type)})
         expected_failure_message = DataFrameExpectationFailureMessage(
             expectation_str=str(expectation),
-            data_frame_type=str(df_type),
+            data_frame_type=df_lib,
             violations_data_frame=expected_violations_df,
             message=expected_message,
             limit_violations=5,
@@ -609,11 +291,12 @@ def test_expectation_basic_scenarios_pyspark(
             expectations_suite.build().run(data_frame=data_frame)
 
 
-def test_column_missing_error_pandas():
-    """Test that an error is raised when the specified column is missing in pandas."""
+def test_column_missing_error(dataframe_factory):
+    """Test that an error is raised when the specified column is missing."""
+    df_lib, make_df = dataframe_factory
     expected_message = "Column 'col1' does not exist in the DataFrame."
 
-    data_frame = pd.DataFrame({"col2": [3, 4, 5]})
+    data_frame = make_df({"col2": ([3, 4, 5], "long")})
 
     # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
@@ -624,7 +307,7 @@ def test_column_missing_error_pandas():
     result = expectation.validate(data_frame=data_frame)
     expected_failure = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type="pandas",
+        data_frame_type=df_lib,
         message=expected_message,
     )
     assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
@@ -637,38 +320,13 @@ def test_column_missing_error_pandas():
         expectations_suite.build().run(data_frame=data_frame)
 
 
-@pytest.mark.pyspark
-def test_column_missing_error_pyspark(spark):
-    """Test that an error is raised when the specified column is missing in PySpark."""
-    expected_message = "Column 'col1' does not exist in the DataFrame."
-
-    data_frame = spark.createDataFrame([(3,), (4,), (5,)], ["col2"])
-
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationValueGreaterThanEquals",
-        column_name="col1",
-        value=2,
-    )
-    result = expectation.validate(data_frame=data_frame)
-    expected_failure = DataFrameExpectationFailureMessage(
-        expectation_str=str(expectation),
-        data_frame_type="pyspark",
-        message=expected_message,
-    )
-    assert str(result) == str(expected_failure), f"Expected failure message but got: {result}"
-
-    expectations_suite = DataFrameExpectationsSuite().expect_value_greater_than_equals(
-        column_name="col1", value=2
-    )
-    with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.build().run(data_frame=data_frame)
-
-
-def test_large_dataset_performance():
+def test_large_dataset_performance(dataframe_factory):
     """Test the expectation with a larger dataset to ensure performance."""
+    df_lib, make_df = dataframe_factory
+
     # Create a larger dataset with values between 10 and 100
     large_data = np.random.uniform(10, 100, 10000).tolist()
-    data_frame = pd.DataFrame({"col1": large_data})
+    data_frame = make_df({"col1": (large_data, "double")})
 
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationValueGreaterThanEquals",

@@ -17,39 +17,6 @@ from dataframe_expectations.result_message import (
 )
 
 
-def create_pyspark_dataframe(data, column_name, spark, data_type="long"):
-    """Helper function to create a PySpark DataFrame.
-
-    Args:
-        data: List of values for the column
-        column_name: Name of the column
-        spark: Spark session (required for pyspark)
-        data_type: Data type for the column - "long", "string", "double", "boolean", "timestamp"
-    """
-
-    # Use explicit schema for all PySpark DataFrames
-    from pyspark.sql.types import (
-        StructType,
-        StructField,
-        LongType,
-        StringType,
-        DoubleType,
-        BooleanType,
-        TimestampType,
-    )
-
-    type_mapping = {
-        "long": LongType(),
-        "string": StringType(),
-        "double": DoubleType(),
-        "boolean": BooleanType(),
-        "timestamp": TimestampType(),
-    }
-
-    schema = StructType([StructField(column_name, type_mapping[data_type], True)])
-    return spark.createDataFrame([(val,) for val in data], schema)
-
-
 def test_expectation_name():
     """
     Test that the expectation name is correctly returned.
@@ -64,50 +31,77 @@ def test_expectation_name():
     )
 
 
+def _assert_distinct_column_values_equals(
+    data_frame, df_lib, expected_value, expected_result, expected_message
+):
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationDistinctColumnValuesEquals",
+        column_name="col1",
+        expected_value=expected_value,
+    )
+
+    result = expectation.validate(data_frame=data_frame)
+
+    if expected_result == "success":
+        assert str(result) == str(
+            DataFrameExpectationSuccessMessage(
+                expectation_name="ExpectationDistinctColumnValuesEquals"
+            )
+        ), f"Expected success message but got: {result}"
+    else:
+        expected_failure_message = DataFrameExpectationFailureMessage(
+            expectation_str=str(expectation),
+            data_frame_type=df_lib,
+            message=expected_message,
+        )
+        assert str(result) == str(expected_failure_message), (
+            f"Expected failure message but got: {result}"
+        )
+
+    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
+        column_name="col1", expected_value=expected_value
+    )
+
+    if expected_result == "success":
+        result = expectations_suite.build().run(data_frame=data_frame)
+        assert result is not None
+        assert isinstance(result, SuiteExecutionResult)
+        assert result.success
+        assert result.total_passed == 1
+        assert result.total_failed == 0
+    else:
+        with pytest.raises(DataFrameExpectationsSuiteFailure):
+            expectations_suite.build().run(data_frame=data_frame)
+
+
 @pytest.mark.parametrize(
-    "df_type, df_data, expected_value, expected_result, expected_message, data_type",
+    "df_data, expected_value, expected_result, expected_message, arrow_type",
     [
-        # Basic success - 3 distinct values
-        ("pandas", [1, 2, 3, 2, 1], 3, "success", None, "long"),
-        # Success with nulls - 3 distinct values [1, 2, None]
-        ("pandas", [1, 2, None, 2, 1], 3, "success", None, "long"),
-        # Too few distinct values - 2 distinct, expecting 5
+        ([1, 2, 3, 2, 1], 3, "success", None, "long"),
+        ([1, 2, None, 2, 1], 3, "success", None, "long"),
         (
-            "pandas",
             [1, 2, 1, 2, 1],
             5,
             "failure",
             "Column 'col1' has 2 distinct values, expected exactly 5.",
             "long",
         ),
-        # Too many distinct values - 5 distinct, expecting 2
         (
-            "pandas",
             [1, 2, 3, 4, 5],
             2,
             "failure",
             "Column 'col1' has 5 distinct values, expected exactly 2.",
             "long",
         ),
-        # Edge case: empty DataFrame - 0 distinct values
-        ("pandas", [], 0, "success", None, "long"),
-        # Edge case: single distinct value - 1 distinct value
-        ("pandas", [5, 5, 5, 5, 5], 1, "success", None, "long"),
-        # String column with mixed values including None
-        ("pandas", ["A", "B", "C", "B", "A", None], 4, "success", None, "string"),
-        # String case-sensitive - 4 distinct values ["a", "A", "b", "B"]
-        ("pandas", ["a", "A", "b", "B", "a", "A"], 4, "success", None, "string"),
-        # Float column - 3 distinct values
-        ("pandas", [1.1, 2.2, 3.3, 2.2, 1.1], 3, "success", None, "double"),
-        # Numeric precision - 3 distinct values
-        ("pandas", [1.0, 1.1, 1.2, 1.0, 1.1], 3, "success", None, "double"),
-        # Boolean column - 2 distinct values
-        ("pandas", [True, False, True, False, True], 2, "success", None, "boolean"),
-        # Boolean with None - 3 distinct values
-        ("pandas", [True, False, None, False, True], 3, "success", None, "boolean"),
-        # Datetime column - 3 distinct values using datetime objects
+        ([], 0, "success", None, "long"),
+        ([5, 5, 5, 5, 5], 1, "success", None, "long"),
+        (["A", "B", "C", "B", "A", None], 4, "success", None, "string"),
+        (["a", "A", "b", "B", "a", "A"], 4, "success", None, "string"),
+        ([1.1, 2.2, 3.3, 2.2, 1.1], 3, "success", None, "double"),
+        ([1.0, 1.1, 1.2, 1.0, 1.1], 3, "success", None, "double"),
+        ([True, False, True, False, True], 2, "success", None, "boolean"),
+        ([True, False, None, False, True], 3, "success", None, "boolean"),
         (
-            "pandas",
             [
                 datetime(2023, 1, 1),
                 datetime(2023, 1, 2),
@@ -120,9 +114,7 @@ def test_expectation_name():
             None,
             "timestamp",
         ),
-        # Datetime with timezone - 2 distinct values
         (
-            "pandas",
             [
                 datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
                 datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
@@ -132,312 +124,82 @@ def test_expectation_name():
             2,
             "success",
             None,
-            "timestamp",
+            "timestamp_utc",
         ),
-        # Mixed data types - 4 distinct values (pandas only - pyspark doesn't support mixed types)
-        ("pandas", ["text", 42, 3.14, None, "text", 42], 4, "success", None, "string"),
-        # Categorical data - 3 distinct categories (pandas only - pyspark doesn't support Categorical)
-        (
-            "pandas",
-            pd.Categorical(["A", "B", "C", "A", "B", "C", "A"]),
-            3,
-            "success",
-            None,
-            "string",
-        ),
-        # Multiple NaN values counted as one - 3 distinct values
-        ("pandas", [1, 2, None, None, None, 1, 2], 3, "success", None, "long"),
-        # Strings with different whitespace - 4 distinct values
-        ("pandas", ["test", " test", "test ", " test ", "test"], 4, "success", None, "string"),
-        # Numeric strings vs numeric values - 2 distinct values (pandas only - object dtype)
-        ("pandas", ["1", 1, "1", 1], 2, "success", None, "object"),
+        ([1, 2, None, None, None, 1, 2], 3, "success", None, "long"),
+        (["test", " test", "test ", " test ", "test"], 4, "success", None, "string"),
     ],
     ids=[
-        "pandas_success",
-        "pandas_success_with_nulls",
-        "pandas_too_few",
-        "pandas_too_many",
-        "pandas_empty",
-        "pandas_single_value",
-        "pandas_string_with_nulls",
-        "pandas_string_case_sensitive",
-        "pandas_float",
-        "pandas_numeric_precision",
-        "pandas_boolean",
-        "pandas_boolean_with_none",
-        "pandas_datetime",
-        "pandas_datetime_with_timezone",
-        "pandas_mixed_data_types",
-        "pandas_categorical",
-        "pandas_duplicate_nan_handling",
-        "pandas_string_whitespace",
-        "pandas_numeric_string_vs_numeric",
+        "success",
+        "success_with_nulls",
+        "too_few",
+        "too_many",
+        "empty",
+        "single_value",
+        "string_with_nulls",
+        "string_case_sensitive",
+        "float",
+        "numeric_precision",
+        "boolean",
+        "boolean_with_none",
+        "datetime",
+        "datetime_with_timezone",
+        "duplicate_nan_handling",
+        "string_whitespace",
     ],
 )
-def test_expectation_basic_scenarios_pandas(
-    df_type, df_data, expected_value, expected_result, expected_message, data_type
+def test_expectation_basic_scenarios(
+    dataframe_factory, df_data, expected_value, expected_result, expected_message, arrow_type
 ):
-    """
-    Test the expectation for various scenarios across pandas DataFrames.
-    Tests both direct expectation validation and suite-based validation.
-    Covers: success cases, success with nulls, edge cases (empty, single value), too few values, too many values,
-    and various data types (strings, floats, booleans, datetimes, categorical, mixed types).
-    """
+    df_lib, make_df = dataframe_factory
+    data_frame = make_df({"col1": (df_data, arrow_type)})
+    _assert_distinct_column_values_equals(
+        data_frame, df_lib, expected_value, expected_result, expected_message
+    )
+
+
+@pytest.mark.pandas
+@pytest.mark.parametrize(
+    "df_data, expected_value, expected_result, expected_message, data_type",
+    [
+        (["text", 42, 3.14, None, "text", 42], 4, "success", None, None),
+        (pd.Categorical(["A", "B", "C", "A", "B", "C", "A"]), 3, "success", None, None),
+        (["1", 1, "1", 1], 2, "success", None, "object"),
+    ],
+    ids=["mixed_data_types", "categorical", "numeric_string_vs_numeric"],
+)
+def test_expectation_basic_scenarios_pandas_only(
+    df_data, expected_value, expected_result, expected_message, data_type
+):
     if data_type == "object":
         data_frame = pd.DataFrame({"col1": df_data}, dtype=object)
     else:
         data_frame = pd.DataFrame(df_data, columns=["col1"])
-
-    # Test 1: Direct expectation validation
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationDistinctColumnValuesEquals",
-        column_name="col1",
-        expected_value=expected_value,
+    _assert_distinct_column_values_equals(
+        data_frame, DataFrameType.PANDAS, expected_value, expected_result, expected_message
     )
 
-    result = expectation.validate(data_frame=data_frame)
 
-    if expected_result == "success":
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(
-                expectation_name="ExpectationDistinctColumnValuesEquals"
-            )
-        ), f"Expected success message but got: {result}"
-    else:  # failure
-        expected_failure_message = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=str(df_type),
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure_message), (
-            f"Expected failure message but got: {result}"
-        )
+def test_column_missing_error(dataframe_factory):
+    df_lib, make_df = dataframe_factory
+    data_frame = make_df({"col2": ([1, 2, 3, 4, 5], "long")})
 
-    # Test 2: Suite-based validation
-    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
-        column_name="col1", expected_value=expected_value
-    )
-
-    if expected_result == "success":
-        result = expectations_suite.build().run(data_frame=data_frame)
-        assert result is not None, "Expected SuiteExecutionResult"
-        assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
-        assert result.success, "Expected all expectations to pass"
-        assert result.total_passed == 1, "Expected 1 passed expectation"
-        assert result.total_failed == 0, "Expected 0 failed expectations"
-    else:  # failure
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            expectations_suite.build().run(data_frame=data_frame)
-
-
-@pytest.mark.pyspark
-@pytest.mark.parametrize(
-    "df_type, df_data, expected_value, expected_result, expected_message, data_type",
-    [
-        # Basic success - 3 distinct values
-        ("pyspark", [1, 2, 3, 2, 1], 3, "success", None, "long"),
-        # Success with nulls - 3 distinct values [1, 2, None]
-        ("pyspark", [1, 2, None, 2, 1], 3, "success", None, "long"),
-        # Too few distinct values - 2 distinct, expecting 5
-        (
-            "pyspark",
-            [1, 2, 1, 2, 1],
-            5,
-            "failure",
-            "Column 'col1' has 2 distinct values, expected exactly 5.",
-            "long",
-        ),
-        # Too many distinct values - 5 distinct, expecting 2
-        (
-            "pyspark",
-            [1, 2, 3, 4, 5],
-            2,
-            "failure",
-            "Column 'col1' has 5 distinct values, expected exactly 2.",
-            "long",
-        ),
-        # Edge case: empty DataFrame - 0 distinct values
-        ("pyspark", [], 0, "success", None, "long"),
-        # Edge case: single distinct value - 1 distinct value
-        ("pyspark", [5, 5, 5, 5, 5], 1, "success", None, "long"),
-        # String column with mixed values including None
-        ("pyspark", ["A", "B", "C", "B", "A", None], 4, "success", None, "string"),
-        # String case-sensitive - 4 distinct values ["a", "A", "b", "B"]
-        ("pyspark", ["a", "A", "b", "B", "a", "A"], 4, "success", None, "string"),
-        # Float column - 3 distinct values
-        ("pyspark", [1.1, 2.2, 3.3, 2.2, 1.1], 3, "success", None, "double"),
-        # Numeric precision - 3 distinct values
-        ("pyspark", [1.0, 1.1, 1.2, 1.0, 1.1], 3, "success", None, "double"),
-        # Boolean column - 2 distinct values
-        ("pyspark", [True, False, True, False, True], 2, "success", None, "boolean"),
-        # Boolean with None - 3 distinct values
-        ("pyspark", [True, False, None, False, True], 3, "success", None, "boolean"),
-        # Datetime column - 3 distinct values using datetime objects
-        (
-            "pyspark",
-            [
-                datetime(2023, 1, 1),
-                datetime(2023, 1, 2),
-                datetime(2023, 1, 3),
-                datetime(2023, 1, 2),
-                datetime(2023, 1, 1),
-            ],
-            3,
-            "success",
-            None,
-            "timestamp",
-        ),
-        # Datetime with timezone - 2 distinct values
-        (
-            "pyspark",
-            [
-                datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-                datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
-                datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-                datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
-            ],
-            2,
-            "success",
-            None,
-            "timestamp",
-        ),
-        # Multiple NaN values counted as one - 3 distinct values
-        ("pyspark", [1, 2, None, None, None, 1, 2], 3, "success", None, "long"),
-        # Strings with different whitespace - 4 distinct values
-        ("pyspark", ["test", " test", "test ", " test ", "test"], 4, "success", None, "string"),
-    ],
-    ids=[
-        "pyspark_success",
-        "pyspark_success_with_nulls",
-        "pyspark_too_few",
-        "pyspark_too_many",
-        "pyspark_empty",
-        "pyspark_single_value",
-        "pyspark_string_with_nulls",
-        "pyspark_string_case_sensitive",
-        "pyspark_float",
-        "pyspark_numeric_precision",
-        "pyspark_boolean",
-        "pyspark_boolean_with_none",
-        "pyspark_datetime",
-        "pyspark_datetime_with_timezone",
-        "pyspark_duplicate_nan_handling",
-        "pyspark_string_whitespace",
-    ],
-)
-def test_expectation_basic_scenarios_pyspark(
-    df_type, df_data, expected_value, expected_result, expected_message, data_type, spark
-):
-    """
-    Test the expectation for various scenarios across PySpark DataFrames.
-    Tests both direct expectation validation and suite-based validation.
-    Covers: success cases, success with nulls, edge cases (empty, single value), too few values, too many values,
-    and various data types (strings, floats, booleans, datetimes).
-    """
-    data_frame = create_pyspark_dataframe(df_data, "col1", spark, data_type)
-
-    # Test 1: Direct expectation validation
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationDistinctColumnValuesEquals",
-        column_name="col1",
-        expected_value=expected_value,
-    )
-
-    result = expectation.validate(data_frame=data_frame)
-
-    if expected_result == "success":
-        assert str(result) == str(
-            DataFrameExpectationSuccessMessage(
-                expectation_name="ExpectationDistinctColumnValuesEquals"
-            )
-        ), f"Expected success message but got: {result}"
-    else:  # failure
-        expected_failure_message = DataFrameExpectationFailureMessage(
-            expectation_str=str(expectation),
-            data_frame_type=str(df_type),
-            message=expected_message,
-        )
-        assert str(result) == str(expected_failure_message), (
-            f"Expected failure message but got: {result}"
-        )
-
-    # Test 2: Suite-based validation
-    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
-        column_name="col1", expected_value=expected_value
-    )
-
-    if expected_result == "success":
-        result = expectations_suite.build().run(data_frame=data_frame)
-        assert result is not None, "Expected SuiteExecutionResult"
-        assert isinstance(result, SuiteExecutionResult), "Result should be SuiteExecutionResult"
-        assert result.success, "Expected all expectations to pass"
-        assert result.total_passed == 1, "Expected 1 passed expectation"
-        assert result.total_failed == 0, "Expected 0 failed expectations"
-    else:  # failure
-        with pytest.raises(DataFrameExpectationsSuiteFailure):
-            expectations_suite.build().run(data_frame=data_frame)
-
-
-def test_column_missing_error_pandas():
-    """
-    Test that an error is raised when the specified column is missing in pandas DataFrame.
-    Tests both direct expectation validation and suite-based validation.
-    """
-    # Test 1: Direct expectation validation
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=3,
     )
 
-    data_frame = pd.DataFrame({"col2": [1, 2, 3, 4, 5]})
-    df_type_enum = DataFrameType.PANDAS
-
     result = expectation.validate(data_frame=data_frame)
     expected_failure_message = DataFrameExpectationFailureMessage(
         expectation_str=str(expectation),
-        data_frame_type=df_type_enum,
+        data_frame_type=df_lib,
         message="Column 'col1' does not exist in the DataFrame.",
     )
     assert str(result) == str(expected_failure_message), (
         f"Expected failure message but got: {result}"
     )
 
-    # Test 2: Suite-based validation
-    expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
-        column_name="col1", expected_value=3
-    )
-    with pytest.raises(DataFrameExpectationsSuiteFailure):
-        expectations_suite.build().run(data_frame=data_frame)
-
-
-@pytest.mark.pyspark
-def test_column_missing_error_pyspark(spark):
-    """
-    Test that an error is raised when the specified column is missing in PySpark DataFrame.
-    Tests both direct expectation validation and suite-based validation.
-    """
-    # Test 1: Direct expectation validation
-    expectation = DataFrameExpectationRegistry.get_expectation(
-        expectation_name="ExpectationDistinctColumnValuesEquals",
-        column_name="col1",
-        expected_value=3,
-    )
-
-    data_frame = spark.createDataFrame([(1,), (2,), (3,), (4,), (5,)], ["col2"])
-    df_type_enum = DataFrameType.PYSPARK
-
-    result = expectation.validate(data_frame=data_frame)
-    expected_failure_message = DataFrameExpectationFailureMessage(
-        expectation_str=str(expectation),
-        data_frame_type=df_type_enum,
-        message="Column 'col1' does not exist in the DataFrame.",
-    )
-    assert str(result) == str(expected_failure_message), (
-        f"Expected failure message but got: {result}"
-    )
-
-    # Test 2: Suite-based validation
     expectations_suite = DataFrameExpectationsSuite().expect_distinct_column_values_equals(
         column_name="col1", expected_value=3
     )
@@ -467,17 +229,21 @@ def test_invalid_parameters(expected_value, expected_error_message):
     )
 
 
-def test_large_dataset_performance():
+def test_large_dataset_performance(dataframe_factory):
     """
     Test the expectation with a larger dataset to ensure reasonable performance.
     """
+    df_lib, make_df = dataframe_factory
+
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesEquals",
         column_name="col1",
         expected_value=1000,
     )
     # Create a DataFrame with exactly 1000 distinct values
-    data_frame = pd.DataFrame({"col1": list(range(1000)) * 5})  # 5000 rows, 1000 distinct values
+    data_frame = make_df(
+        {"col1": (list(range(1000)) * 5, "long")}
+    )  # 5000 rows, 1000 distinct values
     result = expectation.validate(data_frame=data_frame)
     assert isinstance(result, DataFrameExpectationSuccessMessage), (
         f"Expected DataFrameExpectationSuccessMessage but got: {type(result)}"

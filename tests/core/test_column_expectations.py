@@ -1,8 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
 
-import pandas as pd
-
 from dataframe_expectations.core.types import DataFrameType
 from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
@@ -30,41 +28,25 @@ def test_get_expectation_name(expectation):
     )
 
 
-def test_validate_for_pandas_df(expectation):
+def test_validate_calls_row_validation(expectation, dataframe_factory):
     """
-    Test whether row_validation() and get_filter_fn() methods are called with the right parameters for Pandas.
+    Test that validate() calls row_validation() with the correct parameters
+    for each supported DataFrame library.
     """
+    df_lib, make_df = dataframe_factory
 
-    # Mock methods
     expectation.row_validation = MagicMock(return_value="mock_result")
+    data_frame = make_df({"col1": ([1, 2, 3], "long"), "col2": (["a", "b", "c"], "string")})
 
-    data_frame = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
-
-    # test validate_pandas called the right methods
     _ = expectation.validate(data_frame=data_frame)
 
+    match df_lib:
+        case DataFrameType.PYSPARK:
+            fn_violations = expectation.fn_violations_pyspark
+        case DataFrameType.PANDAS:
+            fn_violations = expectation.fn_violations_pandas
     expectation.row_validation.assert_called_once_with(
-        data_frame_type=DataFrameType.PANDAS,
+        data_frame_type=df_lib,
         data_frame=data_frame,
-        fn_violations=expectation.fn_violations_pandas,
-    )
-
-
-@pytest.mark.pyspark
-def test_validate_for_pyspark_df(expectation, spark):
-    """
-    Test whether row_validation() and get_filter_fn() methods are called with the right parameters for PySpark.
-    """
-
-    # Mock methods
-    expectation.row_validation = MagicMock(return_value="mock_result")
-    data_frame = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-
-    # test validate_pyspark called the right methods
-    _ = expectation.validate(data_frame=data_frame)
-
-    expectation.row_validation.assert_called_once_with(
-        data_frame_type=DataFrameType.PYSPARK,
-        data_frame=data_frame,
-        fn_violations=expectation.fn_violations_pyspark,
+        fn_violations=fn_violations,
     )
