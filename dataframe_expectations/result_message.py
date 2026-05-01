@@ -28,6 +28,8 @@ class DataFrameExpectationResultMessage(ABC):
             data_frame = data_frame.head(rows)
         elif data_frame_type == DataFrameType.PYSPARK:
             data_frame = data_frame.limit(rows).toPandas()
+        elif data_frame_type == DataFrameType.POLARS:
+            data_frame = data_frame.head(rows).to_pandas()
         else:
             raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
 

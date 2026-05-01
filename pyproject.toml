@@ -18,12 +18,16 @@ dependencies = [
 pyspark = [
     "pyspark>=3.3.0",
 ]
+polars = [
+    "polars>=1.40.1",
+]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
 markers = [
     "pyspark: marks tests as requiring PySpark (deselect with '-m \"not pyspark\"')",
-    "pandas: marks tests as standard pandas logic"
+    "pandas: marks tests as requiring Pandas (deselect with '-m \"not pandas\"')",
+    "polars: marks tests as requiring Polars (deselect with '-m \"not polars\"')",
 ]
 
 [dependency-groups]

@@ -6,9 +6,10 @@ from typing import Any, Dict, Union
 from pandas import DataFrame as PandasDataFrame
 from pydantic import BaseModel, ConfigDict, Field
 from dataframe_expectations.core.pyspark_utils import PySparkDataFrame
+from dataframe_expectations.core.polars_utils import PolarsDataFrame
 
 # Type aliases
-DataFrameLike = Union[PySparkDataFrame, PandasDataFrame]
+DataFrameLike = Union[PySparkDataFrame, PandasDataFrame, PolarsDataFrame]
 
 
 class DataFrameType(str, Enum):
@@ -16,6 +17,7 @@ class DataFrameType(str, Enum):
 
     PANDAS = "pandas"
     PYSPARK = "pyspark"
+    POLARS = "polars"
 
 
 class TagMatchMode(str, Enum):

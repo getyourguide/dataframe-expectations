@@ -77,6 +77,20 @@ class DataFrameAggregationExpectation(DataFrameExpectation):
             f"aggregate_and_validate_pyspark method must be implemented for {self.__class__.__name__}"
         )
 
+    @abstractmethod
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """
+        Aggregate and validate a Polars DataFrame against the expectation.
+
+        Note: This method should NOT check for column existence - that's handled
+        automatically by the validate_polars method.
+        """
+        raise NotImplementedError(
+            f"aggregate_and_validate_polars method must be implemented for {self.__class__.__name__}"
+        )
+
     def validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
     ) -> DataFrameExpectationResultMessage:
@@ -114,6 +128,25 @@ class DataFrameAggregationExpectation(DataFrameExpectation):
 
         # Call the implementation-specific validation
         return self.aggregate_and_validate_pyspark(data_frame, **kwargs)
+
+    def validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """
+        Validate a Polars DataFrame against the expectation.
+        Automatically checks column existence before calling the implementation.
+        """
+        # Check if all required columns exist
+        column_error = self._check_columns_exist(data_frame)
+        if column_error:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
+                message=column_error,
+            )
+
+        # Call the implementation-specific validation
+        return self.aggregate_and_validate_polars(data_frame, **kwargs)
 
     def _check_columns_exist(self, data_frame: DataFrameLike) -> Union[str, None]:
         """

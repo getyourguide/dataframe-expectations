@@ -3,6 +3,7 @@ from typing import List, Optional, Union, cast
 import pandas as pd
 from pandas import DataFrame as PandasDataFrame
 from dataframe_expectations.core.pyspark_utils import PySparkDataFrame, get_pyspark_functions
+from dataframe_expectations.core.polars_utils import PolarsDataFrame, get_polars_functions
 
 from dataframe_expectations.core.aggregation_expectation import (
     DataFrameAggregationExpectation,
@@ -24,7 +25,8 @@ from dataframe_expectations.result_message import (
 # F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
 # or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
 # occurs at module load / test collection time.
-F = get_pyspark_functions()
+F_PYSPARK = get_pyspark_functions()
+F_POLARS = get_polars_functions()
 
 
 class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
@@ -149,7 +151,7 @@ class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
             # Cast to PySparkDataFrame for type safety
             pyspark_df = cast(PySparkDataFrame, data_frame)
             # First check if all values are null to avoid edge cases
-            non_null_count = pyspark_df.select(F.count(self.column_name)).collect()[0][0]
+            non_null_count = pyspark_df.select(F_PYSPARK.count(self.column_name)).collect()[0][0]
             if non_null_count == 0:
                 return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
@@ -159,17 +161,23 @@ class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
 
             # Calculate quantile
             if self.quantile == 0.0:
-                result = pyspark_df.select(F.min(self.column_name).alias("quantile_val")).collect()
+                result = pyspark_df.select(
+                    F_PYSPARK.min(self.column_name).alias("quantile_val")
+                ).collect()
             elif self.quantile == 1.0:
-                result = pyspark_df.select(F.max(self.column_name).alias("quantile_val")).collect()
+                result = pyspark_df.select(
+                    F_PYSPARK.max(self.column_name).alias("quantile_val")
+                ).collect()
             elif self.quantile == 0.5:
                 result = pyspark_df.select(
-                    F.median(self.column_name).alias("quantile_val")  # type: ignore
+                    F_PYSPARK.median(self.column_name).alias("quantile_val")  # type: ignore
                 ).collect()
             else:
                 # Use percentile_approx for other quantiles
                 result = pyspark_df.select(
-                    F.percentile_approx(F.col(self.column_name), F.lit(self.quantile)).alias(  # type: ignore
+                    F_PYSPARK.percentile_approx(
+                        F_PYSPARK.col(self.column_name), F_PYSPARK.lit(self.quantile)
+                    ).alias(  # type: ignore
                         "quantile_val"
                     )
                 ).collect()
@@ -201,6 +209,72 @@ class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error calculating {self.quantile} quantile for column '{self.column_name}': {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate column quantile in a Polars DataFrame."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+            # First check if all values are null to avoid edge cases
+            non_null_count = polars_df.select(
+                F_POLARS.col(self.column_name).drop_nulls().len().alias("cnt")
+            )[0, "cnt"]
+            if non_null_count == 0:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' contains only null values.",
+                )
+
+            # Calculate quantile
+            if self.quantile == 0.0:
+                result = polars_df.select(
+                    F_POLARS.col(self.column_name).min().alias("quantile_val")
+                )
+            elif self.quantile == 1.0:
+                result = polars_df.select(
+                    F_POLARS.col(self.column_name).max().alias("quantile_val")
+                )
+            elif self.quantile == 0.5:
+                result = polars_df.select(
+                    F_POLARS.col(self.column_name).median().alias("quantile_val")
+                )
+            else:
+                result = polars_df.select(
+                    F_POLARS.col(self.column_name).quantile(self.quantile).alias("quantile_val")
+                )
+
+            quantile_val = result[0, "quantile_val"]
+
+            # Defensive check: quantile_val should not be None after the non-null count check above,
+            # but we keep this for extra safety in case of unexpected Spark behavior or schema issues.
+            if quantile_val is None:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' contains only null values.",
+                )
+
+            # Check if quantile is within bounds
+            if self.min_value <= quantile_val <= self.max_value:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' {self.quantile_desc} value {quantile_val} is not between {self.min_value} and {self.max_value}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error calculating {self.quantile} quantile for column '{self.column_name}': {str(e)}",
             )
 
@@ -293,7 +367,9 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
             # Cast to PySparkDataFrame for type safety
             pyspark_df = cast(PySparkDataFrame, data_frame)
             # Calculate mean
-            mean_result = pyspark_df.select(F.avg(self.column_name).alias("mean_val")).collect()
+            mean_result = pyspark_df.select(
+                F_PYSPARK.avg(self.column_name).alias("mean_val")
+            ).collect()
             mean_val = mean_result[0]["mean_val"]
 
             # Handle case where all values are null
@@ -320,6 +396,44 @@ class ExpectationColumnMeanBetween(DataFrameAggregationExpectation):
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error calculating mean for column '{self.column_name}': {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate column mean in a Polars DataFrame."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+            # Calculate mean
+            mean_result = polars_df.select(F_POLARS.col(self.column_name).mean().alias("mean_val"))
+            mean_val = mean_result[0, "mean_val"]
+
+            # Handle case where all values are null
+            if mean_val is None:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' contains only null values.",
+                )
+
+            # Check if mean is within bounds
+            if self.min_value <= mean_val <= self.max_value:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' mean value {mean_val} is not between {self.min_value} and {self.max_value}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error calculating mean for column '{self.column_name}': {str(e)}",
             )
 

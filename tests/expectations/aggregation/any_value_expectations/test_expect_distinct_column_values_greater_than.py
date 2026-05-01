@@ -146,7 +146,7 @@ def test_expectation_datetime_scenario(
             import pandas as pd
 
             data_frame = make_df({"col1": (pd.to_datetime(df_data), "timestamp")})
-        case DataFrameType.PYSPARK:
+        case DataFrameType.PYSPARK | DataFrameType.POLARS:
             from datetime import datetime
 
             parsed = [datetime.fromisoformat(d) for d in df_data]

@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from dataframe_expectations.core.pyspark_utils import get_pyspark_functions
+from dataframe_expectations.core.polars_utils import get_polars_functions
 
 from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
@@ -15,7 +16,8 @@ from dataframe_expectations.core.utils import requires_params
 # F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
 # or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
 # occurs at module load / test collection time.
-F = get_pyspark_functions()
+F_PYSPARK = get_pyspark_functions()
+F_POLARS = get_polars_functions()
 
 
 @register_expectation(
@@ -38,7 +40,8 @@ def create_expectation_value_equals(
         expectation_name="ExpectationValueEquals",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] != value],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) != value),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name) != value),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name) != value),
         description=f"'{column_name}' equals {value}",
         error_message=f"'{column_name}' is not equal to {value}.",
         tags=tags,
@@ -65,7 +68,8 @@ def create_expectation_value_not_equals(
         expectation_name="ExpectationValueNotEquals",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] == value],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) == value),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name) == value),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name) == value),
         description=f"'{column_name}' is not equal to {value}",
         error_message=f"'{column_name}' is equal to {value}.",
         tags=tags,
@@ -90,7 +94,8 @@ def create_expectation_value_null(
         expectation_name="ExpectationValueNull",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].notnull()],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name).isNotNull()),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name).isNotNull()),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name).is_not_null()),
         description=f"'{column_name}' is null",
         error_message=f"'{column_name}' is not null.",
         tags=tags,
@@ -115,7 +120,8 @@ def create_expectation_value_not_null(
         expectation_name="ExpectationValueNotNull",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].isnull()],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name).isNull()),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name).isNull()),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name).is_null()),
         description=f"'{column_name}' is not null",
         error_message=f"'{column_name}' is null.",
         tags=tags,
@@ -142,7 +148,8 @@ def create_expectation_value_in(
         expectation_name="ExpectationValueIn",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[~df[column_name].isin(values)],
-        fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).isin(values)),
+        fn_violations_pyspark=lambda df: df.filter(~F_PYSPARK.col(column_name).isin(values)),
+        fn_violations_polars=lambda df: df.filter(~F_POLARS.col(column_name).is_in(values)),
         description=f"'{column_name}' is in {values}",
         error_message=f"'{column_name}' is not in {values}.",
         tags=tags,
@@ -169,7 +176,8 @@ def create_expectation_value_not_in(
         expectation_name="ExpectationValueNotIn",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].isin(values)],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name).isin(values)),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name).isin(values)),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name).is_in(values)),
         description=f"'{column_name}' is not in {values}",
         error_message=f"'{column_name}' is in {values}.",
         tags=tags,

@@ -184,7 +184,7 @@ def test_75th_percentile_failure(dataframe_factory):
             expected_message = (
                 f"Column 'col1' 75th percentile value {expected_val} is not between 25 and 30."
             )
-        case DataFrameType.PYSPARK:
+        case DataFrameType.PYSPARK | DataFrameType.POLARS:
             # PySpark percentile_approx returns 30
             min_value, max_value = 32, 40
             expected_message = "Column 'col1' 75th percentile value 30.0 is not between 32 and 40."
@@ -206,28 +206,23 @@ def test_other_quantile_scenarios(dataframe_factory):
     """Test other quantile scenarios that differ between libraries."""
     df_lib, make_df = dataframe_factory
 
+    df = make_df({"col1": ([10, 20, 30, 40, 50], "double")})
+
     match df_lib:
         case DataFrameType.PANDAS:
-            # Test 33rd percentile
-            df = make_df({"col1": ([10, 20, 30, 40, 50], "double")})
-            expectation = DataFrameExpectationRegistry.get_expectation(
-                expectation_name="ExpectationColumnQuantileBetween",
-                column_name="col1",
-                quantile=0.33,
-                min_value=20,
-                max_value=30,
-            )
-        case DataFrameType.PYSPARK:
-            # Test 90th percentile
-            df = make_df({"col1": ([20, 25, 30, 35], "double")})
-            expectation = DataFrameExpectationRegistry.get_expectation(
-                expectation_name="ExpectationColumnQuantileBetween",
-                column_name="col1",
-                quantile=0.9,
-                min_value=30,
-                max_value=40,
-            )
+            # Pandas uses linear interpolation: quantile(0.33) ≈ 23.2
+            min_value, max_value = 20, 30
+        case DataFrameType.PYSPARK | DataFrameType.POLARS:
+            # PySpark percentile_approx and Polars both return 20.0
+            min_value, max_value = 15, 25
 
+    expectation = DataFrameExpectationRegistry.get_expectation(
+        expectation_name="ExpectationColumnQuantileBetween",
+        column_name="col1",
+        quantile=0.33,
+        min_value=min_value,
+        max_value=max_value,
+    )
     result = expectation.validate(data_frame=df)
     assert isinstance(result, DataFrameExpectationSuccessMessage), (
         f"Expected success but got: {result}"
