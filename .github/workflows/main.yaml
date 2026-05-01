@@ -12,13 +12,13 @@ concurrency:
   cancel-in-progress: ${{ github.ref_name != github.event.repository.default_branch }}
 
 jobs:
-  tests-without-pyspark:
+  core-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-      fail-fast: false  # Don't cancel other jobs if one fails
-    name: Tests Without PySpark (Python ${{ matrix.python-version }})
+      fail-fast: false
+    name: Core Tests (Python ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v4
       - name: Install Python and UV
@@ -26,63 +26,39 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: |
-          uv sync --group dev
+        run: uv sync --group dev
       - name: Run sanity check
-        run: |
-          uv run python scripts/sanity_checks.py
-      - name: Run tests without pyspark marker
-        run: |
-          uv run pytest tests/ -m "not pyspark" -n auto --tb=line --cov=dataframe_expectations
+        run: uv run python scripts/sanity_checks.py
+      - name: Run core tests
+        run: uv run pytest tests/ -m "not pyspark and not pandas and not polars" -n auto --tb=line --cov=dataframe_expectations
 
-  tests-with-pyspark-extra:
+  library-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-      fail-fast: false  # Don't cancel other jobs if one fails
-    name: Tests With PySpark Extra (Python ${{ matrix.python-version }})
+        suite:
+          - name: pandas
+            marker: pandas
+            extras: ""
+          - name: polars
+            marker: polars
+            extras: --extra polars
+          - name: pyspark
+            marker: pyspark
+            extras: --extra pyspark
+      fail-fast: false
+    name: ${{ matrix.suite.name }} (Python ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v4
       - name: Install Python and UV
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies with pyspark extra
-        run: |
-          uv sync --group dev --extra pyspark
-      - name: Run sanity check
-        run: |
-          uv run python scripts/sanity_checks.py
-      - name: Run tests with pyspark marker
-        run: |
-          uv run pytest tests/ -n auto --tb=line --cov=dataframe_expectations
-
-  tests-with-external-pyspark:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-      fail-fast: false  # Don't cancel other jobs if one fails
-    name: Tests With External PySpark (Python ${{ matrix.python-version }})
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Python and UV
-        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies without pyspark extra
-        run: |
-          uv sync --group dev
-      - name: Install pyspark as external dependency
-        run: |
-          uv pip install "pyspark>=3.3.0"
-      - name: Run sanity check
-        run: |
-          uv run python scripts/sanity_checks.py
-      - name: Run tests with pyspark marker
-        run: |
-          uv run pytest tests/ -n auto --tb=line --cov=dataframe_expectations
+      - name: Install dependencies
+        run: uv sync --group dev ${{ matrix.suite.extras }}
+      - name: Run tests
+        run: uv run pytest tests/ -m "${{ matrix.suite.marker }}" -n auto --tb=line --cov=dataframe_expectations
 
   lint:
     runs-on: ubuntu-latest
@@ -105,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: "3.11"  # Use a single version for docs
-    needs: [tests-without-pyspark, tests-with-pyspark-extra, tests-with-external-pyspark, lint]
+    needs: [core-tests, library-tests, lint]
     permissions:
       contents: read
       pages: write
