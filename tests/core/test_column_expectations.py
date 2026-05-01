@@ -14,6 +14,7 @@ def expectation():
         column_name="test_column",
         fn_violations_pandas=lambda df: df,
         fn_violations_pyspark=lambda df: df,
+        fn_violations_polars=lambda df: df,
         description="Test column expectation",
         error_message="Test column expectation failed.",
     )
@@ -45,6 +46,8 @@ def test_validate_calls_row_validation(expectation, dataframe_factory):
             fn_violations = expectation.fn_violations_pyspark
         case DataFrameType.PANDAS:
             fn_violations = expectation.fn_violations_pandas
+        case DataFrameType.POLARS:
+            fn_violations = expectation.fn_violations_polars
     expectation.row_validation.assert_called_once_with(
         data_frame_type=df_lib,
         data_frame=data_frame,

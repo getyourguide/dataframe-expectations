@@ -21,6 +21,12 @@ class MyTestExpectation(DataFrameExpectation):
         """
         return "pyspark validation successful"
 
+    def validate_polars(self, data_frame: DataFrameLike, **kwargs):
+        """
+        Mock implementation for Polars DataFrame validation.
+        """
+        return "polars validation successful"
+
     def get_description(self):
         return "This is a test expectation for unit testing purposes."
 
@@ -278,6 +284,7 @@ def test_tags_sent_to_base_class_direct():
         column_name="test",
         fn_violations_pandas=lambda df: df,
         fn_violations_pyspark=lambda df: df,
+        fn_violations_polars=lambda df: df,
         description="Test",
         error_message="Error",
         tags=test_tags,

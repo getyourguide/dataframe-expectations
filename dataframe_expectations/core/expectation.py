@@ -9,6 +9,7 @@ from dataframe_expectations.core.tagging import TagSet
 from dataframe_expectations.result_message import (
     DataFrameExpectationResultMessage,
 )
+from dataframe_expectations.core.polars_utils import is_polars_data_frame
 
 # Kept as module-level symbol for backward compatibility and test patching.
 try:
@@ -71,6 +72,9 @@ class DataFrameExpectation(ABC):
         if is_pyspark_data_frame(data_frame):
             return DataFrameType.PYSPARK
 
+        if is_polars_data_frame(data_frame):
+            return DataFrameType.POLARS
+
         raise ValueError(f"Unsupported DataFrame type: {type(data_frame)}")
 
     def validate(self, data_frame: DataFrameLike, **kwargs):
@@ -84,6 +88,8 @@ class DataFrameExpectation(ABC):
                 return self.validate_pandas(data_frame=data_frame, **kwargs)
             case DataFrameType.PYSPARK:
                 return self.validate_pyspark(data_frame=data_frame, **kwargs)
+            case DataFrameType.POLARS:
+                return self.validate_polars(data_frame=data_frame, **kwargs)
             case _:
                 raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
 
@@ -109,6 +115,17 @@ class DataFrameExpectation(ABC):
             f"validate_pyspark method must be implemented for {self.__class__.__name__}"
         )
 
+    @abstractmethod
+    def validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """
+        Validate a Polars DataFrame against the expectation.
+        """
+        raise NotImplementedError(
+            f"validate_polars method must be implemented for {self.__class__.__name__}"
+        )
+
     @classmethod
     def num_data_frame_rows(cls, data_frame: DataFrameLike) -> int:
         """
@@ -121,5 +138,8 @@ class DataFrameExpectation(ABC):
         elif data_frame_type == DataFrameType.PYSPARK:
             # PySpark DataFrames expose count(), including runtime-provided patched variants.
             return cast(Any, data_frame).count()
+        elif data_frame_type == DataFrameType.POLARS:
+            # Polars DataFrames use height or len() for row count
+            return len(cast(Any, data_frame))
         else:
             raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")

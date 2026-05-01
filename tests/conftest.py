@@ -62,6 +62,10 @@ def arrow_to_df(table: pa.Table, df_lib: DataFrameType, spark: Any = None) -> An
                 pdf,
                 schema=from_arrow_schema(table.schema),
             )
+        case DataFrameType.POLARS:
+            import polars as pl
+
+            return pl.from_arrow(table)
         case _:
             raise ValueError(f"Unsupported df_lib: {df_lib!r}")
 
@@ -123,6 +127,7 @@ def spark():
     params=[
         pytest.param(DataFrameType.PANDAS, marks=pytest.mark.pandas),
         pytest.param(DataFrameType.PYSPARK, marks=pytest.mark.pyspark),
+        pytest.param(DataFrameType.POLARS, marks=pytest.mark.polars),
     ]
 )
 def dataframe_factory(request):
@@ -153,7 +158,11 @@ def dataframe_factory(request):
 
             def _factory(columns: dict[str, tuple[list, "str | pa.DataType"]]) -> Any:
                 return make_dataframe(columns, DataFrameType.PANDAS)
+        case DataFrameType.POLARS:
+            pytest.importorskip("polars")
 
+            def _factory(columns: dict[str, tuple[list, "str | pa.DataType"]]) -> Any:
+                return make_dataframe(columns, DataFrameType.POLARS)
         case _:
             raise ValueError(f"Unsupported df_lib: {lib!r}")
 

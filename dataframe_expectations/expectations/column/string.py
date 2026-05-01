@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from dataframe_expectations.core.pyspark_utils import get_pyspark_functions
+from dataframe_expectations.core.polars_utils import get_polars_functions
 
 from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
@@ -15,7 +16,8 @@ from dataframe_expectations.core.utils import requires_params
 # F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
 # or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
 # occurs at module load / test collection time.
-F = get_pyspark_functions()
+F_PYSPARK = get_pyspark_functions()
+F_POLARS = get_polars_functions()
 
 
 @register_expectation(
@@ -38,7 +40,10 @@ def create_expectation_string_contains(
         expectation_name="ExpectationStringContains",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[~df[column_name].str.contains(substring, na=False)],
-        fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).contains(substring)),
+        fn_violations_pyspark=lambda df: df.filter(~F_PYSPARK.col(column_name).contains(substring)),
+        fn_violations_polars=lambda df: df.filter(
+            ~F_POLARS.col(column_name).str.contains(substring)
+        ),
         description=f"'{column_name}' contains '{substring}'",
         error_message=f"'{column_name}' does not contain '{substring}'.",
         tags=tags,
@@ -65,7 +70,10 @@ def create_expectation_string_not_contains(
         expectation_name="ExpectationStringNotContains",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].str.contains(substring, na=False)],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name).contains(substring)),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name).contains(substring)),
+        fn_violations_polars=lambda df: df.filter(
+            F_POLARS.col(column_name).str.contains(substring)
+        ),
         description=f"'{column_name}' does not contain '{substring}'",
         error_message=f"'{column_name}' contains '{substring}'.",
         tags=tags,
@@ -92,7 +100,10 @@ def create_expectation_string_starts_with(
         expectation_name="ExpectationStringStartsWith",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[~df[column_name].str.startswith(prefix, na=False)],
-        fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).startswith(prefix)),
+        fn_violations_pyspark=lambda df: df.filter(~F_PYSPARK.col(column_name).startswith(prefix)),
+        fn_violations_polars=lambda df: df.filter(
+            ~F_POLARS.col(column_name).str.starts_with(prefix)
+        ),
         description=f"'{column_name}' starts with '{prefix}'",
         error_message=f"'{column_name}' does not start with '{prefix}'.",
         tags=tags,
@@ -119,7 +130,8 @@ def create_expectation_string_ends_with(
         expectation_name="ExpectationStringEndsWith",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[~df[column_name].str.endswith(suffix, na=False)],
-        fn_violations_pyspark=lambda df: df.filter(~F.col(column_name).endswith(suffix)),
+        fn_violations_pyspark=lambda df: df.filter(~F_PYSPARK.col(column_name).endswith(suffix)),
+        fn_violations_polars=lambda df: df.filter(~F_POLARS.col(column_name).str.ends_with(suffix)),
         description=f"'{column_name}' ends with '{suffix}'",
         error_message=f"'{column_name}' does not end with '{suffix}'.",
         tags=tags,
@@ -146,7 +158,10 @@ def create_expectation_string_length_less_than(
         expectation_name="ExpectationStringLengthLessThan",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].str.len() >= length],
-        fn_violations_pyspark=lambda df: df.filter(F.length(column_name) >= length),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.length(column_name) >= length),
+        fn_violations_polars=lambda df: df.filter(
+            F_POLARS.col(column_name).str.len_chars() >= length
+        ),
         description=f"'{column_name}' length is less than {length}",
         error_message=f"'{column_name}' length is not less than {length}.",
         tags=tags,
@@ -173,7 +188,12 @@ def create_expectation_string_length_greater_than(
         expectation_name="ExpectationStringLengthGreaterThan",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].str.len() <= length],
-        fn_violations_pyspark=lambda df: df.filter(F.length(F.col(column_name)) <= length),
+        fn_violations_pyspark=lambda df: df.filter(
+            F_PYSPARK.length(F_PYSPARK.col(column_name)) <= length
+        ),
+        fn_violations_polars=lambda df: df.filter(
+            F_POLARS.col(column_name).str.len_chars() <= length
+        ),
         description=f"'{column_name}' length is greater than {length}",
         error_message=f"'{column_name}' length is not greater than {length}.",
         tags=tags,
@@ -210,8 +230,12 @@ def create_expectation_string_length_between(
             (df[column_name].str.len() < min_length) | (df[column_name].str.len() > max_length)
         ],
         fn_violations_pyspark=lambda df: df.filter(
-            (F.length(F.col(column_name)) < min_length)
-            | (F.length(F.col(column_name)) > max_length)
+            (F_PYSPARK.length(F_PYSPARK.col(column_name)) < min_length)
+            | (F_PYSPARK.length(F_PYSPARK.col(column_name)) > max_length)
+        ),
+        fn_violations_polars=lambda df: df.filter(
+            (F_POLARS.col(column_name).str.len_chars() < min_length)
+            | (F_POLARS.col(column_name).str.len_chars() > max_length)
         ),
         description=f"'{column_name}' length is between {min_length} and {max_length}",
         error_message=f"'{column_name}' length is not between {min_length} and {max_length}.",
@@ -239,7 +263,12 @@ def create_expectation_string_length_equals(
         expectation_name="ExpectationStringLengthEquals",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name].str.len() != length],
-        fn_violations_pyspark=lambda df: df.filter(F.length(F.col(column_name)) != length),
+        fn_violations_pyspark=lambda df: df.filter(
+            F_PYSPARK.length(F_PYSPARK.col(column_name)) != length
+        ),
+        fn_violations_polars=lambda df: df.filter(
+            F_POLARS.col(column_name).str.len_chars() != length
+        ),
         description=f"'{column_name}' length equals {length}",
         error_message=f"'{column_name}' length is not equal to {length}.",
         tags=tags,

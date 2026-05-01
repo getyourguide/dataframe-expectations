@@ -3,6 +3,7 @@ from typing import List, Optional, cast
 import pandas as pd
 from pandas import DataFrame as PandasDataFrame
 from dataframe_expectations.core.pyspark_utils import PySparkDataFrame, get_pyspark_functions
+from dataframe_expectations.core.polars_utils import get_polars_functions, PolarsDataFrame
 from dataframe_expectations.core.aggregation_expectation import (
     DataFrameAggregationExpectation,
 )
@@ -23,7 +24,8 @@ from dataframe_expectations.result_message import (
 # F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
 # or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
 # occurs at module load / test collection time.
-F = get_pyspark_functions()
+F_PYSPARK = get_pyspark_functions()
+F_POLARS = get_polars_functions()
 
 
 class ExpectationUniqueRows(DataFrameAggregationExpectation):
@@ -151,9 +153,9 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
         duplicates_df = (
             pyspark_df.groupBy(*check_columns)
             .count()
-            .filter(F.col("count") > 1)
+            .filter(F_PYSPARK.col("count") > 1)
             .withColumnRenamed("count", "#duplicates")
-            .orderBy(F.col("#duplicates"), *check_columns)
+            .orderBy(F_PYSPARK.col("#duplicates"), *check_columns)
         )
 
         duplicate_count = duplicates_df.count()
@@ -162,7 +164,7 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
             return DataFrameExpectationSuccessMessage(expectation_name=self.get_expectation_name())
 
         # Calculate total number of duplicate rows (not groups)
-        total_duplicate_rows = duplicates_df.agg(F.sum("#duplicates")).collect()[0][0]
+        total_duplicate_rows = duplicates_df.agg(F_PYSPARK.sum("#duplicates")).collect()[0][0]
 
         # Generate dynamic error message
         error_msg = (
@@ -174,6 +176,57 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
         return DataFrameExpectationFailureMessage(
             expectation_str=str(self),
             data_frame_type=DataFrameType.PYSPARK,
+            violations_data_frame=duplicates_df,
+            message=f"Found {total_duplicate_rows} duplicate row(s). {error_msg}",
+        )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """
+        Validate uniqueness in a Polars DataFrame.
+        """
+        # Cast to PolarsDataFrame for type safety
+        polars_df = cast(PolarsDataFrame, data_frame)
+
+        # If columns list is empty, use all columns
+        check_columns = self.column_names if self.column_names else polars_df.columns
+
+        # Group by the specified columns and count duplicates
+        # duplicates_df = (
+        #     polars_df.groupBy(*check_columns)
+        #     .count()
+        #     .filter(F_PYSPARK.col("count") > 1)
+        #     .withColumnRenamed("count", "#duplicates")
+        #     .orderBy(F_PYSPARK.col("#duplicates"), *check_columns)
+        # )
+
+        duplicates_df = (
+            polars_df.group_by(*check_columns)
+            .len()
+            .filter(F_POLARS.col("len") > 1)
+            .rename({"len": "#duplicates"})
+            .sort(by=["#duplicates"] + check_columns)
+        )
+
+        duplicate_count = duplicates_df.height
+
+        if duplicate_count == 0:
+            return DataFrameExpectationSuccessMessage(expectation_name=self.get_expectation_name())
+
+        # Calculate total number of duplicate rows (not groups)
+        total_duplicate_rows = duplicates_df.select(F_POLARS.sum("#duplicates")).to_series()[0]
+
+        # Generate dynamic error message
+        error_msg = (
+            f"duplicate rows found for columns {self.column_names}"
+            if self.column_names
+            else "duplicate rows found"
+        )
+
+        return DataFrameExpectationFailureMessage(
+            expectation_str=str(self),
+            data_frame_type=DataFrameType.POLARS,
             violations_data_frame=duplicates_df,
             message=f"Found {total_duplicate_rows} duplicate row(s). {error_msg}",
         )
@@ -272,6 +325,34 @@ class ExpectationDistinctColumnValuesEquals(DataFrameAggregationExpectation):
                 message=f"Error counting distinct values: {str(e)}",
             )
 
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate distinct values count in a Polars DataFrame."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+            # Count distinct values including nulls
+            actual_count = polars_df.select(self.column_name).unique().height
+
+            if actual_count == self.expected_value:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' has {actual_count} distinct values, expected exactly {self.expected_value}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
+                message=f"Error counting distinct values: {str(e)}",
+            )
+
 
 class ExpectationDistinctColumnValuesLessThan(DataFrameAggregationExpectation):
     """
@@ -366,6 +447,34 @@ class ExpectationDistinctColumnValuesLessThan(DataFrameAggregationExpectation):
                 message=f"Error counting distinct values: {str(e)}",
             )
 
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate distinct values count in a Polars DataFrame."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+            # Count distinct values including nulls
+            actual_count = polars_df.select(self.column_name).unique().height
+
+            if actual_count < self.threshold:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' has {actual_count} distinct values, expected fewer than {self.threshold}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
+                message=f"Error counting distinct values: {str(e)}",
+            )
+
 
 class ExpectationDistinctColumnValuesGreaterThan(DataFrameAggregationExpectation):
     """
@@ -457,6 +566,34 @@ class ExpectationDistinctColumnValuesGreaterThan(DataFrameAggregationExpectation
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error counting distinct values: {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate distinct values count in a Polars DataFrame."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+            # Count distinct values including nulls
+            actual_count = polars_df.select(self.column_name).unique().height
+
+            if actual_count > self.threshold:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' has {actual_count} distinct values, expected more than {self.threshold}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error counting distinct values: {str(e)}",
             )
 
@@ -561,6 +698,34 @@ class ExpectationDistinctColumnValuesBetween(DataFrameAggregationExpectation):
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error counting distinct values: {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate distinct values count in a Polars DataFrame."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+            # Count distinct values including nulls
+            actual_count = polars_df.select(self.column_name).unique().height
+
+            if self.min_value <= actual_count <= self.max_value:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' has {actual_count} distinct values, expected between {self.min_value} and {self.max_value}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error counting distinct values: {str(e)}",
             )
 
