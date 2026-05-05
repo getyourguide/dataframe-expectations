@@ -7,18 +7,31 @@ else:
     PolarsDataFrame = Any
 
 
+class _MissingPolarsFunctions:
+    def __getattr__(self, name: str) -> Any:
+        raise ImportError(
+            "Polars is required for Polars validation paths. "
+            "Install polars or use a runtime that provides polars."
+        )
+
+
 @lru_cache(maxsize=1)
 def get_polars_functions():
-    """Lazy import of polars module."""
+    """Return the polars module or a proxy raising a clear ImportError on use."""
     try:
         import polars as pl
 
         return pl
     except ImportError:
-        return None
+        return _MissingPolarsFunctions()
 
 
 def is_polars_data_frame(data_frame: Any) -> bool:
-    """Check if the given data frame is a Polars DataFrame."""
+    """Return True when the input is a Polars DataFrame."""
     pl = get_polars_functions()
-    return pl is not None and isinstance(data_frame, pl.DataFrame)
+    try:
+        return isinstance(data_frame, pl.DataFrame) or type(data_frame).__module__.startswith(
+            "polars"
+        )
+    except ImportError:
+        return False

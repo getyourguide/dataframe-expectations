@@ -185,7 +185,7 @@ def test_75th_percentile_failure(dataframe_factory):
                 f"Column 'col1' 75th percentile value {expected_val} is not between 25 and 30."
             )
         case DataFrameType.PYSPARK | DataFrameType.POLARS:
-            # PySpark percentile_approx returns 30
+            # PySpark percentile_approx and Polars both return 30
             min_value, max_value = 32, 40
             expected_message = "Column 'col1' 75th percentile value 30.0 is not between 32 and 40."
 

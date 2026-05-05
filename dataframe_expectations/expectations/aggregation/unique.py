@@ -192,15 +192,6 @@ class ExpectationUniqueRows(DataFrameAggregationExpectation):
         # If columns list is empty, use all columns
         check_columns = self.column_names if self.column_names else polars_df.columns
 
-        # Group by the specified columns and count duplicates
-        # duplicates_df = (
-        #     polars_df.groupBy(*check_columns)
-        #     .count()
-        #     .filter(F_PYSPARK.col("count") > 1)
-        #     .withColumnRenamed("count", "#duplicates")
-        #     .orderBy(F_PYSPARK.col("#duplicates"), *check_columns)
-        # )
-
         duplicates_df = (
             polars_df.group_by(*check_columns)
             .len()

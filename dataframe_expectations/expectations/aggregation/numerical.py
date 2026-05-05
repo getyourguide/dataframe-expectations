@@ -251,7 +251,7 @@ class ExpectationColumnQuantileBetween(DataFrameAggregationExpectation):
             quantile_val = result[0, "quantile_val"]
 
             # Defensive check: quantile_val should not be None after the non-null count check above,
-            # but we keep this for extra safety in case of unexpected Spark behavior or schema issues.
+            # but we keep this for extra safety in case of unexpected Polars behavior or schema issues.
             if quantile_val is None:
                 return DataFrameExpectationFailureMessage(
                     expectation_str=str(self),
