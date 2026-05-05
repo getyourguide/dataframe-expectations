@@ -1,7 +1,7 @@
 [project]
 name = "dataframe-expectations"
 version = "0.6.0"
-description = "Python library designed to validate Pandas and PySpark DataFrames using customizable, reusable expectations"
+description = "Python library designed to validate Pandas, PySpark, and Polars DataFrames using customizable, reusable expectations"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
@@ -44,6 +44,7 @@ docs = [
     "sphinx>=4.0.0",
     "sphinx-book-theme>=1.0.0",
     "sphinx-autobuild>=2021.3.14",
+    "sphinx-design>=0.6.0",
     "pyspark>=3.3.0",
     "pandas>=1.5.0",
     "tabulate>=0.8.9",
