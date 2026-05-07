@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.6.0...v0.7.0) (2026-05-07)
+
+
+### Features
+
+* add polars support ([f8ba5ef](https://github.com/getyourguide/dataframe-expectations/commit/f8ba5ef6932e84d83081da6971552ea972bab062))
+
 ## [0.6.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.2...v0.6.0) (2026-03-18)
 
 
