@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from dataframe_expectations.core.pyspark_utils import get_pyspark_functions
-
+from dataframe_expectations.core.polars_utils import get_polars_functions
 from dataframe_expectations.core.column_expectation import (
     DataFrameColumnExpectation,
 )
@@ -15,7 +15,8 @@ from dataframe_expectations.core.utils import requires_params
 # F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
 # or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
 # occurs at module load / test collection time.
-F = get_pyspark_functions()
+F_PYSPARK = get_pyspark_functions()
+F_POLARS = get_polars_functions()
 
 
 @register_expectation(
@@ -38,7 +39,8 @@ def create_expectation_value_greater_than(
         expectation_name="ExpectationValueGreaterThan",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] <= value],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) <= value),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name) <= value),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name) <= value),
         description=f"'{column_name}' is greater than {value}",
         error_message=f"'{column_name}' is not greater than {value}.",
         tags=tags,
@@ -65,7 +67,8 @@ def create_expectation_value_less_than(
         expectation_name="ExpectationValueLessThan",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] >= value],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) >= value),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name) >= value),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name) >= value),
         description=f"'{column_name}' is less than {value}",
         error_message=f"'{column_name}' is not less than {value}.",
         tags=tags,
@@ -92,7 +95,8 @@ def create_expectation_value_greater_than_equals(
         expectation_name="ExpectationValueGreaterThanEquals",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] < value],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) < value),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name) < value),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name) < value),
         description=f"'{column_name}' is greater than or equal to {value}",
         error_message=f"'{column_name}' is not greater than or equal to {value}.",
         tags=tags,
@@ -119,7 +123,8 @@ def create_expectation_value_less_than_equals(
         expectation_name="ExpectationValueLessThanEquals",
         column_name=column_name,
         fn_violations_pandas=lambda df: df[df[column_name] > value],
-        fn_violations_pyspark=lambda df: df.filter(F.col(column_name) > value),
+        fn_violations_pyspark=lambda df: df.filter(F_PYSPARK.col(column_name) > value),
+        fn_violations_polars=lambda df: df.filter(F_POLARS.col(column_name) > value),
         description=f"'{column_name}' is less than or equal to {value}",
         error_message=f"'{column_name}' is not less than or equal to {value}.",
         tags=tags,
@@ -160,7 +165,10 @@ def create_expectation_value_between(
             (df[column_name] < min_value) | (df[column_name] > max_value)
         ],
         fn_violations_pyspark=lambda df: df.filter(
-            (F.col(column_name) < min_value) | (F.col(column_name) > max_value)
+            (F_PYSPARK.col(column_name) < min_value) | (F_PYSPARK.col(column_name) > max_value)
+        ),
+        fn_violations_polars=lambda df: df.filter(
+            (F_POLARS.col(column_name) < min_value) | (F_POLARS.col(column_name) > max_value)
         ),
         description=f"'{column_name}' is between {min_value} and {max_value}",
         error_message=f"'{column_name}' is not between {min_value} and {max_value}.",

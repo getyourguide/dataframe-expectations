@@ -1,12 +1,12 @@
 Getting Started
 ===============
 
-Welcome to DataFrame Expectations! This guide will help you get up and running quickly with validating your Pandas and PySpark DataFrames.
+Welcome to DataFrame Expectations! This guide will help you get up and running quickly with validating your Pandas, PySpark, and Polars DataFrames.
 
 Installation
 ------------
 
-Install without PySpark (pandas only):
+Install without PySpark or Polars (pandas only):
 
 .. code-block:: bash
 
@@ -17,6 +17,18 @@ Install with PySpark support:
 .. code-block:: bash
 
    pip install dataframe-expectations[pyspark]
+
+Install with Polars support:
+
+.. code-block:: bash
+
+   pip install dataframe-expectations[polars]
+
+Install with both PySpark and Polars support:
+
+.. code-block:: bash
+
+   pip install dataframe-expectations[pyspark,polars]
 
 .. note::
 
@@ -32,75 +44,105 @@ Requirements
 * pydantic >= 2.12.4
 * tabulate >= 0.8.9
 * pyspark >= 3.3.0 *(optional — install with* ``[pyspark]`` *extra or provide your own)*
+* polars >= 1.40.1 *(optional — install with* ``[polars]`` *extra)*
 
 Quick Start
 -----------
 
-Pandas Example
-~~~~~~~~~~~~~~
+.. tab-set::
 
-.. code-block:: python
+    .. tab-item:: Pandas
 
-    import pandas as pd
-    from dataframe_expectations.suite import DataFrameExpectationsSuite
+        .. code-block:: python
 
-    # Build a suite with expectations
-    suite = (
-         DataFrameExpectationsSuite()
-         .expect_min_rows(min_rows=3)
-         .expect_max_rows(max_rows=10)
-         .expect_value_greater_than(column_name="age", value=18)
-         .expect_value_less_than(column_name="salary", value=100000)
-         .expect_value_not_null(column_name="name")
-    )
+            import pandas as pd
+            from dataframe_expectations.suite import DataFrameExpectationsSuite
 
-    # Create a runner
-    runner = suite.build()
+            # Build a suite with expectations
+            suite = (
+                 DataFrameExpectationsSuite()
+                 .expect_min_rows(min_rows=3)
+                 .expect_max_rows(max_rows=10)
+                 .expect_value_greater_than(column_name="age", value=18)
+                 .expect_value_less_than(column_name="salary", value=100000)
+                 .expect_value_not_null(column_name="name")
+            )
 
-    # Validate a DataFrame
-    df = pd.DataFrame({
-         "age": [25, 15, 45, 22],
-         "name": ["Alice", "Bob", "Charlie", "Diana"],
-         "salary": [50000, 60000, 80000, 45000]
-    })
-    runner.run(df)
+            # Create a runner
+            runner = suite.build()
 
+            # Validate a DataFrame
+            df = pd.DataFrame({
+                 "age": [25, 15, 45, 22],
+                 "name": ["Alice", "Bob", "Charlie", "Diana"],
+                 "salary": [50000, 60000, 80000, 45000]
+            })
+            runner.run(df)
 
-PySpark Example
-~~~~~~~~~~~~~~~
+    .. tab-item:: PySpark
 
-.. code-block:: python
+        .. code-block:: python
 
-    from dataframe_expectations.suite import DataFrameExpectationsSuite
-    from pyspark.sql import SparkSession
+            from dataframe_expectations.suite import DataFrameExpectationsSuite
+            from pyspark.sql import SparkSession
 
-    # Initialize Spark session
-    spark = SparkSession.builder.appName("example").getOrCreate()
+            # Initialize Spark session
+            spark = SparkSession.builder.appName("example").getOrCreate()
 
-    # Build a validation suite (same API as Pandas!)
-    suite = (
-         DataFrameExpectationsSuite()
-         .expect_min_rows(min_rows=3)
-         .expect_max_rows(max_rows=10)
-         .expect_value_greater_than(column_name="age", value=18)
-         .expect_value_less_than(column_name="salary", value=100000)
-         .expect_value_not_null(column_name="name")
-    )
+            # Build a validation suite (same API as Pandas!)
+            suite = (
+                 DataFrameExpectationsSuite()
+                 .expect_min_rows(min_rows=3)
+                 .expect_max_rows(max_rows=10)
+                 .expect_value_greater_than(column_name="age", value=18)
+                 .expect_value_less_than(column_name="salary", value=100000)
+                 .expect_value_not_null(column_name="name")
+            )
 
-    # Build the runner
-    runner = suite.build()
+            # Build the runner
+            runner = suite.build()
 
-    # Create a PySpark DataFrame
-    data = [
-         {"age": 25, "name": "Alice", "salary": 50000},
-         {"age": 15, "name": "Bob", "salary": 60000},
-         {"age": 45, "name": "Charlie", "salary": 80000},
-         {"age": 22, "name": "Diana", "salary": 45000}
-    ]
-    df = spark.createDataFrame(data)
+            # Create a PySpark DataFrame
+            data = [
+                 {"age": 25, "name": "Alice", "salary": 50000},
+                 {"age": 15, "name": "Bob", "salary": 60000},
+                 {"age": 45, "name": "Charlie", "salary": 80000},
+                 {"age": 22, "name": "Diana", "salary": 45000}
+            ]
+            df = spark.createDataFrame(data)
 
-    # Validate
-    runner.run(df)
+            # Validate
+            runner.run(df)
+
+    .. tab-item:: Polars
+
+        .. code-block:: python
+
+            from dataframe_expectations.suite import DataFrameExpectationsSuite
+            import polars as pl
+
+            # Build a validation suite (same API as Pandas and PySpark!)
+            suite = (
+                 DataFrameExpectationsSuite()
+                 .expect_min_rows(min_rows=3)
+                 .expect_max_rows(max_rows=10)
+                 .expect_value_greater_than(column_name="age", value=18)
+                 .expect_value_less_than(column_name="salary", value=100000)
+                 .expect_value_not_null(column_name="name")
+            )
+
+            # Build the runner
+            runner = suite.build()
+
+            # Create a Polars DataFrame
+            df = pl.DataFrame({
+                 "age": [25, 15, 45, 22],
+                 "name": ["Alice", "Bob", "Charlie", "Diana"],
+                 "salary": [50000, 60000, 80000, 45000]
+            })
+
+            # Validate
+            runner.run(df)
 
 Validation Patterns
 -------------------

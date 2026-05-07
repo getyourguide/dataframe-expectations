@@ -170,6 +170,10 @@ def serialize_violations(
             pyspark_df = violations_df  # type: ignore[assignment]
             count = pyspark_df.count()  # type: ignore[assignment]
             sample = pyspark_df.limit(limit).toPandas().to_dict("records")  # type: ignore[assignment,operator]
+        elif df_type == DataFrameType.POLARS:
+            polars_df = violations_df  # type: ignore[assignment]
+            count = polars_df.height  # type: ignore[assignment]
+            sample = polars_df.head(limit).to_dicts()  # type: ignore[assignment,union-attr,operator]
 
         return count, sample
     except Exception:

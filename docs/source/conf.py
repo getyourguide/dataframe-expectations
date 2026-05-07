@@ -27,6 +27,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',  # For Google/NumPy style docstrings
     'sphinx.ext.intersphinx',
+    'sphinx_design',
     'expectations_autodoc',  # Our custom extension
 ]
 

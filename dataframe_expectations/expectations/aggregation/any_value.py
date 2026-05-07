@@ -12,6 +12,7 @@ from dataframe_expectations.core.types import (
     DataFrameLike,
     DataFrameType,
 )
+from dataframe_expectations.core.polars_utils import get_polars_functions, PolarsDataFrame
 from dataframe_expectations.registry import register_expectation
 from dataframe_expectations.core.utils import requires_params
 from dataframe_expectations.result_message import (
@@ -23,7 +24,8 @@ from dataframe_expectations.result_message import (
 # F is a module-level proxy: returns real pyspark.sql.functions when pyspark is installed,
 # or _MissingPySparkFunctions otherwise. Lambdas capture F lazily, so no pyspark import
 # occurs at module load / test collection time.
-F = get_pyspark_functions()
+F_PYSPARK = get_pyspark_functions()
+F_POLARS = get_polars_functions()
 
 
 class ExpectationMinRows(DataFrameAggregationExpectation):
@@ -90,7 +92,8 @@ class ExpectationMinRows(DataFrameAggregationExpectation):
     ) -> DataFrameExpectationResultMessage:
         """Validate minimum rows in a PySpark DataFrame."""
         try:
-            row_count = data_frame.count()
+            pyspark_df = cast(PySparkDataFrame, data_frame)
+            row_count = pyspark_df.count()
 
             if row_count >= self.min_rows:
                 return DataFrameExpectationSuccessMessage(
@@ -107,6 +110,34 @@ class ExpectationMinRows(DataFrameAggregationExpectation):
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error counting DataFrame rows: {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate minimum rows in a Polars DataFrame."""
+
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+            row_count = polars_df.height
+
+            if row_count >= self.min_rows:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"DataFrame has {row_count} rows, expected at least {self.min_rows}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error counting DataFrame rows: {str(e)}",
             )
 
@@ -175,7 +206,8 @@ class ExpectationMaxRows(DataFrameAggregationExpectation):
     ) -> DataFrameExpectationResultMessage:
         """Validate maximum rows in a PySpark DataFrame."""
         try:
-            row_count = data_frame.count()
+            pyspark_df = cast(PySparkDataFrame, data_frame)
+            row_count = pyspark_df.count()
 
             if row_count <= self.max_rows:
                 return DataFrameExpectationSuccessMessage(
@@ -192,6 +224,32 @@ class ExpectationMaxRows(DataFrameAggregationExpectation):
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error counting DataFrame rows: {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate maximum rows in a Polars DataFrame."""
+        try:
+            polars_df = cast(PolarsDataFrame, data_frame)
+            row_count = polars_df.height
+
+            if row_count <= self.max_rows:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"DataFrame has {row_count} rows, expected at most {self.max_rows}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error counting DataFrame rows: {str(e)}",
             )
 
@@ -287,9 +345,9 @@ class ExpectationMaxNullPercentage(DataFrameAggregationExpectation):
             else:
                 # Count null values in the specific column
                 null_count_result = pyspark_df.select(
-                    F.sum(F.when(F.col(self.column_name).isNull(), 1).otherwise(0)).alias(
-                        "null_count"
-                    )
+                    F_PYSPARK.sum(
+                        F_PYSPARK.when(F_PYSPARK.col(self.column_name).isNull(), 1).otherwise(0)
+                    ).alias("null_count")
                 ).collect()
 
                 null_count = null_count_result[0]["null_count"]
@@ -310,6 +368,47 @@ class ExpectationMaxNullPercentage(DataFrameAggregationExpectation):
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error calculating null percentage for column '{self.column_name}': {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate maximum null percentage in a Polars DataFrame column."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+
+            # Get total number of rows
+            total_rows = polars_df.height
+
+            if total_rows == 0:
+                # Empty DataFrame has 0% null values
+                actual_percentage = 0.0
+            else:
+                # Count null values in the specific column
+                null_count_result = polars_df.select(
+                    F_POLARS.col(self.column_name).is_null().sum().alias("null_count")
+                )
+
+                null_count = null_count_result[0, "null_count"]
+                actual_percentage = (null_count / total_rows) * 100
+
+            if actual_percentage <= self.max_percentage:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' has {actual_percentage:.2f}% null values, expected at most {self.max_percentage:.2f}%.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error calculating null percentage for column '{self.column_name}': {str(e)}",
             )
 
@@ -389,7 +488,9 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
 
             # Count null values in the specific column
             null_count_result = pyspark_df.select(
-                F.sum(F.when(F.col(self.column_name).isNull(), 1).otherwise(0)).alias("null_count")
+                F_PYSPARK.sum(
+                    F_PYSPARK.when(F_PYSPARK.col(self.column_name).isNull(), 1).otherwise(0)
+                ).alias("null_count")
             ).collect()
 
             # Handle the case where null_count might be None (e.g., empty DataFrame)
@@ -412,6 +513,42 @@ class ExpectationMaxNullCount(DataFrameAggregationExpectation):
             return DataFrameExpectationFailureMessage(
                 expectation_str=str(self),
                 data_frame_type=DataFrameType.PYSPARK,
+                message=f"Error calculating null count for column '{self.column_name}': {str(e)}",
+            )
+
+    def aggregate_and_validate_polars(
+        self, data_frame: DataFrameLike, **kwargs
+    ) -> DataFrameExpectationResultMessage:
+        """Validate maximum null count in a Polars DataFrame column."""
+        try:
+            # Cast to PolarsDataFrame for type safety
+            polars_df = cast(PolarsDataFrame, data_frame)
+
+            # Count null values in the specific column
+            null_count_result = polars_df.select(
+                F_POLARS.col(self.column_name).is_null().sum().alias("null_count")
+            )
+
+            # Handle the case where null_count might be None (e.g., empty DataFrame)
+            null_count = null_count_result[0, "null_count"]
+            if null_count is None:
+                null_count = 0
+
+            if null_count <= self.max_count:
+                return DataFrameExpectationSuccessMessage(
+                    expectation_name=self.get_expectation_name()
+                )
+            else:
+                return DataFrameExpectationFailureMessage(
+                    expectation_str=str(self),
+                    data_frame_type=DataFrameType.POLARS,
+                    message=f"Column '{self.column_name}' has {null_count} null values, expected at most {self.max_count}.",
+                )
+
+        except Exception as e:
+            return DataFrameExpectationFailureMessage(
+                expectation_str=str(self),
+                data_frame_type=DataFrameType.POLARS,
                 message=f"Error calculating null count for column '{self.column_name}': {str(e)}",
             )
 
