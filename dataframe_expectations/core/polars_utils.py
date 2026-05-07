@@ -30,8 +30,6 @@ def is_polars_data_frame(data_frame: Any) -> bool:
     """Return True when the input is a Polars DataFrame."""
     pl = get_polars_functions()
     try:
-        return isinstance(data_frame, pl.DataFrame) or type(data_frame).__module__.startswith(
-            "polars"
-        )
+        return isinstance(data_frame, pl.DataFrame)
     except ImportError:
         return False
