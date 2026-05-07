@@ -151,6 +151,8 @@ def test_expectation_datetime_scenario(
 
             parsed = [datetime.fromisoformat(d) for d in df_data]
             data_frame = make_df({"col1": (parsed, "timestamp")})
+        case _:
+            pytest.fail(f"test does not handle {df_lib} — add a case for it")
 
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationDistinctColumnValuesGreaterThan",

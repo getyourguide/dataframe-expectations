@@ -22,51 +22,29 @@ def test_result_message_empty():
     )
 
 
-def test_data_frame_to_str_pandas():
+def test_dataframe_to_str(dataframe_factory):
     """
-    Test the dataframe_to_str method with a mock DataFrame.
+    Test the dataframe_to_str method with all DataFrame types.
     """
-    pandas_dataframe = pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
-    result_message = DataFrameExpectationResultMessage()
+    df_lib, make_df = dataframe_factory
+    df = make_df({"col1": ([1, 2, 3], "long"), "col2": (["a", "b", "c"], "string")})
 
-    expected_dataframe_str = tabulate(
-        pandas_dataframe.head(2), headers="keys", tablefmt="pretty", showindex=False
-    )
+    result_message = DataFrameExpectationResultMessage()
 
     actual_str = result_message.dataframe_to_str(
-        data_frame_type=DataFrameType.PANDAS,
-        data_frame=pandas_dataframe,
+        data_frame_type=df_lib,
+        data_frame=df,
         rows=2,
     )
-    assert actual_str == expected_dataframe_str, (
-        f"Expected pandas dataframe string but got: {actual_str}"
-    )
 
-
-@pytest.mark.pyspark
-def test_dataframe_to_str_pyspark(spark):
-    """
-    Test the dataframe_to_str method with a mock PySpark DataFrame.
-    """
-    pyspark_dataframe = spark.createDataFrame([(1, "a"), (2, "b"), (3, "c")], ["col1", "col2"])
-
-    result_message = DataFrameExpectationResultMessage()
-
+    # All backends convert to pandas for tabulate, so expected output is the same
     expected_dataframe_str = tabulate(
-        pyspark_dataframe.limit(2).toPandas(),
+        pd.DataFrame({"col1": [1, 2], "col2": ["a", "b"]}),
         headers="keys",
         tablefmt="pretty",
         showindex=False,
     )
-
-    actual_str = result_message.dataframe_to_str(
-        data_frame_type=DataFrameType.PYSPARK,
-        data_frame=pyspark_dataframe,
-        rows=2,
-    )
-    assert actual_str == expected_dataframe_str, (
-        f"Expected pyspark dataframe string but got: {actual_str}"
-    )
+    assert actual_str == expected_dataframe_str, f"Expected dataframe string but got: {actual_str}"
 
 
 def test_dataframe_to_str_invalid_type():

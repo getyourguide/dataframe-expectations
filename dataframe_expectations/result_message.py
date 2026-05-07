@@ -24,14 +24,15 @@ class DataFrameExpectationResultMessage(ABC):
         Print the DataFrame based on its type.
         """
 
-        if data_frame_type == DataFrameType.PANDAS:
-            data_frame = data_frame.head(rows)
-        elif data_frame_type == DataFrameType.PYSPARK:
-            data_frame = data_frame.limit(rows).toPandas()
-        elif data_frame_type == DataFrameType.POLARS:
-            data_frame = data_frame.head(rows).to_pandas()
-        else:
-            raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
+        match data_frame_type:
+            case DataFrameType.PANDAS:
+                data_frame = data_frame.head(rows)
+            case DataFrameType.PYSPARK:
+                data_frame = data_frame.limit(rows).toPandas()
+            case DataFrameType.POLARS:
+                data_frame = data_frame.head(rows).to_pandas()
+            case _:
+                raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
 
         return tabulate(data_frame, headers="keys", tablefmt="pretty", showindex=False)
 

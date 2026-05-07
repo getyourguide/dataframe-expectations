@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from typing import List, Optional, Union
 
 from dataframe_expectations.core.types import DataFrameLike, DataFrameType
@@ -49,7 +48,6 @@ class DataFrameAggregationExpectation(DataFrameExpectation):
         """
         return self.description
 
-    @abstractmethod
     def aggregate_and_validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
     ) -> DataFrameExpectationResultMessage:
@@ -63,7 +61,6 @@ class DataFrameAggregationExpectation(DataFrameExpectation):
             f"aggregate_and_validate_pandas method must be implemented for {self.__class__.__name__}"
         )
 
-    @abstractmethod
     def aggregate_and_validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
     ) -> DataFrameExpectationResultMessage:
@@ -77,7 +74,6 @@ class DataFrameAggregationExpectation(DataFrameExpectation):
             f"aggregate_and_validate_pyspark method must be implemented for {self.__class__.__name__}"
         )
 
-    @abstractmethod
     def aggregate_and_validate_polars(
         self, data_frame: DataFrameLike, **kwargs
     ) -> DataFrameExpectationResultMessage:

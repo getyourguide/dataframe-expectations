@@ -188,6 +188,8 @@ def test_75th_percentile_failure(dataframe_factory):
             # PySpark percentile_approx and Polars both return 30
             min_value, max_value = 32, 40
             expected_message = "Column 'col1' 75th percentile value 30.0 is not between 32 and 40."
+        case _:
+            pytest.fail(f"test does not handle {df_lib} — add a case for it")
 
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnQuantileBetween",
@@ -215,6 +217,8 @@ def test_other_quantile_scenarios(dataframe_factory):
         case DataFrameType.PYSPARK | DataFrameType.POLARS:
             # PySpark percentile_approx and Polars both return 20.0
             min_value, max_value = 15, 25
+        case _:
+            pytest.fail(f"test does not handle {df_lib} — add a case for it")
 
     expectation = DataFrameExpectationRegistry.get_expectation(
         expectation_name="ExpectationColumnQuantileBetween",

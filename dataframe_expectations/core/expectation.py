@@ -93,7 +93,6 @@ class DataFrameExpectation(ABC):
             case _:
                 raise ValueError(f"Unsupported DataFrame type: {data_frame_type}")
 
-    @abstractmethod
     def validate_pandas(
         self, data_frame: DataFrameLike, **kwargs
     ) -> DataFrameExpectationResultMessage:
@@ -104,7 +103,6 @@ class DataFrameExpectation(ABC):
             f"validate_pandas method must be implemented for {self.__class__.__name__}"
         )
 
-    @abstractmethod
     def validate_pyspark(
         self, data_frame: DataFrameLike, **kwargs
     ) -> DataFrameExpectationResultMessage:
@@ -115,7 +113,6 @@ class DataFrameExpectation(ABC):
             f"validate_pyspark method must be implemented for {self.__class__.__name__}"
         )
 
-    @abstractmethod
     def validate_polars(
         self, data_frame: DataFrameLike, **kwargs
     ) -> DataFrameExpectationResultMessage:

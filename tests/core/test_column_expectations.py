@@ -48,6 +48,8 @@ def test_validate_calls_row_validation(expectation, dataframe_factory):
             fn_violations = expectation.fn_violations_pandas
         case DataFrameType.POLARS:
             fn_violations = expectation.fn_violations_polars
+        case _:
+            pytest.fail(f"test does not handle {df_lib} — add a case for it")
     expectation.row_validation.assert_called_once_with(
         data_frame_type=df_lib,
         data_frame=data_frame,
