@@ -52,6 +52,4 @@ def _get_pyspark_dataframe_types() -> Tuple[type, ...]:
 def is_pyspark_data_frame(data_frame: Any) -> bool:
     """Return True when the input is a classic or connect PySpark DataFrame."""
     data_frame_types = _get_pyspark_dataframe_types()
-    return (data_frame_types and isinstance(data_frame, data_frame_types)) or (
-        type(data_frame).__module__.startswith("pyspark.sql")
-    )
+    return bool(data_frame_types and isinstance(data_frame, data_frame_types))

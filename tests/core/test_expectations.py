@@ -21,6 +21,12 @@ class MyTestExpectation(DataFrameExpectation):
         """
         return "pyspark validation successful"
 
+    def validate_polars(self, data_frame: DataFrameLike, **kwargs):
+        """
+        Mock implementation for Polars DataFrame validation.
+        """
+        return "polars validation successful"
+
     def get_description(self):
         return "This is a test expectation for unit testing purposes."
 
@@ -72,7 +78,7 @@ def test_validate_unsupported_dataframe_type():
 
 
 def test_validate_called(dataframe_factory):
-    """validate() dispatches to validate_pandas or validate_pyspark depending on the DataFrame type."""
+    """validate() dispatches to validate_pandas, validate_pyspark, or validate_polars depending on the DataFrame type."""
     df_lib, make_df = dataframe_factory
     expectation = MyTestExpectation()
 
@@ -81,6 +87,10 @@ def test_validate_called(dataframe_factory):
             expectation.validate_pandas = MagicMock(return_value="mock_result")
         case DataFrameType.PYSPARK:
             expectation.validate_pyspark = MagicMock(return_value="mock_result")
+        case DataFrameType.POLARS:
+            expectation.validate_polars = MagicMock(return_value="mock_result")
+        case _:
+            pytest.fail(f"test_validate_called does not handle {df_lib} — add a case for it")
 
     data_frame = make_df({"col1": ([1, 2, 3], "long"), "col2": (["a", "b", "c"], "string")})
     _ = expectation.validate(data_frame=data_frame)
@@ -90,6 +100,10 @@ def test_validate_called(dataframe_factory):
             expectation.validate_pandas.assert_called_once_with(data_frame=data_frame)
         case DataFrameType.PYSPARK:
             expectation.validate_pyspark.assert_called_once_with(data_frame=data_frame)
+        case DataFrameType.POLARS:
+            expectation.validate_polars.assert_called_once_with(data_frame=data_frame)
+        case _:
+            pytest.fail(f"test_validate_called does not handle {df_lib} — add a case for it")
 
     with pytest.raises(ValueError):
         expectation.validate(None)
@@ -278,6 +292,7 @@ def test_tags_sent_to_base_class_direct():
         column_name="test",
         fn_violations_pandas=lambda df: df,
         fn_violations_pyspark=lambda df: df,
+        fn_violations_polars=lambda df: df,
         description="Test",
         error_message="Error",
         tags=test_tags,
