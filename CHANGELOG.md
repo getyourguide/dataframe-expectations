@@ -1,5 +1,72 @@
 # Changelog
 
+## [0.7.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.6.0...v0.7.0) (2026-05-07)
+
+
+### Features
+
+* **Polars support** ([f8ba5ef](https://github.com/getyourguide/dataframe-expectations/commit/f8ba5ef6932e84d83081da6971552ea972bab062))
+
+  `dataframe-expectations` now supports [Polars](https://pola.rs/) DataFrames alongside Pandas and PySpark. Polars is an optional dependency and must be explicitly requested:
+
+```
+pip install dataframe-expectations[polars] # pandas + polars
+pip install dataframe-expectations[pyspark,polars] # pandas + pyspark + polars
+```
+
+
+All existing expectations that have a Polars implementation will automatically dispatch to the
+correct validation path when a Polars DataFrame is passed to a suite.
+
+Polars imports are fully deferred behind `@lru_cache` helpers (mirroring the PySpark pattern),
+so importing `dataframe_expectations` has zero overhead when Polars is not installed.
+
+* **Backward-compatible API for expectation authors** ([52dda74](https://github.com/getyourguide/dataframe-expectations/commit/52dda741fa5e3376dd4072a1d8dc1ece33ec8248))
+
+The `fn_violations_polars` parameter on `ColumnExpectation` is optional (`None` by default),
+so existing custom expectations that only implement Pandas and/or PySpark continue to work
+without changes. `@abstractmethod` has been removed from `validate_pandas`, `validate_pyspark`,
+and `validate_polars` — each raises `NotImplementedError` by default, allowing expectation
+authors to implement only the backends they need.
+
+* **CI updated to cover Polars install scenarios** ([b636a15](https://github.com/getyourguide/dataframe-expectations/commit/b636a151b6aa9864723e9b11551533c0139d2538))
+
+| Job | Extras installed | Tests run |
+|---|---|---|
+| `tests-without-optional` | None | `-m "not pyspark and not polars"` |
+| `tests-with-pyspark` | `[pyspark]` | `-m "not polars"` |
+| `tests-with-polars` | `[polars]` | `-m "not pyspark"` |
+| `tests-with-all` | `[pyspark,polars]` | All |
+
+
+### Bug Fixes
+
+* **Tightened DataFrame type checks** ([15d1df7](https://github.com/getyourguide/dataframe-expectations/commit/15d1df7a3e5b0d1aa397a562fef8ac5ae1c49e6b))
+
+`is_polars_data_frame()` and `is_pyspark_data_frame()` no longer use `__module__` name
+fallbacks. Only actual `DataFrame` instances (via `isinstance`) are accepted, preventing
+`Series`, `Expr`, `LazyFrame`, `Column`, `Row`, etc. from being mis-routed into validation paths.
+
+
+### Documentation
+
+* **Getting Started guide updated with tabbed examples** ([ee53581](https://github.com/getyourguide/dataframe-expectations/commit/ee53581e1b8fe50ed296a476e43f010ca25e865a))
+
+Installation and usage examples now use `sphinx-design` tab sets showing Pandas, PySpark, and
+Polars side-by-side. `sphinx-design>=0.6.0` added as a docs dependency.
+
+
+### Test Improvements
+
+* **Refactored test fixtures to use PyArrow** ([f9692bd](https://github.com/getyourguide/dataframe-expectations/commit/f9692bd))
+
+Test data is now defined once via PyArrow tables and converted to Pandas, PySpark, or Polars
+DataFrames through a `dataframe_factory` fixture, eliminating duplicated test data across
+backends. All expectation tests are parametrized over `[pandas, pyspark, polars]`.
+
+* **Exhaustive `match/case` blocks** — all `match df_lib` blocks in tests now include
+`case _: pytest.fail(...)` to catch unhandled DataFrame types immediately.
+
 ## [0.6.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.5.2...v0.6.0) (2026-03-18)
 
 
