@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.1](https://github.com/getyourguide/dataframe-expectations/compare/v0.7.0...v0.7.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* add lint dependencies pinned to python 3.11 ([6352a71](https://github.com/getyourguide/dataframe-expectations/commit/6352a711f9cced5eb5d8fc23caedaf0b79d2429f))
+* add lint dependencies pinned to python 3.11 ([9f6fc32](https://github.com/getyourguide/dataframe-expectations/commit/9f6fc32d7414dd264e4bb79ce83bc9a505280721))
+* allow anyone from eng to approve PR ([b9d6da2](https://github.com/getyourguide/dataframe-expectations/commit/b9d6da2d0d7a133981ef061ceeabf45d17aceefa))
+* remove engineering from codeowners ([3cd57f2](https://github.com/getyourguide/dataframe-expectations/commit/3cd57f2a32579f62795a0be1583b8bc1a7170bb6))
+* remove engineering from codeowners ([2acbdb4](https://github.com/getyourguide/dataframe-expectations/commit/2acbdb49ff3d35ee2869578ada2ffa6d88b07001))
+
 ## [0.7.0](https://github.com/getyourguide/dataframe-expectations/compare/v0.6.0...v0.7.0) (2026-05-07)
 
 
