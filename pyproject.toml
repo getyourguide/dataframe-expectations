@@ -36,9 +36,12 @@ dev = [
     "pyarrow>=10.0.0",
     "pytest>=7.0.0",
     "pytest-xdist>=3.0.0",
-    "pre-commit>=2.20.0",
     "ruff>=0.1.0",
     "pytest-cov>=4.0.0",
+]
+# Isolated so filelock (via virtualenv) isn't locked for Python 3.10, where no patched version exists
+lint = [
+    "pre-commit>=2.20.0; python_version >= '3.11'",
 ]
 docs = [
     "sphinx>=4.0.0",
