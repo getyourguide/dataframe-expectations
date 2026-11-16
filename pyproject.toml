@@ -45,7 +45,9 @@ lint = [
 ]
 docs = [
     "sphinx>=4.0.0",
-    "sphinx-book-theme>=1.0.0",
+    # Isolated so soupsieve (via pydata-sphinx-theme/beautifulsoup4) isn't locked
+    # to a vulnerable version for Python 3.10, where no patched version exists
+    "sphinx-book-theme>=1.0.0; python_full_version >= '3.11.5'",
     "sphinx-autobuild>=2021.3.14",
     "sphinx-design>=0.6.0",
     "pyspark>=3.3.0",
